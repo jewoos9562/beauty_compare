@@ -141,14 +141,28 @@ function CompareCard({
 
   const clinicColors: Record<string, string> = {
     toxnfill: 'border-l-violet-500',
+    toxnfill_gangnam: 'border-l-violet-500',
     uni: 'border-l-emerald-500',
+    uni_gangnam: 'border-l-emerald-500',
+    uni_wangsimni: 'border-l-emerald-500',
     dayview: 'border-l-orange-500',
+    dayview_gangnam: 'border-l-orange-500',
+    vands_gangnam: 'border-l-blue-500',
+    vands_seongsu: 'border-l-blue-500',
+    ppeum_gangnam: 'border-l-pink-500',
   };
 
   const clinicBadgeColors: Record<string, string> = {
     toxnfill: 'bg-violet-100 text-violet-700',
+    toxnfill_gangnam: 'bg-violet-100 text-violet-700',
     uni: 'bg-emerald-100 text-emerald-700',
+    uni_gangnam: 'bg-emerald-100 text-emerald-700',
+    uni_wangsimni: 'bg-emerald-100 text-emerald-700',
     dayview: 'bg-orange-100 text-orange-700',
+    dayview_gangnam: 'bg-orange-100 text-orange-700',
+    vands_gangnam: 'bg-blue-100 text-blue-700',
+    vands_seongsu: 'bg-blue-100 text-blue-700',
+    ppeum_gangnam: 'bg-pink-100 text-pink-700',
   };
 
   return (

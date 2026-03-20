@@ -92,6 +92,8 @@ export default function Home() {
     );
   }
 
+  const districtNames: Record<string, string> = { gwangjin: '광진구', seongdong: '성동구', gangnam: '강남구' };
+  const districtLabel = districtNames[selectedDistrict] ?? selectedDistrict;
   const subtitle = clinics.map(c => c.name.replace(/ 건대.*/, '')).join(' · ');
 
   // District detail page
@@ -111,7 +113,7 @@ export default function Home() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-slate-800">
-              광진구 피부과 가격 비교
+              {districtLabel} 피부과 가격 비교
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
               {subtitle}
