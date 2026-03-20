@@ -21,7 +21,7 @@ type Props = {
 };
 
 export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) {
-  const { t } = useI18n();
+  const { t, tt } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -155,7 +155,7 @@ function CategoryTable({
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
-  const { t, fmtPrice } = useI18n();
+  const { t, tt, fmtPrice } = useI18n();
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
   const hasBase = category.items.some(i => i.base != null);
@@ -165,7 +165,7 @@ function CategoryTable({
   return (
     <div className="mb-5">
       <div className="flex items-center gap-2 mb-2">
-        <h3 className="text-sm font-bold text-slate-700">{category.name}</h3>
+        <h3 className="text-sm font-bold text-slate-700">{tt(category.name)}</h3>
         {tagCfg && tag && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded ${tagCfg.bg} ${tagCfg.color} font-semibold`}>
             {t('tag.' + tag)}
@@ -204,7 +204,7 @@ function CategoryTable({
                   key={i}
                   className="border-t border-slate-100 hover:bg-slate-50 transition"
                 >
-                  <td className="px-3 py-2 text-slate-700">{item.name}</td>
+                  <td className="px-3 py-2 text-slate-700">{tt(item.name)}</td>
                   {hasOrig && (
                     <td className="text-right px-3 py-2 text-slate-400 line-through text-xs whitespace-nowrap">
                       {fmtPrice(item.orig)}

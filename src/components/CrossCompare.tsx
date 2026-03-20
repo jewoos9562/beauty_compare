@@ -166,7 +166,7 @@ function SearchResultsList({
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
-  const { t, fmtPrice } = useI18n();
+  const { t, tt, fmtPrice } = useI18n();
   const lowestPrice = results[0]
     ? (results[0].event ?? results[0].base ?? results[0].orig ?? 0)
     : 0;
@@ -201,11 +201,11 @@ function SearchResultsList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${badgeColor}`}>
-                    {m.clinicName.replace(/의원\s*/, '')}
+                    {tt(m.clinicName.replace(/의원\s*/, ''))}
                   </span>
-                  <span className="text-xs text-slate-400 truncate">{m.categoryName}</span>
+                  <span className="text-xs text-slate-400 truncate">{tt(m.categoryName)}</span>
                 </div>
-                <p className="text-sm text-slate-700 mt-0.5 truncate">{m.itemName}</p>
+                <p className="text-sm text-slate-700 mt-0.5 truncate">{tt(m.itemName)}</p>
               </div>
               <div className="text-right shrink-0">
                 {m.orig != null && m.event != null && (
@@ -268,7 +268,7 @@ function CompareCard({
     });
   });
 
-  const { t, fmtPrice } = useI18n();
+  const { t, tt, fmtPrice } = useI18n();
 
   if (matches.length === 0) return null;
 
@@ -283,7 +283,7 @@ function CompareCard({
   return (
     <div className="mb-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-slate-700">{label}</h3>
+        <h3 className="text-sm font-bold text-slate-700">{tt(label)}</h3>
         <p className="text-[11px] text-slate-400">
           {t('common.items', { count: String(matches.length) })} · {t('common.lowest')} {fmtPrice(lowestPrice)}
         </p>
@@ -310,11 +310,11 @@ function CompareCard({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${badgeColor}`}>
-                    {m.clinicName.replace(/의원\s*/, '')}
+                    {tt(m.clinicName.replace(/의원\s*/, ''))}
                   </span>
-                  <span className="text-xs text-slate-400 truncate">{m.categoryName}</span>
+                  <span className="text-xs text-slate-400 truncate">{tt(m.categoryName)}</span>
                 </div>
-                <p className="text-sm text-slate-700 mt-0.5 truncate">{m.itemName}</p>
+                <p className="text-sm text-slate-700 mt-0.5 truncate">{tt(m.itemName)}</p>
               </div>
               <div className="text-right shrink-0">
                 {m.orig != null && m.event != null && (

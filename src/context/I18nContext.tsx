@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { translations, FALLBACK_RATES } from '@/i18n/translations';
 import type { Lang, Currency } from '@/i18n/translations';
+import { translateText } from '@/i18n/glossary';
 
 type I18nCtx = {
   lang: Lang;
@@ -10,6 +11,7 @@ type I18nCtx = {
   setLang: (l: Lang) => void;
   setCurrency: (c: Currency) => void;
   t: (key: string, vars?: Record<string, string>) => string;
+  tt: (text: string) => string;
   fmtPrice: (krw: number | null | undefined) => string;
   rates: Record<Currency, number>;
   rateLabel: string; // e.g. "1 USD = 1,380 KRW"
@@ -88,6 +90,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return str;
   }, [lang]);
 
+  const tt = useCallback((text: string) => translateText(text, lang), [lang]);
+
   const fmtPrice = useCallback((krw: number | null | undefined) => {
     if (krw == null) return '-';
     if (currency === 'KRW') return krw.toLocaleString('ko-KR') + '원';
@@ -105,8 +109,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [currency, rates]);
 
   const value = useMemo(
-    () => ({ lang, currency, setLang, setCurrency, t, fmtPrice, rates, rateLabel, ready }),
-    [lang, currency, setLang, setCurrency, t, fmtPrice, rates, rateLabel, ready]
+    () => ({ lang, currency, setLang, setCurrency, t, tt, fmtPrice, rates, rateLabel, ready }),
+    [lang, currency, setLang, setCurrency, t, tt, fmtPrice, rates, rateLabel, ready]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

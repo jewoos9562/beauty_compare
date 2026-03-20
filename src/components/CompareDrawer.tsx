@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function CompareDrawer({ items, onRemove, onClear }: Props) {
-  const { t, fmtPrice } = useI18n();
+  const { t, tt, fmtPrice } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const total = items.reduce((s, i) => s + i.price, 0);
 
@@ -50,8 +50,8 @@ export default function CompareDrawer({ items, onRemove, onClear }: Props) {
             {items.map((item, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-400">{item.clinicName}</p>
-                  <p className="text-sm text-slate-700 truncate">{item.itemName}</p>
+                  <p className="text-xs text-slate-400">{tt(item.clinicName)}</p>
+                  <p className="text-sm text-slate-700 truncate">{tt(item.itemName)}</p>
                 </div>
                 <p className="text-sm font-semibold text-slate-700 shrink-0">{fmtPrice(item.price)}</p>
                 <button

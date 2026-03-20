@@ -40,7 +40,7 @@ function branchLabel(fullName: string, chainName: string): string {
 }
 
 export default function Home() {
-  const { t, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
+  const { t, tt, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
   const [showWelcome, setShowWelcome] = useState<boolean | null>(null); // null = checking
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -260,7 +260,7 @@ export default function Home() {
                             onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
                             className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive ? `${pillActive} text-white shadow-sm` : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                           >
-                            {label}
+                            {tt(label)}
                           </button>
                         );
                       })}
