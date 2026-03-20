@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
-import { CLINICS, CROSS_KEYWORDS } from '@/data/clinics';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import type { Clinic } from '@/data/clinics';
+import { fetchCrossKeywords } from '@/lib/fetch-clinics';
 import type { CompareItem } from '@/app/page';
 
 function fmt(n: number | null | undefined): string {
@@ -10,6 +11,7 @@ function fmt(n: number | null | undefined): string {
 }
 
 type Props = {
+  clinics: Clinic[];
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 };
@@ -24,17 +26,25 @@ type MatchedItem = {
   base?: number | null;
 };
 
-export default function CrossCompare({ toggleCompare, isChecked }: Props) {
+type CrossKeyword = { label: string; keywords: string[] };
+
+export default function CrossCompare({ clinics, toggleCompare, isChecked }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [crossKeywords, setCrossKeywords] = useState<CrossKeyword[]>([]);
   const isComposing = useRef(false);
+
+  useEffect(() => {
+    fetchCrossKeywords()
+      .then(setCrossKeywords)
+      .catch(err => console.error('Failed to fetch keywords:', err));
+  }, []);
 
   const q = searchQuery.trim().toLowerCase();
 
-  // Filter keywords by search
   const visibleKeywords = q
-    ? CROSS_KEYWORDS.filter(kw => kw.label.toLowerCase().includes(q) || kw.keywords.some(k => k.includes(q)))
-    : CROSS_KEYWORDS;
+    ? crossKeywords.filter(kw => kw.label.toLowerCase().includes(q) || kw.keywords.some(k => k.includes(q)))
+    : crossKeywords;
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +85,7 @@ export default function CrossCompare({ toggleCompare, isChecked }: Props) {
             key={kw.label}
             label={kw.label}
             keywords={kw.keywords}
+            clinics={clinics}
             toggleCompare={toggleCompare}
             isChecked={isChecked}
           />
@@ -87,18 +98,19 @@ export default function CrossCompare({ toggleCompare, isChecked }: Props) {
 function CompareCard({
   label,
   keywords,
+  clinics,
   toggleCompare,
   isChecked,
 }: {
   label: string;
   keywords: string[];
+  clinics: Clinic[];
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
-  // Find matching items across all clinics
   const matches: MatchedItem[] = [];
 
-  CLINICS.forEach(clinic => {
+  clinics.forEach(clinic => {
     clinic.categories.forEach(cat => {
       cat.items.forEach(item => {
         const nameLower = item.name.toLowerCase();
@@ -119,7 +131,6 @@ function CompareCard({
 
   if (matches.length === 0) return null;
 
-  // Sort by best price ascending
   const sorted = [...matches].sort((a, b) => {
     const pa = a.event ?? a.base ?? a.orig ?? Infinity;
     const pb = b.event ?? b.base ?? b.orig ?? Infinity;

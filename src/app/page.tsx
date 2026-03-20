@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { CLINICS } from '@/data/clinics';
+import { useState, useCallback, useEffect } from 'react';
+import type { Clinic } from '@/data/clinics';
+import { fetchClinics } from '@/lib/fetch-clinics';
 import DistrictMap from '@/components/DistrictMap';
 import ClinicView from '@/components/ClinicView';
 import CrossCompare from '@/components/CrossCompare';
@@ -16,9 +17,24 @@ export type CompareItem = {
 
 export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<'clinics' | 'compare'>('clinics');
   const [activeClinicIdx, setActiveClinicIdx] = useState(0);
   const [compareList, setCompareList] = useState<CompareItem[]>([]);
+
+  // Fetch clinics from Supabase when district is selected
+  useEffect(() => {
+    if (!selectedDistrict) return;
+    setLoading(true);
+    fetchClinics(selectedDistrict)
+      .then(data => {
+        setClinics(data);
+        setActiveClinicIdx(0);
+      })
+      .catch(err => console.error('Failed to fetch clinics:', err))
+      .finally(() => setLoading(false));
+  }, [selectedDistrict]);
 
   const toggleCompare = useCallback((item: CompareItem) => {
     setCompareList(prev => {
@@ -47,7 +63,38 @@ export default function Home() {
     return <DistrictMap onSelect={setSelectedDistrict} />;
   }
 
-  // District detail page (currently only gwangjin)
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-3 border-slate-300 border-t-violet-500 rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-500 mt-3">데이터 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No data
+  if (clinics.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-500">해당 지역 데이터가 없습니다</p>
+          <button
+            onClick={() => setSelectedDistrict(null)}
+            className="mt-3 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg"
+          >
+            지도로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const subtitle = clinics.map(c => c.name.replace(/ 건대.*/, '')).join(' · ');
+
+  // District detail page
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -67,7 +114,7 @@ export default function Home() {
               광진구 피부과 가격 비교
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              톡스앤필 · 유앤아이 · 데이뷰
+              {subtitle}
             </p>
           </div>
         </div>
@@ -101,7 +148,7 @@ export default function Home() {
           <>
             {/* Clinic selector pills */}
             <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
-              {CLINICS.map((c, i) => (
+              {clinics.map((c, i) => (
                 <button
                   key={c.id}
                   onClick={() => setActiveClinicIdx(i)}
@@ -116,13 +163,14 @@ export default function Home() {
               ))}
             </div>
             <ClinicView
-              clinic={CLINICS[activeClinicIdx]}
+              clinic={clinics[activeClinicIdx]}
               toggleCompare={toggleCompare}
               isChecked={isChecked}
             />
           </>
         ) : (
           <CrossCompare
+            clinics={clinics}
             toggleCompare={toggleCompare}
             isChecked={isChecked}
           />
