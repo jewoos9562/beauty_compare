@@ -20,7 +20,17 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
   if (error) throw error;
   if (!data) return [];
 
-  return data.map(row => {
+  // Deduplicate clinics with the same name (keep the one with more categories)
+  const clinicMap = new Map<string, typeof data[number]>();
+  for (const row of data) {
+    const existing = clinicMap.get(row.name);
+    if (!existing || (row.categories as any[]).length > (existing.categories as any[]).length) {
+      clinicMap.set(row.name, row);
+    }
+  }
+  const uniqueClinics = Array.from(clinicMap.values());
+
+  return uniqueClinics.map(row => {
     // Deduplicate categories (same name+tag = duplicate)
     const seenCats = new Set<string>();
     const dedupedCats = (row.categories as any[])
