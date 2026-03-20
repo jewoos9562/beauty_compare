@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { Clinic } from '@/data/clinics';
 import { fetchClinics } from '@/lib/fetch-clinics';
 import DistrictMap from '@/components/DistrictMap';
@@ -92,9 +92,40 @@ export default function Home() {
     );
   }
 
+  const CHAIN_CFG: Record<string, { name: string; border: string; badge: string; pill: string }> = {
+    toxnfill: { name: '톡스앤필', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600' },
+    uni:      { name: '유앤아이', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600' },
+    dayview:  { name: '데이뷰', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500' },
+    vands:    { name: '밴스', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600' },
+    ppeum:    { name: '예쁨주의쁨', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500' },
+    evers:    { name: '닥터에버스', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500' },
+    blivi:    { name: '블리비', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500' },
+  };
+
+  const chainGroups = useMemo(() => {
+    const groups: { key: string; name: string; cfg: typeof CHAIN_CFG[string] | null; branches: { clinic: Clinic; idx: number }[] }[] = [];
+    const map = new Map<string, typeof groups[0]>();
+    clinics.forEach((clinic, idx) => {
+      const chainKey = Object.keys(CHAIN_CFG).find(k => clinic.id.startsWith(k));
+      const key = chainKey ?? `_${clinic.id}`;
+      if (!map.has(key)) {
+        const g = { key, name: chainKey ? CHAIN_CFG[chainKey].name : clinic.name, cfg: chainKey ? CHAIN_CFG[chainKey] : null, branches: [] as typeof groups[0]['branches'] };
+        map.set(key, g);
+        groups.push(g);
+      }
+      map.get(key)!.branches.push({ clinic, idx });
+    });
+    return groups;
+  }, [clinics]);
+
+  const branchLabel = (fullName: string, chainName: string): string => {
+    const cleaned = fullName.replace(chainName, '').replace(/의원\s*/, '').trim();
+    return cleaned || fullName;
+  };
+
   const districtNames: Record<string, string> = { gwangjin: '광진구', seongdong: '성동구', gangnam: '강남구' };
   const districtLabel = districtNames[selectedDistrict] ?? selectedDistrict;
-  const subtitle = clinics.map(c => c.name.replace(/ 건대.*/, '')).join(' · ');
+  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${clinics.length}개 지점`;
 
   // District detail page
   return (
@@ -148,21 +179,51 @@ export default function Home() {
       <main className="max-w-4xl mx-auto px-4 py-4 pb-32">
         {tab === 'clinics' ? (
           <>
-            {/* Clinic selector pills */}
-            <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
-              {clinics.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => setActiveClinicIdx(i)}
-                  className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition border ${
-                    activeClinicIdx === i
-                      ? 'bg-gradient-to-r text-white border-transparent ' + c.color
-                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
+            {/* Franchise-grouped clinic selector */}
+            <div className="space-y-2 mb-4">
+              {chainGroups.map(group => {
+                const border = group.cfg?.border ?? 'border-l-slate-400';
+                const badge = group.cfg?.badge ?? 'bg-slate-100 text-slate-600';
+                const pillActive = group.cfg?.pill ?? 'bg-slate-700';
+
+                return (
+                  <div
+                    key={group.key}
+                    className={`bg-white rounded-xl border border-slate-200 border-l-4 ${border} overflow-hidden`}
+                  >
+                    <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge}`}>
+                        {group.name}
+                      </span>
+                      {group.branches.length > 1 && (
+                        <span className="text-[11px] text-slate-400">{group.branches.length}개 지점</span>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto hide-scrollbar">
+                      {group.branches.map(({ clinic, idx }) => {
+                        const isActive = activeClinicIdx === idx;
+                        const label = group.branches.length > 1
+                          ? branchLabel(clinic.name, group.name)
+                          : branchLabel(clinic.name, group.name);
+
+                        return (
+                          <button
+                            key={clinic.id}
+                            onClick={() => setActiveClinicIdx(idx)}
+                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                              isActive
+                                ? `${pillActive} text-white shadow-sm`
+                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <ClinicView
               clinic={clinics[activeClinicIdx]}
