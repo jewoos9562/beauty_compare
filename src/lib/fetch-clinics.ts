@@ -20,28 +20,45 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
   if (error) throw error;
   if (!data) return [];
 
-  return data.map(row => ({
-    id: row.id,
-    name: row.name,
-    address: row.address ?? '',
-    phone: row.phone ?? '',
-    note: row.note ?? '',
-    color: row.color ?? '',
-    categories: (row.categories as any[])
+  return data.map(row => {
+    // Deduplicate categories (same name+tag = duplicate)
+    const seenCats = new Set<string>();
+    const dedupedCats = (row.categories as any[])
       .sort((a: any, b: any) => a.sort_order - b.sort_order)
-      .map((cat: any): Category => ({
-        name: cat.name,
-        tag: cat.tag,
-        items: (cat.treatments as any[])
+      .filter((cat: any) => {
+        const key = `${cat.name}|${cat.tag ?? ''}`;
+        if (seenCats.has(key)) return false;
+        seenCats.add(key);
+        return true;
+      });
+
+    return {
+      id: row.id,
+      name: row.name,
+      address: row.address ?? '',
+      phone: row.phone ?? '',
+      note: row.note ?? '',
+      color: row.color ?? '',
+      categories: dedupedCats.map((cat: any): Category => {
+        // Deduplicate treatments within category (same name = duplicate)
+        const seenItems = new Set<string>();
+        const items = (cat.treatments as any[])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .filter((t: any) => {
+            if (seenItems.has(t.name)) return false;
+            seenItems.add(t.name);
+            return true;
+          })
           .map((t: any): TreatmentItem => ({
             name: t.name,
             orig: t.orig_price,
             event: t.event_price,
             base: t.base_price,
-          })),
-      })),
-  }));
+          }));
+        return { name: cat.name, tag: cat.tag, items };
+      }),
+    };
+  });
 }
 
 export async function fetchCrossKeywords(): Promise<{ label: string; keywords: string[] }[]> {
