@@ -1,4 +1,8 @@
 import type { Lang } from './translations';
+import TREATMENT_TABLE from './treatment-translations.json';
+
+type TranslationEntry = { en: string; es: string; ja: string; zh: string };
+const PRECOMPUTED = TREATMENT_TABLE as Record<string, TranslationEntry>;
 
 type G = { ko: string; en: string; es: string; ja: string; zh: string };
 
@@ -535,6 +539,9 @@ const HANGUL_RE = /[\uAC00-\uD7AF]+/g;
 
 export function translateText(text: string, lang: Lang): string {
   if (lang === 'ko') return text;
+  // 1. Exact match in pre-computed translation table
+  if (text in PRECOMPUTED) return PRECOMPUTED[text][lang];
+  // 2. Fall back to glossary-based translation
   let result = text;
   for (const entry of GLOSSARY) {
     if (result.includes(entry.ko)) {
