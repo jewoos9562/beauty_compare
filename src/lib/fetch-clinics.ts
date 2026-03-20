@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { Clinic, TreatmentItem, Category } from '@/data/clinics';
+import { parseTreatment } from '@/lib/group-treatments';
 
 export async function fetchClinics(districtId: string): Promise<Clinic[]> {
   // Single query: clinics → categories → treatments (nested join)
@@ -77,5 +78,52 @@ export async function fetchCrossKeywords(): Promise<{ label: string; keywords: s
     .select('label, keywords');
 
   if (error) throw error;
-  return data ?? [];
+  if (!data) return [];
+
+  // Deduplicate by label
+  const seen = new Set<string>();
+  const unique = data.filter(row => {
+    if (seen.has(row.label)) return false;
+    seen.add(row.label);
+    return true;
+  });
+
+  // Merge variant entries (e.g. "울쎄라피 프라임 300샷" + "100샷" → "울쎄라피 프라임")
+  // If a broader entry exists (same baseName without quantity), skip the specific one
+  const baseLabels = new Set<string>();
+  const variantEntries: typeof unique = [];
+  const broadEntries: typeof unique = [];
+
+  for (const row of unique) {
+    const parsed = parseTreatment(row.label);
+    if (parsed.quantity != null) {
+      variantEntries.push(row);
+    } else {
+      broadEntries.push(row);
+      baseLabels.add(parsed.baseName.replace(/\s+/g, ' ').trim().toLowerCase());
+    }
+  }
+
+  // Merge variants by baseName into one card, combine keywords
+  const variantsByBase = new Map<string, { label: string; keywords: string[] }>();
+  for (const row of variantEntries) {
+    const parsed = parseTreatment(row.label);
+    const base = parsed.baseName.replace(/\s+/g, ' ').trim();
+    const baseLower = base.toLowerCase();
+
+    // Skip if a broader entry already covers this
+    if (baseLabels.has(baseLower)) continue;
+
+    const existing = variantsByBase.get(baseLower);
+    if (existing) {
+      // Merge keywords
+      for (const kw of row.keywords) {
+        if (!existing.keywords.includes(kw)) existing.keywords.push(kw);
+      }
+    } else {
+      variantsByBase.set(baseLower, { label: base, keywords: [...row.keywords] });
+    }
+  }
+
+  return [...broadEntries, ...Array.from(variantsByBase.values())];
 }
