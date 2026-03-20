@@ -18,14 +18,14 @@ export type CompareItem = {
   categoryName: string;
 };
 
-const CHAIN_CFG: Record<string, { name: string; border: string; badge: string; pill: string }> = {
-  toxnfill: { name: '톡스앤필', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600' },
-  uni:      { name: '유앤아이', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600' },
-  dayview:  { name: '데이뷰', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500' },
-  vands:    { name: '밴스', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600' },
-  ppeum:    { name: '예쁨주의쁨', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500' },
-  evers:    { name: '닥터에버스', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500' },
-  blivi:    { name: '블리비', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500' },
+const CHAIN_CFG: Record<string, { nameKey: string; border: string; badge: string; pill: string }> = {
+  toxnfill: { nameKey: 'chain.toxnfill', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600' },
+  uni:      { nameKey: 'chain.uni', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600' },
+  dayview:  { nameKey: 'chain.dayview', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500' },
+  vands:    { nameKey: 'chain.vands', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600' },
+  ppeum:    { nameKey: 'chain.ppeum', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500' },
+  evers:    { nameKey: 'chain.evers', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500' },
+  blivi:    { nameKey: 'chain.blivi', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500' },
 };
 
 const CHAIN_KEYS = Object.keys(CHAIN_CFG);
@@ -66,14 +66,14 @@ export default function Home() {
       const chainKey = getChainKey(clinic.id);
       const key = chainKey ?? `_${clinic.id}`;
       if (!map.has(key)) {
-        const g = { key, name: chainKey ? CHAIN_CFG[chainKey].name : clinic.name, cfg: chainKey ? CHAIN_CFG[chainKey] : null, branches: [] as typeof groups[0]['branches'] };
+        const g = { key, name: chainKey ? t(CHAIN_CFG[chainKey].nameKey) : clinic.name, cfg: chainKey ? CHAIN_CFG[chainKey] : null, branches: [] as typeof groups[0]['branches'] };
         map.set(key, g);
         groups.push(g);
       }
       map.get(key)!.branches.push({ clinic, idx });
     });
     return groups;
-  }, [clinics]);
+  }, [clinics, t]);
 
   useEffect(() => {
     if (!selectedDistrict) return;
@@ -142,7 +142,7 @@ export default function Home() {
   }
 
   const districtLabel = t('district.' + selectedDistrict) || selectedDistrict;
-  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${clinics.length}${lang === 'ko' ? '개 지점' : ' branches'}`;
+  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${t('common.branches', { count: String(clinics.length) })}`;
   const langInfo = LANGS.find(l => l.code === lang);
   const curInfo = CURRENCIES.find(c => c.code === currency);
 

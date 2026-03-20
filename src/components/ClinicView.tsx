@@ -166,9 +166,9 @@ function CategoryTable({
     <div className="mb-5">
       <div className="flex items-center gap-2 mb-2">
         <h3 className="text-sm font-bold text-slate-700">{category.name}</h3>
-        {tagCfg && (
+        {tagCfg && tag && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded ${tagCfg.bg} ${tagCfg.color} font-semibold`}>
-            {tagCfg.label}
+            {t('tag.' + tag)}
           </span>
         )}
       </div>

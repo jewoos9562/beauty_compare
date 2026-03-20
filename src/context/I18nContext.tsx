@@ -94,7 +94,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const converted = krw / rates[currency];
     const symbols: Record<string, string> = { USD: '$', EUR: '€', JPY: '¥', CNY: '¥' };
     const decimals = currency === 'JPY' ? 0 : 2;
-    return symbols[currency] + converted.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const foreign = symbols[currency] + converted.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${foreign} (₩${krw.toLocaleString('ko-KR')})`;
   }, [currency, rates]);
 
   const rateLabel = useMemo(() => {

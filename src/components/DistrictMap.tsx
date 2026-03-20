@@ -168,7 +168,7 @@ export default function DistrictMap({ onSelect }: Props) {
                         fill: isActive ? '#ffffff' : '#64748b',
                       }}
                     >
-                      {d.name}
+                      {t('district.' + d.id) || d.name}
                     </text>
                     {isActive && d.clinicCount && (
                       <text
@@ -208,14 +208,14 @@ export default function DistrictMap({ onSelect }: Props) {
         {/* CTA cards */}
         <div className="mt-4 space-y-3">
           {[
-            { id: 'gangnam', label: '강남구', desc: '톡스앤필 · 유앤아이 · 데이뷰 · 밴스 · 예쁨주의쁨 · 닥터에버스 — 13개 병원' },
-            { id: 'seongdong', label: '성동구', desc: '밴스 성수 · 유앤아이 왕십리 · 밴스 왕십리 — 3개 병원' },
-            { id: 'gwangjin', label: '광진구 (건대입구역)', desc: '톡스앤필 · 유앤아이 · 데이뷰 · 블리비 · 닥터에버스 — 6개 병원' },
+            { id: 'gangnam', labelKey: 'district.gangnam', descKey: 'cta.gangnam.desc' },
+            { id: 'seongdong', labelKey: 'district.seongdong', descKey: 'cta.seongdong.desc' },
+            { id: 'gwangjin', labelKey: 'cta.gwangjin.label', descKey: 'cta.gwangjin.desc' },
           ].map(area => (
             <div key={area.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-violet-600">{area.label}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{area.desc}</p>
+                <p className="text-sm font-bold text-violet-600">{t(area.labelKey)}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{t(area.descKey)}</p>
               </div>
               <button
                 onClick={() => onSelect(area.id)}
