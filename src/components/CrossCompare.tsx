@@ -146,6 +146,7 @@ function CompareCard({
     vands: ['border-l-blue-500', 'bg-blue-100 text-blue-700'],
     ppeum: ['border-l-pink-500', 'bg-pink-100 text-pink-700'],
     evers: ['border-l-amber-500', 'bg-amber-100 text-amber-700'],
+    blivi: ['border-l-rose-500', 'bg-rose-100 text-rose-700'],
   };
   const getChain = (id: string) => Object.keys(CHAIN_COLORS).find(k => id.startsWith(k));
   const clinicColors: Record<string, string> = {};
