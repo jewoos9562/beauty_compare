@@ -41,7 +41,7 @@ export default function Home() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<'clinics' | 'compare'>('clinics');
-  const [activeClinicIdx, setActiveClinicIdx] = useState(0);
+  const [activeClinicIdx, setActiveClinicIdx] = useState<number | null>(null);
   const [compareList, setCompareList] = useState<CompareItem[]>([]);
 
   const chainGroups = useMemo(() => {
@@ -67,7 +67,7 @@ export default function Home() {
     fetchClinics(selectedDistrict)
       .then(data => {
         setClinics(data);
-        setActiveClinicIdx(0);
+        setActiveClinicIdx(null);
       })
       .catch(err => console.error('Failed to fetch clinics:', err))
       .finally(() => setLoading(false));
@@ -208,14 +208,12 @@ export default function Home() {
                     <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto hide-scrollbar">
                       {group.branches.map(({ clinic, idx }) => {
                         const isActive = activeClinicIdx === idx;
-                        const label = group.branches.length > 1
-                          ? branchLabel(clinic.name, group.name)
-                          : branchLabel(clinic.name, group.name);
+                        const label = branchLabel(clinic.name, group.name);
 
                         return (
                           <button
                             key={clinic.id}
-                            onClick={() => setActiveClinicIdx(idx)}
+                            onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
                             className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                               isActive
                                 ? `${pillActive} text-white shadow-sm`
@@ -231,11 +229,17 @@ export default function Home() {
                 );
               })}
             </div>
-            <ClinicView
-              clinic={clinics[activeClinicIdx]}
-              toggleCompare={toggleCompare}
-              isChecked={isChecked}
-            />
+            {activeClinicIdx !== null ? (
+              <ClinicView
+                clinic={clinics[activeClinicIdx]}
+                toggleCompare={toggleCompare}
+                isChecked={isChecked}
+              />
+            ) : (
+              <p className="text-center text-slate-400 py-8 text-sm">
+                병원을 선택하면 시술 메뉴가 표시됩니다
+              </p>
+            )}
           </>
         ) : (
           <CrossCompare

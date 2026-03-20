@@ -10,6 +10,18 @@ function fmt(n: number | null | undefined): string {
   return n.toLocaleString() + '원';
 }
 
+function parseUnit(name: string): { count: number; unit: string } | null {
+  const shot = name.match(/(\d+)\s*샷/);
+  if (shot && parseInt(shot[1]) > 1) return { count: parseInt(shot[1]), unit: '샷' };
+  const cc = name.match(/(\d+)\s*cc/i);
+  if (cc && parseInt(cc[1]) > 1) return { count: parseInt(cc[1]), unit: 'cc' };
+  return null;
+}
+
+function fmtUnit(price: number, u: { count: number; unit: string }): string {
+  return `${Math.round(price / u.count).toLocaleString()}원/${u.unit}`;
+}
+
 type Props = {
   clinic: Clinic;
   toggleCompare: (item: CompareItem) => void;
@@ -207,6 +219,7 @@ function CategoryTable({
                 item.orig && item.event
                   ? Math.round((1 - item.event / item.orig) * 100)
                   : null;
+              const unitInfo = parseUnit(item.name);
 
               return (
                 <tr
@@ -220,16 +233,24 @@ function CategoryTable({
                     </td>
                   )}
                   {hasEvent && (
-                    <td className="text-right px-3 py-2 font-semibold text-rose-600 whitespace-nowrap">
-                      {fmt(item.event)}
-                      {discount != null && discount > 0 && (
-                        <span className="ml-1 text-[10px] text-rose-400">-{discount}%</span>
+                    <td className="text-right px-3 py-2 whitespace-nowrap">
+                      <span className="font-semibold text-rose-600">
+                        {fmt(item.event)}
+                        {discount != null && discount > 0 && (
+                          <span className="ml-1 text-[10px] text-rose-400">-{discount}%</span>
+                        )}
+                      </span>
+                      {unitInfo && item.event != null && item.event > 0 && (
+                        <p className="text-[10px] text-slate-400">{fmtUnit(item.event, unitInfo)}</p>
                       )}
                     </td>
                   )}
                   {hasBase && (
-                    <td className="text-right px-3 py-2 font-medium text-slate-700 whitespace-nowrap">
-                      {fmt(item.base)}
+                    <td className="text-right px-3 py-2 whitespace-nowrap">
+                      <span className="font-medium text-slate-700">{fmt(item.base)}</span>
+                      {unitInfo && item.base != null && item.base > 0 && (
+                        <p className="text-[10px] text-slate-400">{fmtUnit(item.base, unitInfo)}</p>
+                      )}
                     </td>
                   )}
                   <td className="text-center px-2 py-2">

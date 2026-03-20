@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Clinic } from '@/data/clinics';
 import { fetchCrossKeywords } from '@/lib/fetch-clinics';
 import type { CompareItem } from '@/app/page';
@@ -8,6 +8,18 @@ import type { CompareItem } from '@/app/page';
 function fmt(n: number | null | undefined): string {
   if (n == null) return '-';
   return n.toLocaleString() + '원';
+}
+
+function parseUnit(name: string): { count: number; unit: string } | null {
+  const shot = name.match(/(\d+)\s*샷/);
+  if (shot && parseInt(shot[1]) > 1) return { count: parseInt(shot[1]), unit: '샷' };
+  const cc = name.match(/(\d+)\s*cc/i);
+  if (cc && parseInt(cc[1]) > 1) return { count: parseInt(cc[1]), unit: 'cc' };
+  return null;
+}
+
+function fmtUnit(price: number, u: { count: number; unit: string }): string {
+  return `${Math.round(price / u.count).toLocaleString()}원/${u.unit}`;
 }
 
 type Props = {
@@ -28,6 +40,21 @@ type MatchedItem = {
 
 type CrossKeyword = { label: string; keywords: string[] };
 
+const CHAIN_COLORS: Record<string, [string, string]> = {
+  toxnfill: ['border-l-violet-500', 'bg-violet-100 text-violet-700'],
+  uni: ['border-l-emerald-500', 'bg-emerald-100 text-emerald-700'],
+  dayview: ['border-l-orange-500', 'bg-orange-100 text-orange-700'],
+  vands: ['border-l-blue-500', 'bg-blue-100 text-blue-700'],
+  ppeum: ['border-l-pink-500', 'bg-pink-100 text-pink-700'],
+  evers: ['border-l-amber-500', 'bg-amber-100 text-amber-700'],
+  blivi: ['border-l-rose-500', 'bg-rose-100 text-rose-700'],
+};
+
+function getChainColors(clinicId: string): [string, string] {
+  const chain = Object.keys(CHAIN_COLORS).find(k => clinicId.startsWith(k));
+  return chain ? CHAIN_COLORS[chain] : ['border-l-slate-300', 'bg-slate-100 text-slate-600'];
+}
+
 export default function CrossCompare({ clinics, toggleCompare, isChecked }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -42,9 +69,33 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
 
   const q = searchQuery.trim().toLowerCase();
 
-  const visibleKeywords = q
-    ? crossKeywords.filter(kw => kw.label.toLowerCase().includes(q) || kw.keywords.some(k => k.includes(q)))
-    : crossKeywords;
+  // Direct search: find all treatments matching query
+  const searchResults = useMemo(() => {
+    if (!q) return [];
+    const results: MatchedItem[] = [];
+    clinics.forEach(clinic => {
+      clinic.categories.forEach(cat => {
+        cat.items.forEach(item => {
+          if (item.name.toLowerCase().includes(q)) {
+            results.push({
+              clinicName: clinic.name,
+              clinicId: clinic.id,
+              itemName: item.name,
+              categoryName: cat.name,
+              orig: item.orig,
+              event: item.event,
+              base: item.base,
+            });
+          }
+        });
+      });
+    });
+    return results.sort((a, b) => {
+      const pa = a.event ?? a.base ?? a.orig ?? Infinity;
+      const pb = b.event ?? b.base ?? b.orig ?? Infinity;
+      return pa - pb;
+    });
+  }, [q, clinics]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +120,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
     <div>
       <input
         type="text"
-        placeholder="시술명으로 검색..."
+        placeholder="시술명으로 검색... (예: 보톡스, 울쎄라, 슈링크)"
         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-slate-300"
         value={inputValue}
         onChange={handleChange}
@@ -77,24 +128,118 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
         onCompositionEnd={handleCompositionEnd}
       />
 
-      {visibleKeywords.length === 0 ? (
-        <p className="text-center text-slate-400 py-8">검색 결과가 없습니다</p>
-      ) : (
-        visibleKeywords.map(kw => (
-          <CompareCard
-            key={kw.label}
-            label={kw.label}
-            keywords={kw.keywords}
-            clinics={clinics}
+      {q ? (
+        /* Direct search mode */
+        searchResults.length === 0 ? (
+          <p className="text-center text-slate-400 py-8">검색 결과가 없습니다</p>
+        ) : (
+          <SearchResultsList
+            query={inputValue}
+            results={searchResults}
             toggleCompare={toggleCompare}
             isChecked={isChecked}
           />
-        ))
+        )
+      ) : (
+        /* Cross keyword cards mode */
+        crossKeywords.length === 0 ? (
+          <p className="text-center text-slate-400 py-8">데이터 불러오는 중...</p>
+        ) : (
+          crossKeywords.map(kw => (
+            <CompareCard
+              key={kw.label}
+              label={kw.label}
+              keywords={kw.keywords}
+              clinics={clinics}
+              toggleCompare={toggleCompare}
+              isChecked={isChecked}
+            />
+          ))
+        )
       )}
     </div>
   );
 }
 
+/* Direct search results as a flat sorted list */
+function SearchResultsList({
+  query,
+  results,
+  toggleCompare,
+  isChecked,
+}: {
+  query: string;
+  results: MatchedItem[];
+  toggleCompare: (item: CompareItem) => void;
+  isChecked: (item: CompareItem) => boolean;
+}) {
+  const lowestPrice = results[0]
+    ? (results[0].event ?? results[0].base ?? results[0].orig ?? 0)
+    : 0;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+        <h3 className="text-sm font-bold text-slate-700">&ldquo;{query}&rdquo; 검색 결과</h3>
+        <p className="text-[11px] text-slate-400">
+          {results.length}개 항목 · 최저 {fmt(lowestPrice)}
+        </p>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {results.map((m, i) => {
+          const bestPrice = m.event ?? m.base ?? m.orig ?? 0;
+          const [borderColor, badgeColor] = getChainColors(m.clinicId);
+          const compareItem: CompareItem = {
+            clinicName: m.clinicName,
+            itemName: m.itemName,
+            price: bestPrice,
+            categoryName: m.categoryName,
+          };
+          const checked = isChecked(compareItem);
+          const isLowest = bestPrice === lowestPrice && bestPrice > 0;
+          const unitInfo = parseUnit(m.itemName);
+
+          return (
+            <div
+              key={`${m.clinicId}-${m.itemName}-${i}`}
+              className={`flex items-center gap-3 px-4 py-2.5 border-l-4 ${borderColor}`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${badgeColor}`}>
+                    {m.clinicName.replace(/의원\s*/, '')}
+                  </span>
+                  <span className="text-xs text-slate-400 truncate">{m.categoryName}</span>
+                </div>
+                <p className="text-sm text-slate-700 mt-0.5 truncate">{m.itemName}</p>
+              </div>
+              <div className="text-right shrink-0">
+                {m.orig != null && m.event != null && (
+                  <p className="text-[11px] text-slate-400 line-through">{fmt(m.orig)}</p>
+                )}
+                <p className={`text-sm font-bold ${isLowest ? 'text-emerald-600' : 'text-slate-700'}`}>
+                  {fmt(bestPrice)}
+                  {isLowest && <span className="ml-1 text-[10px]">최저</span>}
+                </p>
+                {unitInfo && bestPrice > 0 && (
+                  <p className="text-[10px] text-slate-400">{fmtUnit(bestPrice, unitInfo)}</p>
+                )}
+              </div>
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggleCompare(compareItem)}
+                className="w-4 h-4 accent-slate-700 cursor-pointer shrink-0"
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* Cross keyword compare card */
 function CompareCard({
   label,
   keywords,
@@ -139,26 +284,6 @@ function CompareCard({
 
   const lowestPrice = sorted[0].event ?? sorted[0].base ?? sorted[0].orig ?? 0;
 
-  const CHAIN_COLORS: Record<string, [string, string]> = {
-    toxnfill: ['border-l-violet-500', 'bg-violet-100 text-violet-700'],
-    uni: ['border-l-emerald-500', 'bg-emerald-100 text-emerald-700'],
-    dayview: ['border-l-orange-500', 'bg-orange-100 text-orange-700'],
-    vands: ['border-l-blue-500', 'bg-blue-100 text-blue-700'],
-    ppeum: ['border-l-pink-500', 'bg-pink-100 text-pink-700'],
-    evers: ['border-l-amber-500', 'bg-amber-100 text-amber-700'],
-    blivi: ['border-l-rose-500', 'bg-rose-100 text-rose-700'],
-  };
-  const getChain = (id: string) => Object.keys(CHAIN_COLORS).find(k => id.startsWith(k));
-  const clinicColors: Record<string, string> = {};
-  const clinicBadgeColors: Record<string, string> = {};
-  clinics.forEach(c => {
-    const chain = getChain(c.id);
-    if (chain) {
-      clinicColors[c.id] = CHAIN_COLORS[chain][0];
-      clinicBadgeColors[c.id] = CHAIN_COLORS[chain][1];
-    }
-  });
-
   return (
     <div className="mb-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
@@ -170,6 +295,7 @@ function CompareCard({
       <div className="divide-y divide-slate-100">
         {sorted.map((m, i) => {
           const bestPrice = m.event ?? m.base ?? m.orig ?? 0;
+          const [borderColor, badgeColor] = getChainColors(m.clinicId);
           const compareItem: CompareItem = {
             clinicName: m.clinicName,
             itemName: m.itemName,
@@ -178,16 +304,17 @@ function CompareCard({
           };
           const checked = isChecked(compareItem);
           const isLowest = bestPrice === lowestPrice && bestPrice > 0;
+          const unitInfo = parseUnit(m.itemName);
 
           return (
             <div
               key={`${m.clinicId}-${m.itemName}-${i}`}
-              className={`flex items-center gap-3 px-4 py-2.5 border-l-4 ${clinicColors[m.clinicId] ?? 'border-l-slate-300'}`}
+              className={`flex items-center gap-3 px-4 py-2.5 border-l-4 ${borderColor}`}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${clinicBadgeColors[m.clinicId] ?? 'bg-slate-100 text-slate-600'}`}>
-                    {m.clinicName.replace(/ 건대.*/, '')}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${badgeColor}`}>
+                    {m.clinicName.replace(/의원\s*/, '')}
                   </span>
                   <span className="text-xs text-slate-400 truncate">{m.categoryName}</span>
                 </div>
@@ -201,6 +328,9 @@ function CompareCard({
                   {fmt(bestPrice)}
                   {isLowest && <span className="ml-1 text-[10px]">최저</span>}
                 </p>
+                {unitInfo && bestPrice > 0 && (
+                  <p className="text-[10px] text-slate-400">{fmtUnit(bestPrice, unitInfo)}</p>
+                )}
               </div>
               <input
                 type="checkbox"
