@@ -64,7 +64,7 @@ export default function Home() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-slate-800">
-              건대 피부과 가격 비교
+              광진구 피부과 가격 비교
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
               톡스앤필 · 유앤아이 · 데이뷰
