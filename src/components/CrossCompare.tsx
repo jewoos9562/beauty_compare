@@ -26,6 +26,7 @@ type MatchedItem = {
 
 export default function CrossCompare({ toggleCompare, isChecked }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const isComposing = useRef(false);
 
   const q = searchQuery.trim().toLowerCase();
@@ -35,9 +36,13 @@ export default function CrossCompare({ toggleCompare, isChecked }: Props) {
     ? CROSS_KEYWORDS.filter(kw => kw.label.toLowerCase().includes(q) || kw.keywords.some(k => k.includes(q)))
     : CROSS_KEYWORDS;
 
-  const handleInput = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
-      if (!isComposing.current) setSearchQuery(e.currentTarget.value);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setInputValue(val);
+      if (!isComposing.current) {
+        setSearchQuery(val);
+      }
     },
     []
   );
@@ -56,8 +61,8 @@ export default function CrossCompare({ toggleCompare, isChecked }: Props) {
         type="text"
         placeholder="시술명으로 검색..."
         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-slate-300"
-        value={searchQuery}
-        onInput={handleInput}
+        value={inputValue}
+        onChange={handleChange}
         onCompositionStart={() => { isComposing.current = true; }}
         onCompositionEnd={handleCompositionEnd}
       />

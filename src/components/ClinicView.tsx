@@ -18,6 +18,7 @@ type Props = {
 
 export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const isComposing = useRef(false);
 
@@ -68,10 +69,12 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
         .filter(cat => cat.items.length > 0)
     : filtered;
 
-  const handleInput = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setInputValue(val);
       if (!isComposing.current) {
-        setSearchQuery(e.currentTarget.value);
+        setSearchQuery(val);
       }
     },
     []
@@ -103,8 +106,8 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
         type="text"
         placeholder="시술명 검색..."
         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-slate-300"
-        value={searchQuery}
-        onInput={handleInput}
+        value={inputValue}
+        onChange={handleChange}
         onCompositionStart={() => { isComposing.current = true; }}
         onCompositionEnd={handleCompositionEnd}
       />
