@@ -47,6 +47,27 @@ function getChainColors(clinicId: string): [string, string] {
   return chain ? CHAIN_COLORS[chain] : ['border-l-slate-300', 'bg-slate-100 text-slate-600'];
 }
 
+/** Deduplicate: same clinic + same treatment name → keep the one with lowest price */
+function deduplicateMatches(items: MatchedItem[]): MatchedItem[] {
+  const best = new Map<string, MatchedItem>();
+  for (const m of items) {
+    const key = `${m.clinicId}|${m.itemName}`;
+    const price = m.event ?? m.base ?? m.orig ?? Infinity;
+    const existing = best.get(key);
+    if (!existing) {
+      best.set(key, m);
+    } else {
+      const existingPrice = existing.event ?? existing.base ?? existing.orig ?? Infinity;
+      if (price < existingPrice) best.set(key, m);
+    }
+  }
+  return Array.from(best.values()).sort((a, b) => {
+    const pa = a.event ?? a.base ?? a.orig ?? Infinity;
+    const pb = b.event ?? b.base ?? b.orig ?? Infinity;
+    return pa - pb;
+  });
+}
+
 export default function CrossCompare({ clinics, toggleCompare, isChecked }: Props) {
   const { t, tt } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,7 +83,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
 
   const q = searchQuery.trim().toLowerCase();
 
-  // Direct search: find all treatments matching query
+  // Direct search: find all treatments matching query (dedup per clinic+name)
   const searchResults = useMemo(() => {
     if (!q) return [];
     const results: MatchedItem[] = [];
@@ -83,11 +104,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
         });
       });
     });
-    return results.sort((a, b) => {
-      const pa = a.event ?? a.base ?? a.orig ?? Infinity;
-      const pb = b.event ?? b.base ?? b.orig ?? Infinity;
-      return pa - pb;
-    });
+    return deduplicateMatches(results);
   }, [q, clinics]);
 
   const handleChange = useCallback(
@@ -272,11 +289,7 @@ function CompareCard({
 
   if (matches.length === 0) return null;
 
-  const sorted = [...matches].sort((a, b) => {
-    const pa = a.event ?? a.base ?? a.orig ?? Infinity;
-    const pb = b.event ?? b.base ?? b.orig ?? Infinity;
-    return pa - pb;
-  });
+  const sorted = deduplicateMatches(matches);
 
   const lowestPrice = sorted[0].event ?? sorted[0].base ?? sorted[0].orig ?? 0;
 
