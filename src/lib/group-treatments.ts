@@ -132,13 +132,50 @@ export function parseTreatment(name: string): ParsedTreatment {
 }
 
 /**
+ * Normalize a baseName for grouping purposes:
+ * - Remove price tags like (체험가), (한정가), (타임세일), (체험), (정가)
+ * - Collapse whitespace
+ * - Normalize spacing in known compound brand names
+ */
+function normalizeForGrouping(baseName: string): string {
+  let n = baseName;
+  // Remove price/promo suffixes in parens
+  n = n.replace(/\s*\((체험가|한정가|타임세일|체험|정가|한정)\)\s*/g, '');
+  // Normalize known brand compounds: collapse spaces
+  // e.g., "울쎄라피 프라임" and "울쎄라피프라임" should match
+  const BRAND_COMPOUNDS = [
+    '울쎄라피프라임', '울쎄라피 프라임',
+    '슈링크유니버스', '슈링크 유니버스',
+    '피코슈어토닝', '피코슈어 토닝',
+    '포토나토닝', '포토나 토닝',
+    '바디인모드', '바디 인모드',
+    '바디온다리프팅', '바디 온다 리프팅',
+    '인모드FX', '인모드 FX',
+    '제네시스토닝', '제네시스 토닝',
+  ];
+  // Collapse all spaces for comparison
+  const collapsed = n.replace(/\s+/g, '');
+  // Find the canonical (spaced) form for known compounds
+  for (let i = 0; i < BRAND_COMPOUNDS.length; i += 2) {
+    const noSpace = BRAND_COMPOUNDS[i];
+    const withSpace = BRAND_COMPOUNDS[i + 1];
+    if (collapsed.startsWith(noSpace.replace(/\s+/g, ''))) {
+      const rest = collapsed.slice(noSpace.replace(/\s+/g, '').length);
+      n = withSpace + (rest ? ' ' + rest : '');
+      break;
+    }
+  }
+  return n.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Group treatment items by their base treatment name.
  */
 export function groupItems(items: Item[]): GroupedCategory {
   const sets: Item[] = [];
-  const byBaseName = new Map<
+  const byGroupKey = new Map<
     string,
-    (Item & { quantity: number | null; unit: string | null })[]
+    { displayName: string; items: (Item & { quantity: number | null; unit: string | null })[] }
   >();
 
   for (const item of items) {
@@ -149,12 +186,13 @@ export function groupItems(items: Item[]): GroupedCategory {
       continue;
     }
 
+    const groupKey = normalizeForGrouping(parsed.baseName);
     const enriched = { ...item, quantity: parsed.quantity, unit: parsed.unit };
-    const group = byBaseName.get(parsed.baseName);
-    if (group) {
-      group.push(enriched);
+    const existing = byGroupKey.get(groupKey);
+    if (existing) {
+      existing.items.push(enriched);
     } else {
-      byBaseName.set(parsed.baseName, [enriched]);
+      byGroupKey.set(groupKey, { displayName: groupKey, items: [enriched] });
     }
   }
 
@@ -164,18 +202,18 @@ export function groupItems(items: Item[]): GroupedCategory {
     items: (Item & { quantity: number | null; unit: string | null })[];
   }[] = [];
 
-  for (const [baseName, groupItems] of byBaseName) {
-    if (groupItems.length === 1) {
-      singles.push(groupItems[0]);
+  for (const [, group] of byGroupKey) {
+    if (group.items.length === 1) {
+      singles.push(group.items[0]);
     } else {
       // Sort items by quantity ascending (nulls first)
-      groupItems.sort((a, b) => {
+      group.items.sort((a, b) => {
         if (a.quantity === null && b.quantity === null) return 0;
         if (a.quantity === null) return -1;
         if (b.quantity === null) return -1;
         return a.quantity - b.quantity;
       });
-      groups.push({ baseName, items: groupItems });
+      groups.push({ baseName: group.displayName, items: group.items });
     }
   }
 
