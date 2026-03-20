@@ -295,14 +295,22 @@ export const CLINICS: Clinic[] = [
 ];
 
 export const TAG_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  event:   { label: '이벤트', color: 'text-orange-700', bg: 'bg-orange-100' },
-  first:   { label: '첫방문', color: 'text-green-700',  bg: 'bg-green-100' },
-  hot:     { label: '핫딜',   color: 'text-red-700',    bg: 'bg-red-100' },
-  weekday: { label: '화수목', color: 'text-blue-700',   bg: 'bg-blue-100' },
-  best:    { label: 'BEST',   color: 'text-purple-700', bg: 'bg-purple-100' },
-  'new':   { label: 'NEW',    color: 'text-teal-700',   bg: 'bg-teal-100' },
-  body:    { label: '체형',   color: 'text-amber-700',  bg: 'bg-amber-100' },
-  male:    { label: '남성',   color: 'text-indigo-700', bg: 'bg-indigo-100' },
+  event:        { label: '이벤트',     color: 'text-orange-700',  bg: 'bg-orange-100' },
+  first:        { label: '첫방문',     color: 'text-green-700',   bg: 'bg-green-100' },
+  hot:          { label: '핫딜',       color: 'text-red-700',     bg: 'bg-red-100' },
+  weekday:      { label: '화수목',     color: 'text-blue-700',    bg: 'bg-blue-100' },
+  best:         { label: 'BEST',       color: 'text-purple-700',  bg: 'bg-purple-100' },
+  'new':        { label: 'NEW',        color: 'text-teal-700',    bg: 'bg-teal-100' },
+  body:         { label: '바디',       color: 'text-amber-700',   bg: 'bg-amber-100' },
+  male:         { label: '남성',       color: 'text-indigo-700',  bg: 'bg-indigo-100' },
+  botox:        { label: '보톡스',     color: 'text-violet-700',  bg: 'bg-violet-100' },
+  filler:       { label: '필러',       color: 'text-pink-700',    bg: 'bg-pink-100' },
+  lifting:      { label: '리프팅',     color: 'text-blue-700',    bg: 'bg-blue-100' },
+  skinbooster:  { label: '스킨부스터', color: 'text-cyan-700',    bg: 'bg-cyan-100' },
+  laser:        { label: '레이저',     color: 'text-rose-700',    bg: 'bg-rose-100' },
+  hair_removal: { label: '제모',       color: 'text-lime-700',    bg: 'bg-lime-100' },
+  skincare:     { label: '스킨케어',   color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  neck:         { label: '목라인',     color: 'text-slate-700',   bg: 'bg-slate-100' },
 };
 
 export const CROSS_KEYWORDS = [

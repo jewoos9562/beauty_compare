@@ -37,7 +37,15 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
     { key: 'weekday', label: '화수목' },
     { key: 'best', label: 'BEST' },
     { key: 'new', label: 'NEW' },
-    { key: 'body', label: '체형' },
+    { key: 'botox', label: '보톡스' },
+    { key: 'filler', label: '필러' },
+    { key: 'lifting', label: '리프팅' },
+    { key: 'skinbooster', label: '스킨부스터' },
+    { key: 'laser', label: '레이저' },
+    { key: 'hair_removal', label: '제모' },
+    { key: 'skincare', label: '스킨케어' },
+    { key: 'body', label: '바디' },
+    { key: 'neck', label: '목라인' },
     { key: 'male', label: '남성' },
   ];
 
