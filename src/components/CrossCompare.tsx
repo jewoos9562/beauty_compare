@@ -4,11 +4,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Clinic } from '@/data/clinics';
 import { fetchCrossKeywords } from '@/lib/fetch-clinics';
 import type { CompareItem } from '@/app/page';
-
-function fmt(n: number | null | undefined): string {
-  if (n == null) return '-';
-  return n.toLocaleString() + '원';
-}
+import { useI18n } from '@/context/I18nContext';
 
 function parseUnit(name: string): { count: number; unit: string } | null {
   const shot = name.match(/(\d+)\s*샷/);
@@ -16,10 +12,6 @@ function parseUnit(name: string): { count: number; unit: string } | null {
   const cc = name.match(/(\d+)\s*cc/i);
   if (cc && parseInt(cc[1]) > 1) return { count: parseInt(cc[1]), unit: 'cc' };
   return null;
-}
-
-function fmtUnit(price: number, u: { count: number; unit: string }): string {
-  return `${Math.round(price / u.count).toLocaleString()}원/${u.unit}`;
 }
 
 type Props = {
@@ -56,6 +48,7 @@ function getChainColors(clinicId: string): [string, string] {
 }
 
 export default function CrossCompare({ clinics, toggleCompare, isChecked }: Props) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [crossKeywords, setCrossKeywords] = useState<CrossKeyword[]>([]);
@@ -120,7 +113,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
     <div>
       <input
         type="text"
-        placeholder="시술명으로 검색... (예: 보톡스, 울쎄라, 슈링크)"
+        placeholder={t('search.crossPlaceholder')}
         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-slate-300"
         value={inputValue}
         onChange={handleChange}
@@ -131,7 +124,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
       {q ? (
         /* Direct search mode */
         searchResults.length === 0 ? (
-          <p className="text-center text-slate-400 py-8">검색 결과가 없습니다</p>
+          <p className="text-center text-slate-400 py-8">{t('common.noResults')}</p>
         ) : (
           <SearchResultsList
             query={inputValue}
@@ -143,7 +136,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
       ) : (
         /* Cross keyword cards mode */
         crossKeywords.length === 0 ? (
-          <p className="text-center text-slate-400 py-8">데이터 불러오는 중...</p>
+          <p className="text-center text-slate-400 py-8">{t('common.loading')}</p>
         ) : (
           crossKeywords.map(kw => (
             <CompareCard
@@ -173,6 +166,7 @@ function SearchResultsList({
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
+  const { t, fmtPrice } = useI18n();
   const lowestPrice = results[0]
     ? (results[0].event ?? results[0].base ?? results[0].orig ?? 0)
     : 0;
@@ -180,9 +174,9 @@ function SearchResultsList({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-slate-700">&ldquo;{query}&rdquo; 검색 결과</h3>
+        <h3 className="text-sm font-bold text-slate-700">{t('search.results', { query })}</h3>
         <p className="text-[11px] text-slate-400">
-          {results.length}개 항목 · 최저 {fmt(lowestPrice)}
+          {t('common.items', { count: String(results.length) })} · {t('common.lowest')} {fmtPrice(lowestPrice)}
         </p>
       </div>
       <div className="divide-y divide-slate-100">
@@ -215,14 +209,14 @@ function SearchResultsList({
               </div>
               <div className="text-right shrink-0">
                 {m.orig != null && m.event != null && (
-                  <p className="text-[11px] text-slate-400 line-through">{fmt(m.orig)}</p>
+                  <p className="text-[11px] text-slate-400 line-through">{fmtPrice(m.orig)}</p>
                 )}
                 <p className={`text-sm font-bold ${isLowest ? 'text-emerald-600' : 'text-slate-700'}`}>
-                  {fmt(bestPrice)}
-                  {isLowest && <span className="ml-1 text-[10px]">최저</span>}
+                  {fmtPrice(bestPrice)}
+                  {isLowest && <span className="ml-1 text-[10px]">{t('common.lowest')}</span>}
                 </p>
                 {unitInfo && bestPrice > 0 && (
-                  <p className="text-[10px] text-slate-400">{fmtUnit(bestPrice, unitInfo)}</p>
+                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{unitInfo.unit}</p>
                 )}
               </div>
               <input
@@ -274,6 +268,8 @@ function CompareCard({
     });
   });
 
+  const { t, fmtPrice } = useI18n();
+
   if (matches.length === 0) return null;
 
   const sorted = [...matches].sort((a, b) => {
@@ -289,7 +285,7 @@ function CompareCard({
       <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
         <h3 className="text-sm font-bold text-slate-700">{label}</h3>
         <p className="text-[11px] text-slate-400">
-          {matches.length}개 항목 · 최저 {fmt(lowestPrice)}
+          {t('common.items', { count: String(matches.length) })} · {t('common.lowest')} {fmtPrice(lowestPrice)}
         </p>
       </div>
       <div className="divide-y divide-slate-100">
@@ -322,14 +318,14 @@ function CompareCard({
               </div>
               <div className="text-right shrink-0">
                 {m.orig != null && m.event != null && (
-                  <p className="text-[11px] text-slate-400 line-through">{fmt(m.orig)}</p>
+                  <p className="text-[11px] text-slate-400 line-through">{fmtPrice(m.orig)}</p>
                 )}
                 <p className={`text-sm font-bold ${isLowest ? 'text-emerald-600' : 'text-slate-700'}`}>
-                  {fmt(bestPrice)}
-                  {isLowest && <span className="ml-1 text-[10px]">최저</span>}
+                  {fmtPrice(bestPrice)}
+                  {isLowest && <span className="ml-1 text-[10px]">{t('common.lowest')}</span>}
                 </p>
                 {unitInfo && bestPrice > 0 && (
-                  <p className="text-[10px] text-slate-400">{fmtUnit(bestPrice, unitInfo)}</p>
+                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{unitInfo.unit}</p>
                 )}
               </div>
               <input

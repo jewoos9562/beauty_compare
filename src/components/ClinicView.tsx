@@ -4,11 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import type { Clinic, Category } from '@/data/clinics';
 import { TAG_CONFIG } from '@/data/clinics';
 import type { CompareItem } from '@/app/page';
-
-function fmt(n: number | null | undefined): string {
-  if (n == null) return '-';
-  return n.toLocaleString() + '원';
-}
+import { useI18n } from '@/context/I18nContext';
 
 function parseUnit(name: string): { count: number; unit: string } | null {
   const shot = name.match(/(\d+)\s*샷/);
@@ -18,10 +14,6 @@ function parseUnit(name: string): { count: number; unit: string } | null {
   return null;
 }
 
-function fmtUnit(price: number, u: { count: number; unit: string }): string {
-  return `${Math.round(price / u.count).toLocaleString()}원/${u.unit}`;
-}
-
 type Props = {
   clinic: Clinic;
   toggleCompare: (item: CompareItem) => void;
@@ -29,6 +21,7 @@ type Props = {
 };
 
 export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -42,30 +35,14 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
     else hasBase = true;
   });
 
-  const allFilters = [
-    { key: 'first', label: '첫방문' },
-    { key: 'event', label: '이벤트' },
-    { key: 'hot', label: '핫딜' },
-    { key: 'weekday', label: '화수목' },
-    { key: 'best', label: 'BEST' },
-    { key: 'new', label: 'NEW' },
-    { key: 'botox', label: '보톡스' },
-    { key: 'filler', label: '필러' },
-    { key: 'lifting', label: '리프팅' },
-    { key: 'skinbooster', label: '스킨부스터' },
-    { key: 'laser', label: '레이저' },
-    { key: 'hair_removal', label: '제모' },
-    { key: 'skincare', label: '스킨케어' },
-    { key: 'body', label: '바디' },
-    { key: 'neck', label: '목라인' },
-    { key: 'male', label: '남성' },
-  ];
+  const allFilterKeys = ['first','event','hot','weekday','best','new','botox','filler','lifting','skinbooster','laser','hair_removal','skincare','body','neck','male'];
+  const allFilters = allFilterKeys.map(key => ({ key, label: t('tag.' + key) }));
 
   const filters = [
-    { key: 'all', label: '전체' },
+    { key: 'all', label: t('filter.all') },
     ...allFilters.filter(f => clinicTags.has(f.key)),
   ];
-  if (hasBase) filters.push({ key: 'base', label: '일반' });
+  if (hasBase) filters.push({ key: 'base', label: t('filter.base') });
 
   // Reset filter if current filter doesn't exist for this clinic
   const effectiveFilter =
@@ -124,7 +101,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
       {/* Search */}
       <input
         type="text"
-        placeholder="시술명 검색..."
+        placeholder={t('search.placeholder')}
         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-slate-300"
         value={inputValue}
         onChange={handleChange}
@@ -151,7 +128,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
 
       {/* Category tables */}
       {categories.length === 0 ? (
-        <p className="text-center text-slate-400 py-8">검색 결과가 없습니다</p>
+        <p className="text-center text-slate-400 py-8">{t('common.noResults')}</p>
       ) : (
         categories.map((cat, ci) => (
           <CategoryTable
@@ -178,6 +155,7 @@ function CategoryTable({
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
+  const { t, fmtPrice } = useI18n();
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
   const hasBase = category.items.some(i => i.base != null);
@@ -198,10 +176,10 @@ function CategoryTable({
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-slate-50 text-slate-500 text-xs">
-              <th className="text-left px-3 py-2 font-medium">시술명</th>
-              {hasOrig && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">정가</th>}
-              {hasEvent && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">이벤트가</th>}
-              {hasBase && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">기본가</th>}
+              <th className="text-left px-3 py-2 font-medium">{t('table.name')}</th>
+              {hasOrig && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.original')}</th>}
+              {hasEvent && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.event')}</th>}
+              {hasBase && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.base')}</th>}
               <th className="w-10 px-2 py-2"></th>
             </tr>
           </thead>
@@ -229,27 +207,27 @@ function CategoryTable({
                   <td className="px-3 py-2 text-slate-700">{item.name}</td>
                   {hasOrig && (
                     <td className="text-right px-3 py-2 text-slate-400 line-through text-xs whitespace-nowrap">
-                      {fmt(item.orig)}
+                      {fmtPrice(item.orig)}
                     </td>
                   )}
                   {hasEvent && (
                     <td className="text-right px-3 py-2 whitespace-nowrap">
                       <span className="font-semibold text-rose-600">
-                        {fmt(item.event)}
+                        {fmtPrice(item.event)}
                         {discount != null && discount > 0 && (
                           <span className="ml-1 text-[10px] text-rose-400">-{discount}%</span>
                         )}
                       </span>
                       {unitInfo && item.event != null && item.event > 0 && (
-                        <p className="text-[10px] text-slate-400">{fmtUnit(item.event, unitInfo)}</p>
+                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.event / unitInfo.count))}/{unitInfo.unit}</p>
                       )}
                     </td>
                   )}
                   {hasBase && (
                     <td className="text-right px-3 py-2 whitespace-nowrap">
-                      <span className="font-medium text-slate-700">{fmt(item.base)}</span>
+                      <span className="font-medium text-slate-700">{fmtPrice(item.base)}</span>
                       {unitInfo && item.base != null && item.base > 0 && (
-                        <p className="text-[10px] text-slate-400">{fmtUnit(item.base, unitInfo)}</p>
+                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.base / unitInfo.count))}/{unitInfo.unit}</p>
                       )}
                     </td>
                   )}

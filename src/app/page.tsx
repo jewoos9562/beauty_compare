@@ -3,10 +3,13 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { Clinic } from '@/data/clinics';
 import { fetchClinics } from '@/lib/fetch-clinics';
+import { useI18n } from '@/context/I18nContext';
+import { LANGS, CURRENCIES } from '@/i18n/translations';
 import DistrictMap from '@/components/DistrictMap';
 import ClinicView from '@/components/ClinicView';
 import CrossCompare from '@/components/CrossCompare';
 import CompareDrawer from '@/components/CompareDrawer';
+import WelcomeScreen from '@/components/WelcomeScreen';
 
 export type CompareItem = {
   clinicName: string;
@@ -37,12 +40,24 @@ function branchLabel(fullName: string, chainName: string): string {
 }
 
 export default function Home() {
+  const { t, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(null); // null = checking
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<'clinics' | 'compare'>('clinics');
   const [activeClinicIdx, setActiveClinicIdx] = useState<number | null>(null);
   const [compareList, setCompareList] = useState<CompareItem[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Check if user has completed welcome
+  useEffect(() => {
+    try {
+      setShowWelcome(!localStorage.getItem('i18n_done'));
+    } catch {
+      setShowWelcome(false);
+    }
+  }, []);
 
   const chainGroups = useMemo(() => {
     const groups: { key: string; name: string; cfg: typeof CHAIN_CFG[string] | null; branches: { clinic: Clinic; idx: number }[] }[] = [];
@@ -60,7 +75,6 @@ export default function Home() {
     return groups;
   }, [clinics]);
 
-  // Fetch clinics from Supabase when district is selected
   useEffect(() => {
     if (!selectedDistrict) return;
     setLoading(true);
@@ -76,9 +90,7 @@ export default function Home() {
   const toggleCompare = useCallback((item: CompareItem) => {
     setCompareList(prev => {
       const key = `${item.clinicName}|${item.itemName}|${item.price}`;
-      const exists = prev.find(
-        c => `${c.clinicName}|${c.itemName}|${c.price}` === key
-      );
+      const exists = prev.find(c => `${c.clinicName}|${c.itemName}|${c.price}` === key);
       if (exists) return prev.filter(c => `${c.clinicName}|${c.itemName}|${c.price}` !== key);
       return [...prev, item];
     });
@@ -86,14 +98,17 @@ export default function Home() {
 
   const isChecked = useCallback(
     (item: CompareItem) =>
-      compareList.some(
-        c =>
-          c.clinicName === item.clinicName &&
-          c.itemName === item.itemName &&
-          c.price === item.price
-      ),
+      compareList.some(c => c.clinicName === item.clinicName && c.itemName === item.itemName && c.price === item.price),
     [compareList]
   );
+
+  // Still checking localStorage
+  if (showWelcome === null) return null;
+
+  // Welcome screen
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
+  }
 
   // Landing page — district map
   if (!selectedDistrict) {
@@ -106,7 +121,7 @@ export default function Home() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-3 border-slate-300 border-t-violet-500 rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-500 mt-3">데이터 불러오는 중...</p>
+          <p className="text-sm text-slate-500 mt-3">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -117,23 +132,20 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-500">해당 지역 데이터가 없습니다</p>
-          <button
-            onClick={() => setSelectedDistrict(null)}
-            className="mt-3 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg"
-          >
-            지도로 돌아가기
+          <p className="text-slate-500">{t('common.noData')}</p>
+          <button onClick={() => setSelectedDistrict(null)} className="mt-3 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">
+            {t('common.backToMap')}
           </button>
         </div>
       </div>
     );
   }
 
-  const districtNames: Record<string, string> = { gwangjin: '광진구', seongdong: '성동구', gangnam: '강남구' };
-  const districtLabel = districtNames[selectedDistrict] ?? selectedDistrict;
-  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${clinics.length}개 지점`;
+  const districtLabel = t('district.' + selectedDistrict) || selectedDistrict;
+  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${clinics.length}${lang === 'ko' ? '개 지점' : ' branches'}`;
+  const langInfo = LANGS.find(l => l.code === lang);
+  const curInfo = CURRENCIES.find(c => c.code === currency);
 
-  // District detail page
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -142,42 +154,80 @@ export default function Home() {
           <button
             onClick={() => setSelectedDistrict(null)}
             className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition text-slate-500"
-            aria-label="뒤로가기"
+            aria-label="Back"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 4L6 10L12 16" />
             </svg>
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">
-              {districtLabel} 피부과 가격 비교
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-slate-800 truncate">
+              {t('header.districtCompare', { district: districtLabel })}
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {subtitle}
-            </p>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>
+          </div>
+          {/* Language/Currency badge */}
+          <div className="relative shrink-0">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-xs"
+            >
+              <span>{langInfo?.flag}</span>
+              <span className="font-medium text-slate-600">{curInfo?.symbol}{currency}</span>
+            </button>
+            {showSettings && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border border-slate-200 shadow-xl p-3 w-56">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5">{t('welcome.language')}</p>
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {LANGS.map(l => (
+                      <button
+                        key={l.code}
+                        onClick={() => setLang(l.code)}
+                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                        data-lang={l.code}
+                      >
+                        {l.flag} {l.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5">{t('welcome.currency')}</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {CURRENCIES.map(c => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCurrency(c.code)}
+                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                        data-cur={c.code}
+                      >
+                        {c.symbol} {c.code}
+                      </button>
+                    ))}
+                  </div>
+                  {rateLabel && (
+                    <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-1.5">
+                      {t('header.exchangeRate')}: {rateLabel}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
         {/* Tab bar */}
         <div className="max-w-4xl mx-auto px-4 flex gap-1 pb-2">
           <button
             onClick={() => setTab('clinics')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-              tab === 'clinics'
-                ? 'bg-slate-800 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${tab === 'clinics' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
           >
-            병원별 보기
+            {t('tab.clinics')}
           </button>
           <button
             onClick={() => setTab('compare')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-              tab === 'compare'
-                ? 'bg-slate-800 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${tab === 'compare' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
           >
-            시술별 비교
+            {t('tab.compare')}
           </button>
         </div>
       </header>
@@ -193,32 +243,22 @@ export default function Home() {
                 const pillActive = group.cfg?.pill ?? 'bg-slate-700';
 
                 return (
-                  <div
-                    key={group.key}
-                    className={`bg-white rounded-xl border border-slate-200 border-l-4 ${border} overflow-hidden`}
-                  >
+                  <div key={group.key} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${border} overflow-hidden`}>
                     <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge}`}>
-                        {group.name}
-                      </span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge}`}>{group.name}</span>
                       {group.branches.length > 1 && (
-                        <span className="text-[11px] text-slate-400">{group.branches.length}개 지점</span>
+                        <span className="text-[11px] text-slate-400">{t('common.branches', { count: String(group.branches.length) })}</span>
                       )}
                     </div>
                     <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto hide-scrollbar">
                       {group.branches.map(({ clinic, idx }) => {
                         const isActive = activeClinicIdx === idx;
                         const label = branchLabel(clinic.name, group.name);
-
                         return (
                           <button
                             key={clinic.id}
                             onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
-                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                              isActive
-                                ? `${pillActive} text-white shadow-sm`
-                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                            }`}
+                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive ? `${pillActive} text-white shadow-sm` : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                           >
                             {label}
                           </button>
@@ -230,34 +270,20 @@ export default function Home() {
               })}
             </div>
             {activeClinicIdx !== null ? (
-              <ClinicView
-                clinic={clinics[activeClinicIdx]}
-                toggleCompare={toggleCompare}
-                isChecked={isChecked}
-              />
+              <ClinicView clinic={clinics[activeClinicIdx]} toggleCompare={toggleCompare} isChecked={isChecked} />
             ) : (
-              <p className="text-center text-slate-400 py-8 text-sm">
-                병원을 선택하면 시술 메뉴가 표시됩니다
-              </p>
+              <p className="text-center text-slate-400 py-8 text-sm">{t('common.selectClinic')}</p>
             )}
           </>
         ) : (
-          <CrossCompare
-            clinics={clinics}
-            toggleCompare={toggleCompare}
-            isChecked={isChecked}
-          />
+          <CrossCompare clinics={clinics} toggleCompare={toggleCompare} isChecked={isChecked} />
         )}
       </main>
 
-      {/* Compare drawer */}
       {compareList.length > 0 && (
-        <CompareDrawer
-          items={compareList}
-          onRemove={(item) => toggleCompare(item)}
-          onClear={() => setCompareList([])}
-        />
+        <CompareDrawer items={compareList} onRemove={(item) => toggleCompare(item)} onClear={() => setCompareList([])} />
       )}
     </div>
   );
 }
+

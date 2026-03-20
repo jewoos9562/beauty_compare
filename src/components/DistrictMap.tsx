@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '@/context/I18nContext';
+import { LANGS, CURRENCIES } from '@/i18n/translations';
 
 type District = {
   name: string;
@@ -47,18 +49,64 @@ type Props = {
 
 export default function DistrictMap({ onSelect }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const { t, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
+  const [showSettings, setShowSettings] = useState(false);
+  const langInfo = LANGS.find(l => l.code === lang);
+  const curInfo = CURRENCIES.find(c => c.code === currency);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur border-b border-slate-200">
-        <div className="max-w-3xl mx-auto px-4 py-5 text-center">
-          <h1 className="text-2xl font-bold text-slate-800">
-            서울 피부과 가격 비교
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            지역을 선택하세요
-          </p>
+        <div className="max-w-3xl mx-auto px-4 py-5 flex items-center justify-center relative">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-slate-800">
+              {t('header.title')}
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {t('header.selectDistrict')}
+            </p>
+          </div>
+          {/* Settings badge */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-xs"
+            >
+              <span>{langInfo?.flag}</span>
+              <span className="font-medium text-slate-600">{curInfo?.symbol}{currency}</span>
+            </button>
+            {showSettings && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border border-slate-200 shadow-xl p-3 w-56">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5">{t('welcome.language')}</p>
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {LANGS.map(l => (
+                      <button key={l.code} onClick={() => setLang(l.code)}
+                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        {l.flag} {l.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5">{t('welcome.currency')}</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {CURRENCIES.map(c => (
+                      <button key={c.code} onClick={() => setCurrency(c.code)}
+                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        {c.symbol} {c.code}
+                      </button>
+                    ))}
+                  </div>
+                  {rateLabel && (
+                    <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-1.5">
+                      {t('header.exchangeRate')}: {rateLabel}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -135,7 +183,7 @@ export default function DistrictMap({ onSelect }: Props) {
                           fill: '#e0d4ff',
                         }}
                       >
-                        {d.clinicCount}개 병원
+                        {t('common.hospitals', { count: String(d.clinicCount) })}
                       </text>
                     )}
                   </g>
@@ -149,11 +197,11 @@ export default function DistrictMap({ onSelect }: Props) {
         <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded bg-violet-500" />
-            데이터 제공 중
+            {t('legend.available')}
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded bg-slate-100 border border-slate-300" />
-            준비중
+            {t('legend.preparing')}
           </div>
         </div>
 
@@ -173,7 +221,7 @@ export default function DistrictMap({ onSelect }: Props) {
                 onClick={() => onSelect(area.id)}
                 className="shrink-0 px-4 py-2 bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-xs font-semibold rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
               >
-                보기
+                {t('cta.view')}
               </button>
             </div>
           ))}
@@ -181,7 +229,7 @@ export default function DistrictMap({ onSelect }: Props) {
       </main>
 
       <footer className="text-center py-4 text-[11px] text-slate-400">
-        가격 정보는 각 병원 홈페이지 기준이며, 실제와 다를 수 있습니다
+        {t('footer.disclaimer')}
       </footer>
     </div>
   );

@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 import type { CompareItem } from '@/app/page';
-
-function fmt(n: number): string {
-  return n.toLocaleString() + '원';
-}
+import { useI18n } from '@/context/I18nContext';
 
 type Props = {
   items: CompareItem[];
@@ -14,6 +11,7 @@ type Props = {
 };
 
 export default function CompareDrawer({ items, onRemove, onClear }: Props) {
+  const { t, fmtPrice } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const total = items.reduce((s, i) => s + i.price, 0);
 
@@ -29,10 +27,10 @@ export default function CompareDrawer({ items, onRemove, onClear }: Props) {
             <span className="bg-white text-slate-800 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
               {items.length}
             </span>
-            <span className="text-sm font-medium">비교 목록</span>
+            <span className="text-sm font-medium">{t('compare.list')}</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold">{fmt(total)}</span>
+            <span className="text-sm font-bold">{fmtPrice(total)}</span>
             <svg
               className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
               fill="none"
@@ -55,7 +53,7 @@ export default function CompareDrawer({ items, onRemove, onClear }: Props) {
                   <p className="text-xs text-slate-400">{item.clinicName}</p>
                   <p className="text-sm text-slate-700 truncate">{item.itemName}</p>
                 </div>
-                <p className="text-sm font-semibold text-slate-700 shrink-0">{fmt(item.price)}</p>
+                <p className="text-sm font-semibold text-slate-700 shrink-0">{fmtPrice(item.price)}</p>
                 <button
                   onClick={() => onRemove(item)}
                   className="text-slate-400 hover:text-red-500 transition shrink-0"
@@ -72,10 +70,10 @@ export default function CompareDrawer({ items, onRemove, onClear }: Props) {
               onClick={onClear}
               className="text-xs text-red-500 hover:text-red-700 font-medium"
             >
-              전체 삭제
+              {t('compare.clearAll')}
             </button>
             <p className="text-sm font-bold text-slate-800">
-              합계: {fmt(total)}
+              {t('compare.total', { price: fmtPrice(total) ?? '' })}
             </p>
           </div>
         </div>

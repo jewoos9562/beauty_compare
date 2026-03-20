@@ -3,14 +3,14 @@
 -- =============================================
 
 -- 1. 지역구
-CREATE TABLE districts (
+CREATE TABLE IF NOT EXISTS districts (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   active BOOLEAN DEFAULT false
 );
 
 -- 2. 병원
-CREATE TABLE clinics (
+CREATE TABLE IF NOT EXISTS clinics (
   id TEXT PRIMARY KEY,
   district_id TEXT NOT NULL REFERENCES districts(id),
   name TEXT NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE clinics (
 );
 
 -- 3. 카테고리 (이벤트/첫방문/일반 등)
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
   clinic_id TEXT NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE categories (
 );
 
 -- 4. 시술 항목
-CREATE TABLE treatments (
+CREATE TABLE IF NOT EXISTS treatments (
   id SERIAL PRIMARY KEY,
   category_id INT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -48,14 +48,14 @@ CREATE TABLE treatments (
 );
 
 -- 5. 교차비교 키워드
-CREATE TABLE cross_keywords (
+CREATE TABLE IF NOT EXISTS cross_keywords (
   id SERIAL PRIMARY KEY,
   label TEXT NOT NULL,
   keywords TEXT[] NOT NULL
 );
 
 -- 6. 크롤링 로그
-CREATE TABLE crawl_logs (
+CREATE TABLE IF NOT EXISTS crawl_logs (
   id SERIAL PRIMARY KEY,
   clinic_id TEXT REFERENCES clinics(id),
   status TEXT NOT NULL DEFAULT 'success',
@@ -67,12 +67,12 @@ CREATE TABLE crawl_logs (
 -- =============================================
 -- 인덱스
 -- =============================================
-CREATE INDEX idx_clinics_district ON clinics(district_id);
-CREATE INDEX idx_categories_clinic ON categories(clinic_id);
-CREATE INDEX idx_treatments_category ON treatments(category_id);
-CREATE INDEX idx_categories_tag ON categories(tag);
-CREATE INDEX idx_crawl_logs_clinic ON crawl_logs(clinic_id);
-CREATE INDEX idx_crawl_logs_time ON crawl_logs(crawled_at);
+CREATE INDEX IF NOT EXISTS idx_clinics_district ON clinics(district_id);
+CREATE INDEX IF NOT EXISTS idx_categories_clinic ON categories(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_treatments_category ON treatments(category_id);
+CREATE INDEX IF NOT EXISTS idx_categories_tag ON categories(tag);
+CREATE INDEX IF NOT EXISTS idx_crawl_logs_clinic ON crawl_logs(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_crawl_logs_time ON crawl_logs(crawled_at);
 
 -- =============================================
 -- RLS (Row Level Security) - 읽기 허용
@@ -85,11 +85,17 @@ ALTER TABLE cross_keywords ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crawl_logs ENABLE ROW LEVEL SECURITY;
 
 -- anon 사용자에게 읽기 허용
+DROP POLICY IF EXISTS "Allow public read" ON districts;
 CREATE POLICY "Allow public read" ON districts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read" ON clinics;
 CREATE POLICY "Allow public read" ON clinics FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read" ON categories;
 CREATE POLICY "Allow public read" ON categories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read" ON treatments;
 CREATE POLICY "Allow public read" ON treatments FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read" ON cross_keywords;
 CREATE POLICY "Allow public read" ON cross_keywords FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read" ON crawl_logs;
 CREATE POLICY "Allow public read" ON crawl_logs FOR SELECT USING (true);
 
 -- updated_at 자동 갱신 트리거
@@ -101,10 +107,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS tr_clinics_updated ON clinics;
 CREATE TRIGGER tr_clinics_updated
   BEFORE UPDATE ON clinics
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS tr_treatments_updated ON treatments;
 CREATE TRIGGER tr_treatments_updated
   BEFORE UPDATE ON treatments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
