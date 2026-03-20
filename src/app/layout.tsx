@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "건대 피부과 가격 비교",
-  description: "건대입구역 근처 피부과 시술 가격 비교 — 톡스앤필, 유앤아이, 데이뷰",
+  title: "피부과 가격 비교",
+  description: "서울 지역별 피부과 시술 가격 비교",
 };
 
 export default function RootLayout({
