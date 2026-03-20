@@ -48,7 +48,7 @@ function getChainColors(clinicId: string): [string, string] {
 }
 
 export default function CrossCompare({ clinics, toggleCompare, isChecked }: Props) {
-  const { t } = useI18n();
+  const { t, tt } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [crossKeywords, setCrossKeywords] = useState<CrossKeyword[]>([]);
@@ -69,7 +69,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
     clinics.forEach(clinic => {
       clinic.categories.forEach(cat => {
         cat.items.forEach(item => {
-          if (item.name.toLowerCase().includes(q)) {
+          if (item.name.toLowerCase().includes(q) || tt(item.name).toLowerCase().includes(q)) {
             results.push({
               clinicName: clinic.name,
               clinicId: clinic.id,
@@ -216,7 +216,7 @@ function SearchResultsList({
                   {isLowest && <span className="ml-1 text-[10px]">{t('common.lowest')}</span>}
                 </p>
                 {unitInfo && bestPrice > 0 && (
-                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{unitInfo.unit}</p>
+                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{tt(unitInfo.unit)}</p>
                 )}
               </div>
               <input
@@ -325,7 +325,7 @@ function CompareCard({
                   {isLowest && <span className="ml-1 text-[10px]">{t('common.lowest')}</span>}
                 </p>
                 {unitInfo && bestPrice > 0 && (
-                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{unitInfo.unit}</p>
+                  <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(bestPrice / unitInfo.count))}/{tt(unitInfo.unit)}</p>
                 )}
               </div>
               <input

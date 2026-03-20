@@ -61,7 +61,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
     ? filtered
         .map(cat => ({
           ...cat,
-          items: cat.items.filter(item => item.name.toLowerCase().includes(q)),
+          items: cat.items.filter(item => item.name.toLowerCase().includes(q) || tt(item.name).toLowerCase().includes(q)),
         }))
         .filter(cat => cat.items.length > 0)
     : filtered;
@@ -89,11 +89,11 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
     <div>
       {/* Clinic info */}
       <div className="bg-white rounded-2xl p-4 mb-4 border border-slate-200 shadow-sm">
-        <p className="text-sm text-slate-500">{clinic.address}</p>
+        <p className="text-sm text-slate-500">{tt(clinic.address)}</p>
         <p className="text-sm text-slate-500">{clinic.phone}</p>
         {clinic.note && (
           <p className="text-xs text-amber-600 mt-1 bg-amber-50 rounded-lg px-2 py-1 inline-block">
-            {clinic.note}
+            {tt(clinic.note)}
           </p>
         )}
       </div>
@@ -219,7 +219,7 @@ function CategoryTable({
                         )}
                       </span>
                       {unitInfo && item.event != null && item.event > 0 && (
-                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.event / unitInfo.count))}/{unitInfo.unit}</p>
+                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.event / unitInfo.count))}/{tt(unitInfo.unit)}</p>
                       )}
                     </td>
                   )}
@@ -227,7 +227,7 @@ function CategoryTable({
                     <td className="text-right px-3 py-2 whitespace-nowrap">
                       <span className="font-medium text-slate-700">{fmtPrice(item.base)}</span>
                       {unitInfo && item.base != null && item.base > 0 && (
-                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.base / unitInfo.count))}/{unitInfo.unit}</p>
+                        <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.base / unitInfo.count))}/{tt(unitInfo.unit)}</p>
                       )}
                     </td>
                   )}

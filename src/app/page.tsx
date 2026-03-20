@@ -35,7 +35,7 @@ function getChainKey(clinicId: string): string | undefined {
 }
 
 function branchLabel(fullName: string, chainName: string): string {
-  const cleaned = fullName.replace(chainName, '').replace(/의원\s*/, '').trim();
+  const cleaned = fullName.replace(chainName, '').replace(/의원\s*/, '').replace(/점$/, '').replace(/역점$/, '').trim();
   return cleaned || fullName;
 }
 
