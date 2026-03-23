@@ -8,6 +8,7 @@ import { useI18n } from '@/context/I18nContext';
 import { groupItems } from '@/lib/group-treatments';
 import ReviewSummary from '@/components/ReviewSummary';
 import reviewsData from '@/data/reviews.json';
+import reviewsTranslated from '@/data/reviews-translated.json';
 
 function parseUnit(name: string): { count: number; unit: string } | null {
   const shot = name.match(/(\d+)\s*샷/);
@@ -26,7 +27,7 @@ type Props = {
 };
 
 export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl, chainColor }: Props) {
-  const { t, tt } = useI18n();
+  const { t, tt, lang } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -131,7 +132,13 @@ export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl
         clinicId={clinic.id}
         clinicName={clinic.name}
         clinicAddress={clinic.address}
-        reviewData={(reviewsData as Record<string, any>)[clinic.id] ?? null}
+        reviewData={
+          lang !== 'ko'
+            ? (reviewsTranslated as Record<string, any>)[lang]?.[clinic.id]
+              ?? (reviewsData as Record<string, any>)[clinic.id]
+              ?? null
+            : (reviewsData as Record<string, any>)[clinic.id] ?? null
+        }
       />
 
       {/* Search */}
