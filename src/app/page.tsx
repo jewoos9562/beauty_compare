@@ -100,6 +100,8 @@ export default function Home() {
       }
       map.get(key)!.branches.push({ clinic, idx });
     });
+    // Sort branches within each group by name ascending
+    groups.forEach(g => g.branches.sort((a, b) => a.clinic.name.localeCompare(b.clinic.name, 'ko')));
     return groups;
   }, [clinics, t]);
 
