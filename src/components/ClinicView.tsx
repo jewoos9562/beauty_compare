@@ -21,9 +21,11 @@ type Props = {
   clinic: Clinic;
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
+  branchUrl?: string | null;
+  chainColor?: string | null;
 };
 
-export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) {
+export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl, chainColor }: Props) {
   const { t, tt } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -86,8 +88,12 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
 
   return (
     <div>
-      {/* Clinic info */}
+      {/* Clinic header */}
       <div className="bg-white rounded-xl p-4 mb-4 border border-slate-200/60">
+        <div className="flex items-center gap-2 mb-2">
+          {chainColor && <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: chainColor }} />}
+          <h2 className="text-base font-bold text-slate-800">{tt(clinic.name)}</h2>
+        </div>
         <p className="text-sm text-slate-500">{tt(clinic.address)}</p>
         {clinic.phone && <p className="text-sm text-slate-400">{clinic.phone}</p>}
         {clinic.note && (
@@ -95,7 +101,18 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
             {tt(clinic.note)}
           </p>
         )}
-        <div className="mt-3">
+        <div className="flex gap-2 mt-3">
+          {branchUrl && (
+            <a
+              href={branchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-xs font-medium text-slate-600 hover:bg-sky-50 hover:text-sky-700 transition border border-slate-200/60"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              {t('common.officialSite')}
+            </a>
+          )}
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.name + ' ' + clinic.address)}`}
             target="_blank"
@@ -103,7 +120,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 text-xs font-medium text-slate-600 hover:bg-sky-50 hover:text-sky-700 transition border border-slate-200/60"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            {t('common.viewMap')} · {t('common.viewReviews')}
+              {t('common.viewMapReviews')}
           </a>
         </div>
       </div>

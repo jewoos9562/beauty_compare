@@ -273,38 +273,19 @@ export default function Home() {
                       {group.branches.map(({ clinic, idx }) => {
                         const isActive = activeClinicIdx === idx;
                         const label = branchLabel(clinic.name, group.name);
-                        const branchUrl = getBranchUrl(clinic.id);
                         return (
-                          <div key={clinic.id} className="shrink-0 flex items-center gap-0.5">
-                            <button
-                              onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
-                              className={`px-3 py-1.5 text-xs font-medium transition ${
-                                isActive
-                                  ? 'text-white shadow-sm'
-                                  : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                              } ${branchUrl ? 'rounded-l-lg' : 'rounded-lg'}`}
-                              style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
-                            >
-                              {tt(label)}
-                            </button>
-                            {branchUrl && (
-                              <a
-                                href={branchUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`flex items-center px-1.5 py-1.5 text-xs transition ${
-                                  isActive
-                                    ? 'text-white/70 hover:text-white'
-                                    : 'bg-slate-50 text-slate-300 hover:text-sky-500 hover:bg-sky-50'
-                                } rounded-r-lg border-l ${isActive ? 'border-white/20' : 'border-slate-200/60'}`}
-                                style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
-                                title={t('common.officialSite')}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                              </a>
-                            )}
-                          </div>
+                          <button
+                            key={clinic.id}
+                            onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
+                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                              isActive
+                                ? 'text-white shadow-sm'
+                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                            }`}
+                            style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
+                          >
+                            {tt(label)}
+                          </button>
                         );
                       })}
                     </div>
@@ -313,7 +294,13 @@ export default function Home() {
               })}
             </div>
             {activeClinicIdx !== null ? (
-              <ClinicView clinic={clinics[activeClinicIdx]} toggleCompare={toggleCompare} isChecked={isChecked} />
+              <ClinicView
+                clinic={clinics[activeClinicIdx]}
+                toggleCompare={toggleCompare}
+                isChecked={isChecked}
+                branchUrl={getBranchUrl(clinics[activeClinicIdx].id)}
+                chainColor={(() => { const ck = getChainKey(clinics[activeClinicIdx].id); return ck ? CHAIN_CFG[ck].color : null; })()}
+              />
             ) : (
               <div className="text-center py-16">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
