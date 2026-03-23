@@ -24,6 +24,7 @@ const CHAIN_CFG: Record<string, { nameKey: string; color: string; bg: string; te
   dayview:  { nameKey: 'chain.dayview',  color: '#ea580c', bg: 'bg-orange-50',  text: 'text-orange-700', dot: 'bg-orange-500', url: 'https://daybeauclinic.com' },
   vands:    { nameKey: 'chain.vands',    color: '#2563eb', bg: 'bg-blue-50',    text: 'text-blue-700', dot: 'bg-blue-500', url: 'https://vandsclinic.com' },
   ppeum:    { nameKey: 'chain.ppeum',    color: '#db2777', bg: 'bg-pink-50',    text: 'text-pink-700', dot: 'bg-pink-500', url: 'https://ppeum.co.kr' },
+  drevers:  { nameKey: 'chain.evers',    color: '#d97706', bg: 'bg-amber-50',   text: 'text-amber-700', dot: 'bg-amber-500', url: 'https://drevers.co.kr' },
   evers:    { nameKey: 'chain.evers',    color: '#d97706', bg: 'bg-amber-50',   text: 'text-amber-700', dot: 'bg-amber-500', url: 'https://drevers.co.kr' },
   blivi:    { nameKey: 'chain.blivi',    color: '#e11d48', bg: 'bg-rose-50',    text: 'text-rose-700', dot: 'bg-rose-500', url: 'https://velyb.kr' },
 };
