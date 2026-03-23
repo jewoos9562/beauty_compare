@@ -21,7 +21,6 @@ export type CompareItem = {
 const CHAIN_CFG: Record<string, { nameKey: string; color: string; bg: string; text: string; dot: string; url: string }> = {
   toxnfill: { nameKey: 'chain.toxnfill', color: '#7c3aed', bg: 'bg-violet-50',  text: 'text-violet-700', dot: 'bg-violet-500', url: 'https://toxnfill.com' },
   uni:      { nameKey: 'chain.uni',      color: '#059669', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', url: 'https://uni114.co.kr' },
-  dayview:  { nameKey: 'chain.dayview',  color: '#ea580c', bg: 'bg-orange-50',  text: 'text-orange-700', dot: 'bg-orange-500', url: 'https://daybeauclinic.com' },
   daybeau:  { nameKey: 'chain.dayview',  color: '#ea580c', bg: 'bg-orange-50',  text: 'text-orange-700', dot: 'bg-orange-500', url: 'https://daybeauclinic.com' },
   vands:    { nameKey: 'chain.vands',    color: '#2563eb', bg: 'bg-blue-50',    text: 'text-blue-700', dot: 'bg-blue-500', url: 'https://vandsclinic.com' },
   ppeum:    { nameKey: 'chain.ppeum',    color: '#db2777', bg: 'bg-pink-50',    text: 'text-pink-700', dot: 'bg-pink-500', url: 'https://ppeum.co.kr' },
