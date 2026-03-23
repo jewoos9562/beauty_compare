@@ -18,14 +18,14 @@ export type CompareItem = {
   categoryName: string;
 };
 
-const CHAIN_CFG: Record<string, { nameKey: string; border: string; badge: string; pill: string; url: string }> = {
-  toxnfill: { nameKey: 'chain.toxnfill', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600', url: 'https://toxnfill.com' },
-  uni:      { nameKey: 'chain.uni', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600', url: 'https://uni114.co.kr' },
-  dayview:  { nameKey: 'chain.dayview', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500', url: 'https://daybeauclinic.com' },
-  vands:    { nameKey: 'chain.vands', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600', url: 'https://vandsclinic.com' },
-  ppeum:    { nameKey: 'chain.ppeum', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500', url: 'https://ppeum.co.kr' },
-  evers:    { nameKey: 'chain.evers', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500', url: 'https://drevers.co.kr' },
-  blivi:    { nameKey: 'chain.blivi', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500', url: 'https://velyb.kr' },
+const CHAIN_CFG: Record<string, { nameKey: string; color: string; bg: string; text: string; dot: string; url: string }> = {
+  toxnfill: { nameKey: 'chain.toxnfill', color: '#7c3aed', bg: 'bg-violet-50',  text: 'text-violet-700', dot: 'bg-violet-500', url: 'https://toxnfill.com' },
+  uni:      { nameKey: 'chain.uni',      color: '#059669', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', url: 'https://uni114.co.kr' },
+  dayview:  { nameKey: 'chain.dayview',  color: '#ea580c', bg: 'bg-orange-50',  text: 'text-orange-700', dot: 'bg-orange-500', url: 'https://daybeauclinic.com' },
+  vands:    { nameKey: 'chain.vands',    color: '#2563eb', bg: 'bg-blue-50',    text: 'text-blue-700', dot: 'bg-blue-500', url: 'https://vandsclinic.com' },
+  ppeum:    { nameKey: 'chain.ppeum',    color: '#db2777', bg: 'bg-pink-50',    text: 'text-pink-700', dot: 'bg-pink-500', url: 'https://ppeum.co.kr' },
+  evers:    { nameKey: 'chain.evers',    color: '#d97706', bg: 'bg-amber-50',   text: 'text-amber-700', dot: 'bg-amber-500', url: 'https://drevers.co.kr' },
+  blivi:    { nameKey: 'chain.blivi',    color: '#e11d48', bg: 'bg-rose-50',    text: 'text-rose-700', dot: 'bg-rose-500', url: 'https://velyb.kr' },
 };
 
 const CHAIN_KEYS = Object.keys(CHAIN_CFG);
@@ -41,7 +41,7 @@ function branchLabel(fullName: string, chainName: string): string {
 
 export default function Home() {
   const { t, tt, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
-  const [showWelcome, setShowWelcome] = useState<boolean | null>(null); // null = checking
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,6 @@ export default function Home() {
   const [compareList, setCompareList] = useState<CompareItem[]>([]);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Check if user has completed welcome
   useEffect(() => {
     try {
       setShowWelcome(!localStorage.getItem('i18n_done'));
@@ -102,38 +101,27 @@ export default function Home() {
     [compareList]
   );
 
-  // Still checking localStorage
   if (showWelcome === null) return null;
+  if (showWelcome) return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
+  if (!selectedDistrict) return <DistrictMap onSelect={setSelectedDistrict} />;
 
-  // Welcome screen
-  if (showWelcome) {
-    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
-  }
-
-  // Landing page — district map
-  if (!selectedDistrict) {
-    return <DistrictMap onSelect={setSelectedDistrict} />;
-  }
-
-  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-3 border-slate-300 border-t-violet-500 rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-500 mt-3">{t('common.loading')}</p>
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-sky-500 rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-400 mt-3">{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
-  // No data
   if (clinics.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-500">{t('common.noData')}</p>
-          <button onClick={() => setSelectedDistrict(null)} className="mt-3 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg">
+          <p className="text-slate-400">{t('common.noData')}</p>
+          <button onClick={() => setSelectedDistrict(null)} className="mt-3 px-4 py-2 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-800 transition">
             {t('common.backToMap')}
           </button>
         </div>
@@ -142,18 +130,17 @@ export default function Home() {
   }
 
   const districtLabel = t('district.' + selectedDistrict) || selectedDistrict;
-  const subtitle = chainGroups.map(g => g.name).join(' · ') + ` — ${t('common.branches', { count: String(clinics.length) })}`;
   const langInfo = LANGS.find(l => l.code === lang);
   const curInfo = CURRENCIES.find(c => c.code === currency);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50/50">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
+      <header className="sticky top-0 z-40 glass border-b border-slate-200/60">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setSelectedDistrict(null)}
-            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition text-slate-500"
+            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition text-slate-400"
             aria-label="Back"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -161,19 +148,21 @@ export default function Home() {
             </svg>
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-slate-800 truncate">
-              {t('header.districtCompare', { district: districtLabel })}
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">
+              {districtLabel}
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>
+            <p className="text-xs text-slate-400 mt-0.5 truncate">
+              {chainGroups.map(g => g.name).join(' · ')}
+            </p>
           </div>
           {/* Language/Currency badge */}
           <div className="relative shrink-0">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/60 hover:bg-slate-100 transition text-xs"
             >
               <span>{langInfo?.flag}</span>
-              <span className="font-medium text-slate-600">{curInfo?.symbol}{currency}</span>
+              <span className="font-medium text-slate-500">{curInfo?.symbol}{currency}</span>
             </button>
             {showSettings && (
               <>
@@ -185,7 +174,7 @@ export default function Home() {
                       <button
                         key={l.code}
                         onClick={() => setLang(l.code)}
-                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-sky-50 text-sky-700 font-bold ring-1 ring-sky-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         data-lang={l.code}
                       >
                         {l.flag} {l.label}
@@ -198,7 +187,7 @@ export default function Home() {
                       <button
                         key={c.code}
                         onClick={() => setCurrency(c.code)}
-                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-sky-50 text-sky-700 font-bold ring-1 ring-sky-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                         data-cur={c.code}
                       >
                         {c.symbol} {c.code}
@@ -217,18 +206,19 @@ export default function Home() {
         </div>
         {/* Tab bar */}
         <div className="max-w-4xl mx-auto px-4 flex gap-1 pb-2">
-          <button
-            onClick={() => setTab('clinics')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${tab === 'clinics' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-          >
-            {t('tab.clinics')}
-          </button>
-          <button
-            onClick={() => setTab('compare')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${tab === 'compare' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-          >
-            {t('tab.compare')}
-          </button>
+          {(['clinics', 'compare'] as const).map(key => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                tab === key
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {t('tab.' + key)}
+            </button>
+          ))}
         </div>
       </header>
 
@@ -238,21 +228,21 @@ export default function Home() {
             {/* Franchise-grouped clinic selector */}
             <div className="space-y-2 mb-4">
               {chainGroups.map(group => {
-                const border = group.cfg?.border ?? 'border-l-slate-400';
-                const badge = group.cfg?.badge ?? 'bg-slate-100 text-slate-600';
-                const pillActive = group.cfg?.pill ?? 'bg-slate-700';
-
+                const cfg = group.cfg;
                 return (
-                  <div key={group.key} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${border} overflow-hidden`}>
+                  <div key={group.key} className="bg-white rounded-xl border border-slate-200/60 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge}`}>{group.name}</span>
-                      {group.cfg?.url && (
-                        <a href={group.cfg.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 transition" title={t('common.officialSite')}>
+                      <div className="flex items-center gap-1.5">
+                        {cfg && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
+                        <span className={`text-[12px] font-semibold ${cfg ? cfg.text : 'text-slate-600'}`}>{group.name}</span>
+                      </div>
+                      {cfg?.url && (
+                        <a href={cfg.url} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-slate-500 transition" title={t('common.officialSite')}>
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                         </a>
                       )}
                       {group.branches.length > 1 && (
-                        <span className="text-[11px] text-slate-400">{t('common.branches', { count: String(group.branches.length) })}</span>
+                        <span className="text-[11px] text-slate-300">{group.branches.length}</span>
                       )}
                     </div>
                     <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto hide-scrollbar">
@@ -263,7 +253,12 @@ export default function Home() {
                           <button
                             key={clinic.id}
                             onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
-                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive ? `${pillActive} text-white shadow-sm` : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                              isActive
+                                ? 'text-white shadow-sm'
+                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                            }`}
+                            style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
                           >
                             {tt(label)}
                           </button>
@@ -277,7 +272,14 @@ export default function Home() {
             {activeClinicIdx !== null ? (
               <ClinicView clinic={clinics[activeClinicIdx]} toggleCompare={toggleCompare} isChecked={isChecked} />
             ) : (
-              <p className="text-center text-slate-400 py-8 text-sm">{t('common.selectClinic')}</p>
+              <div className="text-center py-16">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <p className="text-sm text-slate-400">{t('common.selectClinic')}</p>
+              </div>
             )}
           </>
         ) : (
@@ -291,4 +293,3 @@ export default function Home() {
     </div>
   );
 }
-

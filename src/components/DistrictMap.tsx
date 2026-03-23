@@ -61,15 +61,15 @@ export default function DistrictMap({ onSelect }: Props) {
   const curInfo = CURRENCIES.find(c => c.code === currency);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50/30 flex flex-col">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur border-b border-slate-200">
+      <header className="glass border-b border-slate-200/60">
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-center justify-center relative">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-800">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               {t('header.title')}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-400 mt-1">
               {t('header.selectDistrict')}
             </p>
           </div>
@@ -77,10 +77,10 @@ export default function DistrictMap({ onSelect }: Props) {
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/60 hover:bg-slate-100 transition text-xs"
             >
               <span>{langInfo?.flag}</span>
-              <span className="font-medium text-slate-600">{curInfo?.symbol}{currency}</span>
+              <span className="font-medium text-slate-500">{curInfo?.symbol}{currency}</span>
             </button>
             {showSettings && (
               <>
@@ -90,7 +90,7 @@ export default function DistrictMap({ onSelect }: Props) {
                   <div className="flex flex-wrap gap-1 mb-3">
                     {LANGS.map(l => (
                       <button key={l.code} onClick={() => setLang(l.code)}
-                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        className={`px-2 py-1 rounded text-xs transition ${lang === l.code ? 'bg-sky-50 text-sky-700 font-bold ring-1 ring-sky-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                         {l.flag} {l.label}
                       </button>
                     ))}
@@ -99,7 +99,7 @@ export default function DistrictMap({ onSelect }: Props) {
                   <div className="flex flex-wrap gap-1 mb-2">
                     {CURRENCIES.map(c => (
                       <button key={c.code} onClick={() => setCurrency(c.code)}
-                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        className={`px-2 py-1 rounded text-xs transition ${currency === c.code ? 'bg-sky-50 text-sky-700 font-bold ring-1 ring-sky-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                         {c.symbol} {c.code}
                       </button>
                     ))}
@@ -118,7 +118,7 @@ export default function DistrictMap({ onSelect }: Props) {
 
       {/* Map */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-4">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-5">
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-3 sm:p-5">
           <svg
             viewBox="-10 -10 820 720"
             className="w-full h-auto"
@@ -135,18 +135,18 @@ export default function DistrictMap({ onSelect }: Props) {
               const isHovered = hovered === d.id;
               const isActive = activeDistricts.has(d.id);
 
-              let fill = '#f1f5f9';
-              let stroke = '#cbd5e1';
+              let fill = '#f8fafc';
+              let stroke = '#e2e8f0';
               let strokeWidth = 1;
               let cursor = 'default';
 
               if (isActive) {
-                fill = isHovered ? '#7c3aed' : '#8b5cf6';
-                stroke = '#6d28d9';
+                fill = isHovered ? '#0284c7' : '#0ea5e9';
+                stroke = '#0369a1';
                 strokeWidth = 2;
                 cursor = 'pointer';
               } else if (isHovered) {
-                fill = '#e2e8f0';
+                fill = '#f1f5f9';
               }
 
               return (
@@ -171,7 +171,7 @@ export default function DistrictMap({ onSelect }: Props) {
                       style={{
                         fontSize: d.fs,
                         fontWeight: isActive ? 700 : 500,
-                        fill: isActive ? '#ffffff' : '#64748b',
+                        fill: isActive ? '#ffffff' : '#94a3b8',
                       }}
                     >
                       {t('district.' + d.id) || d.name}
@@ -186,7 +186,7 @@ export default function DistrictMap({ onSelect }: Props) {
                         style={{
                           fontSize: d.fs - 2,
                           fontWeight: 600,
-                          fill: '#e0d4ff',
+                          fill: '#bae6fd',
                         }}
                       >
                         {t('common.hospitals', { count: String(activeDistricts.get(d.id) || 0) })}
@@ -200,42 +200,45 @@ export default function DistrictMap({ onSelect }: Props) {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-500">
+        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-400">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-violet-500" />
+            <span className="w-3 h-3 rounded-sm bg-sky-500" />
             {t('legend.available')}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-slate-100 border border-slate-300" />
+            <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200" />
             {t('legend.preparing')}
           </div>
         </div>
 
         {/* CTA cards — dynamically generated from active districts */}
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 space-y-2.5">
           {DISTRICTS
             .filter(d => activeDistricts.has(d.id))
             .sort((a, b) => (activeDistricts.get(b.id) || 0) - (activeDistricts.get(a.id) || 0))
             .map(d => (
-            <div key={d.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+            <div
+              key={d.id}
+              onClick={() => onSelect(d.id)}
+              className="group bg-white rounded-xl border border-slate-200/60 p-4 flex items-center justify-between cursor-pointer hover:border-sky-200 hover:shadow-md transition-all"
+            >
               <div>
-                <p className="text-sm font-bold text-violet-600">{t('district.' + d.id) || d.name}</p>
+                <p className="text-sm font-semibold text-slate-800 group-hover:text-sky-600 transition-colors">
+                  {t('district.' + d.id) || d.name}
+                </p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {t('common.hospitals', { count: String(activeDistricts.get(d.id) || 0) })}
                 </p>
               </div>
-              <button
-                onClick={() => onSelect(d.id)}
-                className="shrink-0 px-4 py-2 bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-xs font-semibold rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
-              >
-                {t('cta.view')}
-              </button>
+              <svg className="w-5 h-5 text-slate-300 group-hover:text-sky-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
           ))}
         </div>
       </main>
 
-      <footer className="text-center py-4 text-[11px] text-slate-400">
+      <footer className="text-center py-4 text-[11px] text-slate-300">
         {t('footer.disclaimer')}
       </footer>
     </div>
