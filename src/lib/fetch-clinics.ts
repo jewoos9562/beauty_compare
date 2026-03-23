@@ -72,6 +72,18 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
   });
 }
 
+export async function fetchActiveDistricts(): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('district_id');
+  if (error) throw error;
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    counts.set(row.district_id, (counts.get(row.district_id) || 0) + 1);
+  }
+  return counts;
+}
+
 export async function fetchCrossKeywords(): Promise<{ label: string; keywords: string[] }[]> {
   const { data, error } = await supabase
     .from('cross_keywords')

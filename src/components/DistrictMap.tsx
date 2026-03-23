@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '@/context/I18nContext';
 import { LANGS, CURRENCIES } from '@/i18n/translations';
+import { fetchActiveDistricts } from '@/lib/fetch-clinics';
 
 type District = {
   name: string;
@@ -51,6 +52,11 @@ export default function DistrictMap({ onSelect }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const { t, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
   const [showSettings, setShowSettings] = useState(false);
+  const [activeDistricts, setActiveDistricts] = useState<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    fetchActiveDistricts().then(setActiveDistricts).catch(() => {});
+  }, []);
   const langInfo = LANGS.find(l => l.code === lang);
   const curInfo = CURRENCIES.find(c => c.code === currency);
 
@@ -127,7 +133,7 @@ export default function DistrictMap({ onSelect }: Props) {
             </defs>
             {DISTRICTS.map(d => {
               const isHovered = hovered === d.id;
-              const isActive = d.active;
+              const isActive = activeDistricts.has(d.id);
 
               let fill = '#f1f5f9';
               let stroke = '#cbd5e1';
@@ -158,7 +164,7 @@ export default function DistrictMap({ onSelect }: Props) {
                   <g clipPath={`url(#clip-${d.id})`} className="pointer-events-none">
                     <text
                       x={d.cx}
-                      y={isActive && d.clinicCount ? d.cy - 4 : d.cy}
+                      y={isActive && activeDistricts.get(d.id) ? d.cy - 4 : d.cy}
                       textAnchor="middle"
                       dominantBaseline="central"
                       className="select-none"
@@ -170,7 +176,7 @@ export default function DistrictMap({ onSelect }: Props) {
                     >
                       {t('district.' + d.id) || d.name}
                     </text>
-                    {isActive && d.clinicCount && (
+                    {isActive && activeDistricts.get(d.id) && (
                       <text
                         x={d.cx}
                         y={d.cy + d.fs + 2}
@@ -183,7 +189,7 @@ export default function DistrictMap({ onSelect }: Props) {
                           fill: '#e0d4ff',
                         }}
                       >
-                        {t('common.hospitals', { count: String(d.clinicCount) })}
+                        {t('common.hospitals', { count: String(activeDistricts.get(d.id) || 0) })}
                       </text>
                     )}
                   </g>
