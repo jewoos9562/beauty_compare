@@ -212,13 +212,15 @@ ${reviewTexts}
 async function main() {
   const args = process.argv.slice(2);
   const district = args.find(a => !a.startsWith('--')) || 'gangnam';
+  const clinicId = args.includes('--clinic') ? args[args.indexOf('--clinic') + 1] : null;
   const shouldSeed = args.includes('--seed');
 
-  console.log(`=== ${district} 리뷰 스크래핑 (Places API + Playwright + Sonnet) ===\n`);
+  console.log(`=== ${clinicId ? clinicId : district} 리뷰 스크래핑 (Places API + Playwright + Sonnet) ===\n`);
 
   // Get clinics
   let query = supabase.from('clinics').select('id, name, address, district_id');
-  if (district !== 'all') query = query.eq('district_id', district);
+  if (clinicId) query = query.eq('id', clinicId);
+  else if (district !== 'all') query = query.eq('district_id', district);
   const { data: clinics } = await query;
 
   if (!clinics?.length) { console.error('❌ 클리닉 없음'); process.exit(1); }
