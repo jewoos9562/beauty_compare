@@ -11,9 +11,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'REDACTED',
-});
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY 환경변수가 필요합니다');
+  process.exit(1);
+}
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ── 바로그 서울 지점 목록 ────────────────────────────────────────
 const SEOUL_BRANCHES = [
