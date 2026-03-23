@@ -29,6 +29,10 @@ type MatchedItem = {
   orig: number | null;
   event: number | null;
   base?: number | null;
+  displayName: string | null;
+  bodyPart: string | null;
+  origin: string | null;
+  feature: string | null;
 };
 
 type CrossKeyword = { label: string; keywords: string[] };
@@ -72,7 +76,15 @@ function groupMatchedItems(items: MatchedItem[]): { singles: MatchedItem[]; grou
       .replace(/\s+/g, ' ')
       .trim();
     if (!byBase.has(base)) byBase.set(base, []);
-    byBase.get(base)!.push({ ...m, quantity: parsed.quantity, unit: parsed.unit });
+    byBase.get(base)!.push({
+      ...m,
+      quantity: parsed.quantity,
+      unit: parsed.unit,
+      displayName: parsed.displayName ?? m.displayName,
+      bodyPart: parsed.bodyPart ?? m.bodyPart,
+      origin: parsed.origin ?? m.origin,
+      feature: parsed.feature ?? m.feature,
+    });
   }
 
   const singles: MatchedItem[] = [];
@@ -151,6 +163,7 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
       clinic.categories.forEach(cat => {
         cat.items.forEach(item => {
           if (item.name.toLowerCase().includes(q) || tt(item.name).toLowerCase().includes(q)) {
+            const parsed = parseTreatment(item.name);
             results.push({
               clinicName: clinic.name,
               clinicId: clinic.id,
@@ -159,6 +172,10 @@ export default function CrossCompare({ clinics, toggleCompare, isChecked }: Prop
               orig: item.orig,
               event: item.event,
               base: item.base,
+              displayName: parsed.displayName,
+              bodyPart: parsed.bodyPart,
+              origin: parsed.origin,
+              feature: parsed.feature ?? null,
             });
           }
         });
@@ -303,16 +320,21 @@ function CompareCard({
       cat.items.forEach(item => {
         const nameLower = item.name.toLowerCase();
         if (keywords.some(kw => nameLower.includes(kw.toLowerCase()))) {
-          matches.push({
-            clinicName: clinic.name,
-            clinicId: clinic.id,
-            itemName: item.name,
-            categoryName: cat.name,
-            orig: item.orig,
-            event: item.event,
-            base: item.base,
-          });
-        }
+            const parsed = parseTreatment(item.name);
+            matches.push({
+              clinicName: clinic.name,
+              clinicId: clinic.id,
+              itemName: item.name,
+              categoryName: cat.name,
+              orig: item.orig,
+              event: item.event,
+              base: item.base,
+              displayName: parsed.displayName,
+              bodyPart: parsed.bodyPart,
+              origin: parsed.origin,
+              feature: parsed.feature ?? null,
+            });
+          }
       });
     });
   });
@@ -393,7 +415,15 @@ function MatchRow({
             {tt(m.clinicName.replace(/의원\s*/, ''))}
           </span>
         </div>
-        <p className="text-sm text-slate-700 mt-0.5 truncate">{tt(m.itemName)}</p>
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <p className="text-sm text-slate-700 truncate">
+              {m.displayName
+                ? [m.bodyPart, m.displayName].filter(Boolean).join(' ')
+                : tt(m.itemName)}
+            </p>
+            {m.feature && <FeatureBadge feature={m.feature} />}
+            {m.origin && <span className="text-[10px] text-slate-400">{m.origin}</span>}
+          </div>
       </div>
       <div className="text-right shrink-0">
         {m.orig != null && m.event != null && (
@@ -414,6 +444,22 @@ function MatchRow({
         className="w-4 h-4 accent-slate-700 cursor-pointer shrink-0"
       />
     </div>
+  );
+}
+
+function FeatureBadge({ feature }: { feature: string }) {
+  const styles: Record<string, string> = {
+    첫방문: 'bg-blue-100 text-blue-700',
+    이벤트: 'bg-purple-100 text-purple-700',
+    한정가: 'bg-orange-100 text-orange-700',
+    리뷰혜택: 'bg-green-100 text-green-700',
+    일반: 'bg-slate-100 text-slate-500',
+  };
+  const cls = styles[feature] ?? 'bg-slate-100 text-slate-500';
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${cls}`}>
+      {feature}
+    </span>
   );
 }
 
@@ -467,7 +513,7 @@ function CrossGroup({
             const unitInfo = parseUnit(m.itemName);
             const label = m.quantity != null && m.unit
               ? `${m.quantity.toLocaleString()}${tt(m.unit)}`
-              : tt(m.itemName);
+              : (m.displayName ? [m.bodyPart, m.displayName].filter(Boolean).join(' ') : tt(m.itemName));
 
             return (
               <div
@@ -480,6 +526,8 @@ function CrossGroup({
                       {tt(m.clinicName.replace(/의원\s*/, ''))}
                     </span>
                     <span className="text-xs text-slate-500">{label}</span>
+                    {m.feature && <FeatureBadge feature={m.feature} />}
+                    {m.origin && <span className="text-[10px] text-slate-400">{m.origin}</span>}
                   </div>
                 </div>
                 <div className="text-right shrink-0">

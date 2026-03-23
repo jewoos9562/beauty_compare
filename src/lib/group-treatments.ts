@@ -1,3 +1,31 @@
+import CANONICAL from '@/data/treatment-canonical.json';
+
+type CanonicalEntry = {
+  treatmentName: string | null;
+  quantity: number | null;
+  unit: string | null;
+  bodyPart: string | null;
+  feature: string | null;
+  origin: string | null;
+  confidence: string;
+};
+
+const canonicalEntries = (CANONICAL as { entries: Record<string, CanonicalEntry> }).entries;
+
+function lookupCanonical(rawName: string): CanonicalEntry | null {
+  const entry = canonicalEntries[rawName];
+  if (!entry || entry.confidence === 'low') return null;
+  return entry;
+}
+
+function buildBaseName(entry: CanonicalEntry): string {
+  const parts: string[] = [];
+  if (entry.bodyPart) parts.push(entry.bodyPart);
+  if (entry.treatmentName) parts.push(entry.treatmentName);
+  if (entry.origin) parts.push(`(${entry.origin})`);
+  return parts.join(' ').trim();
+}
+
 export type Item = {
   name: string;
   orig: number | null;
@@ -7,19 +35,29 @@ export type Item = {
 
 export type ParsedTreatment = {
   baseName: string;
+  displayName: string | null;
   quantity: number | null;
   unit: string | null;
+  bodyPart: string | null;
+  origin: string | null;
   isSet: boolean;
   rawName: string;
+  feature?: string | null;
+};
+
+export type EnrichedItem = Item & {
+  quantity: number | null;
+  unit: string | null;
+  feature: string | null;
+  displayName: string | null;
+  bodyPart: string | null;
+  origin: string | null;
 };
 
 export type GroupedCategory = {
-  singles: Item[];
-  groups: {
-    baseName: string;
-    items: (Item & { quantity: number | null; unit: string | null })[];
-  }[];
-  sets: Item[];
+  singles: EnrichedItem[];
+  groups: { baseName: string; items: EnrichedItem[] }[];
+  sets: EnrichedItem[];
 };
 
 /**
@@ -99,6 +137,22 @@ function detectSet(name: string): boolean {
  * Parse a treatment name to extract base name, quantity, unit, and set status.
  */
 export function parseTreatment(name: string): ParsedTreatment {
+  // Fast path: canonical lookup
+  const canonical = lookupCanonical(name);
+  if (canonical?.treatmentName) {
+    return {
+      baseName: buildBaseName(canonical),
+      displayName: canonical.treatmentName,
+      quantity: canonical.quantity,
+      unit: canonical.unit,
+      bodyPart: canonical.bodyPart,
+      origin: canonical.origin,
+      isSet: false,
+      rawName: name,
+      feature: canonical.feature,
+    };
+  }
+
   const isSet = detectSet(name);
 
   const matches = findAllQuantityMatches(name);
@@ -106,8 +160,11 @@ export function parseTreatment(name: string): ParsedTreatment {
   if (matches.length === 0) {
     return {
       baseName: name.trim(),
+      displayName: null,
       quantity: null,
       unit: null,
+      bodyPart: null,
+      origin: null,
       isSet,
       rawName: name,
     };
@@ -124,8 +181,11 @@ export function parseTreatment(name: string): ParsedTreatment {
 
   return {
     baseName,
+    displayName: null,
     quantity: lastMatch.quantity,
     unit: lastMatch.unit,
+    bodyPart: null,
+    origin: null,
     isSet,
     rawName: name,
   };
@@ -172,22 +232,27 @@ function normalizeForGrouping(baseName: string): string {
  * Group treatment items by their base treatment name.
  */
 export function groupItems(items: Item[]): GroupedCategory {
-  const sets: Item[] = [];
-  const byGroupKey = new Map<
-    string,
-    { displayName: string; items: (Item & { quantity: number | null; unit: string | null })[] }
-  >();
+  const sets: EnrichedItem[] = [];
+  const byGroupKey = new Map<string, { displayName: string; items: EnrichedItem[] }>();
 
   for (const item of items) {
     const parsed = parseTreatment(item.name);
 
     if (parsed.isSet) {
-      sets.push(item);
+      sets.push({ ...item, quantity: null, unit: null, feature: parsed.feature ?? null, displayName: parsed.displayName, bodyPart: parsed.bodyPart, origin: parsed.origin });
       continue;
     }
 
     const groupKey = normalizeForGrouping(parsed.baseName);
-    const enriched = { ...item, quantity: parsed.quantity, unit: parsed.unit };
+    const enriched: EnrichedItem = {
+      ...item,
+      quantity: parsed.quantity,
+      unit: parsed.unit,
+      feature: parsed.feature ?? null,
+      displayName: parsed.displayName,
+      bodyPart: parsed.bodyPart,
+      origin: parsed.origin,
+    };
     const existing = byGroupKey.get(groupKey);
     if (existing) {
       existing.items.push(enriched);
@@ -196,11 +261,8 @@ export function groupItems(items: Item[]): GroupedCategory {
     }
   }
 
-  const singles: Item[] = [];
-  const groups: {
-    baseName: string;
-    items: (Item & { quantity: number | null; unit: string | null })[];
-  }[] = [];
+  const singles: EnrichedItem[] = [];
+  const groups: { baseName: string; items: EnrichedItem[] }[] = [];
 
   for (const [, group] of byGroupKey) {
     if (group.items.length === 1) {

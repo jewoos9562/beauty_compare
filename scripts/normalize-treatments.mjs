@@ -1,63 +1,93 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs';
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { config } from 'dotenv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const OUTPUT = join(ROOT, 'src/data/treatment-canonical.json');
 const BATCH_SIZE = 20;
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Load .env.local
+config({ path: join(ROOT, '.env.local') });
 
-function extractNames(filterIds = null) {
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+async function fetchAllNames(districtId = null) {
   const names = new Set();
-  const files = readdirSync(ROOT).filter(
-    f => f.startsWith('crawl-results') && f.endsWith('.json') && !f.includes('toxnfill')
-  );
-  for (const fname of files) {
-    const data = JSON.parse(readFileSync(join(ROOT, fname), 'utf-8'));
-    for (const entry of data) {
-      if (filterIds && !filterIds.has(entry.clinic.id)) continue;
-      for (const cat of entry.categories ?? []) {
-        for (const item of cat.items ?? []) {
-          const name = item.name?.trim();
-          if (name) names.add(name);
-        }
+  let page = 0;
+  const PAGE_SIZE = 1000;
+
+  while (true) {
+    let query = supabase
+      .from('treatments')
+      .select('name, categories(clinic_id, clinics(district_id))')
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    for (const row of data) {
+      if (districtId) {
+        const did = row.categories?.clinics?.district_id;
+        if (did !== districtId) continue;
       }
+      const name = row.name?.trim();
+      if (name) names.add(name);
     }
+
+    if (data.length < PAGE_SIZE) break;
+    page++;
   }
+
   return [...names];
 }
 
 async function callClaude(batch) {
   const prompt = `You are a Korean dermatology treatment data normalizer.
-For each raw treatment name, output a JSON object with these fields:
-- displayName: corrected display name. Rules:
-  * Fix spacing: "슈링크유니버스" → "슈링크 유니버스"
-  * Normalize units: 유닛→U, unit→U, kj→KJ, 1,000샷→1000샷, 30,000J→30KJ (1KJ=1000J)
-  * Remove promo prefixes: [첫방문], [EVENT], ※ notes at end
-  * Remove promo suffixes in parens: (체험가), (한정가), (타임세일), (체험), (정가), (한정)
-  * Keep brand qualifiers: (국산), (엘러간), (디스포트), (코어톡스) — these affect price
-  * Do NOT invent or add information not in the raw name
-- canonicalBase: base name without quantity/unit/qualifiers. null for combo packages.
-  Examples: "슈링크 유니버스 300샷" → "슈링크 유니버스", "사각턱보톡스 50U (국산)" → "사각턱보톡스"
-- quantity: primary numeric quantity as integer. null if none. For "30,000J" → 30 (in KJ).
-- unit: canonical unit string — one of: 샷/U/KJ/cc/회/vial/바이알/줄/부위. null if none.
+For each raw treatment name, extract structured fields. Output a JSON object per name with:
+
+- treatmentName: the core procedure name only, no body part, no quantity, no feature tags.
+  Examples: "손등+손가락 제모 1회" → "제모", "사각턱보톡스 50U (국산)" → "보톡스", "슈링크유니버스 300샷" → "슈링크 유니버스"
+  Fix spacing: "슈링크유니버스" → "슈링크 유니버스". null for multi-treatment packages.
+
+- quantity: numeric quantity as integer. null if none.
+  Normalize: 1,000샷→1000, 30,000J→30 (KJ), 유닛/unit→(keep number, unit becomes U)
+
+- unit: canonical unit — one of: 샷/U/KJ/cc/회/vial/바이알/줄/부위. null if none.
   Normalize: 유닛→U, unit→U, kj→KJ
-- qualifier: brand/origin qualifier. Examples: 국산, 수입, 엘러간, 디스포트, 코어톡스, 제오민, 프리미엄. null if none.
-- treatmentType: one of: botox/filler/lifting/laser/skinbooster/skincare/body/hair_removal/set/other
-  Use "set" for combos with "+". Use "other" if unclear.
-- confidence: "high" if clearly one treatment, "medium" if ambiguous, "low" if package/marketing name
+
+- bodyPart: body area/part mentioned in the name. null if none.
+  Examples: "손등+손가락 제모" → "손등+손가락", "사각턱보톡스" → "사각턱", "볼/앞광대필러" → "볼/앞광대"
+  "주름보톡스(1부위)" → "1부위", "얼굴 점제거" → "얼굴"
+
+- feature: special characteristic. One of: 첫방문/이벤트/한정가/리뷰혜택/일반. null if none.
+  Map: [첫방문]→첫방문, (체험가)/(한정가)/(타임세일)/(한정)→한정가, [EVENT]/이벤트→이벤트, 리뷰남길시→리뷰혜택
+
+- origin: brand/origin qualifier. null if none.
+  Examples: 국산, 수입, 엘러간, 디스포트, 코어톡스, 제오민, 리쥬란PN, 쥬베룩, 레스틸렌
+
+- confidence: "high" if clearly parsed, "medium" if ambiguous, "low" if multi-treatment package
 
 Input names:
 ${JSON.stringify(batch)}
 
-Return ONLY a JSON object mapping each exact input name (as key) to its analysis object.
-No markdown, no explanation. Example format:
-{"슈링크유니버스 300샷": {"displayName": "슈링크 유니버스 300샷", "canonicalBase": "슈링크 유니버스", "quantity": 300, "unit": "샷", "qualifier": null, "treatmentType": "lifting", "confidence": "high"}}`;
+Return ONLY a JSON object mapping each exact input name (as key) to its analysis.
+No markdown. Example:
+{
+  "손등+손가락 제모 1회": {"treatmentName":"제모","quantity":1,"unit":"회","bodyPart":"손등+손가락","feature":null,"origin":null,"confidence":"high"},
+  "[첫방문] 슈링크유니버스 300샷": {"treatmentName":"슈링크 유니버스","quantity":300,"unit":"샷","bodyPart":null,"feature":"첫방문","origin":null,"confidence":"high"},
+  "사각턱보톡스(50유닛당) (국산)": {"treatmentName":"보톡스","quantity":50,"unit":"U","bodyPart":"사각턱","feature":null,"origin":"국산","confidence":"high"}
+}`;
 
-  const msg = await client.messages.create({
+  const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 8096,
     messages: [{ role: 'user', content: prompt }],
@@ -81,16 +111,10 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const incremental = args.includes('--incremental');
+  const districtArg = args.find(a => a.startsWith('--district='))?.split('=')[1] ?? null;
 
-  // Gangnam clinic IDs (can be extended or removed for all clinics)
-  const gangnamIds = new Set([
-    'blivi_gangnam', 'daybeau_07', 'drevers_19', 'ppeum_sinnonhyeon',
-    'vands_cheongdam', 'vands_gangnam', 'vands_samseong', 'vands_sinsa', 'vands_yeoksamskin',
-  ]);
-
-  const filterIds = args.includes('--all') ? null : gangnamIds;
-  const allNames = extractNames(filterIds);
-
+  console.log(`Supabase에서 시술명 가져오는 중${districtArg ? ` (지역: ${districtArg})` : ' (전체)'}...`);
+  const allNames = await fetchAllNames(districtArg);
   console.log(`총 고유 시술명: ${allNames.length}개`);
 
   if (dryRun) return;
@@ -119,7 +143,6 @@ async function main() {
       console.log('완료');
     } catch (err) {
       console.log(`오류: ${err.message}`);
-      // Retry once
       try {
         const result = await callClaude(batch);
         for (const [name, entry] of Object.entries(result)) {

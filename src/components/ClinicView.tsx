@@ -5,7 +5,7 @@ import type { Clinic, Category, TreatmentItem } from '@/data/clinics';
 import { TAG_CONFIG } from '@/data/clinics';
 import type { CompareItem } from '@/app/page';
 import { useI18n } from '@/context/I18nContext';
-import { groupItems } from '@/lib/group-treatments';
+import { groupItems, type EnrichedItem } from '@/lib/group-treatments';
 import ReviewSummary from '@/components/ReviewSummary';
 import reviewsData from '@/data/reviews.json';
 import reviewsTranslated from '@/data/reviews-translated.json';
@@ -274,7 +274,7 @@ function TreatmentGroup({
   isChecked,
 }: {
   baseName: string;
-  items: (TreatmentItem & { quantity: number | null; unit: string | null })[];
+  items: EnrichedItem[];
   clinicName: string;
   categoryName: string;
   toggleCompare: (item: CompareItem) => void;
@@ -325,8 +325,19 @@ function TreatmentGroup({
             return (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm text-slate-700">{label}</span>
-                  {item.quantity == null && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm text-slate-700">{label}</span>
+                    {item.feature && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        item.feature === '첫방문' ? 'bg-sky-50 text-sky-600' :
+                        item.feature === '이벤트' ? 'bg-rose-50 text-rose-500' :
+                        item.feature === '한정가' ? 'bg-amber-50 text-amber-600' :
+                        item.feature === '리뷰혜택' ? 'bg-purple-50 text-purple-600' :
+                        'bg-slate-100 text-slate-500'
+                      }`}>{item.feature}</span>
+                    )}
+                  </div>
+                  {item.quantity == null && !item.feature && (
                     <span className="text-xs text-slate-300 ml-1">({tt(item.name)})</span>
                   )}
                 </div>
@@ -372,6 +383,21 @@ function TreatmentGroup({
   );
 }
 
+const FEATURE_STYLE: Record<string, string> = {
+  '첫방문': 'bg-sky-50 text-sky-600',
+  '이벤트': 'bg-rose-50 text-rose-500',
+  '한정가': 'bg-amber-50 text-amber-600',
+  '리뷰혜택': 'bg-purple-50 text-purple-600',
+};
+
+function FeatureBadge({ feature }: { feature: string }) {
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap ${FEATURE_STYLE[feature] ?? 'bg-slate-100 text-slate-500'}`}>
+      {feature}
+    </span>
+  );
+}
+
 function ItemTable({
   items,
   clinicName,
@@ -379,27 +405,31 @@ function ItemTable({
   toggleCompare,
   isChecked,
 }: {
-  items: TreatmentItem[];
+  items: EnrichedItem[];
   clinicName: string;
   categoryName: string;
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
 }) {
-  const { t, tt, fmtPrice } = useI18n();
-  const hasBase = items.some(i => i.base != null);
-  const hasEvent = items.some(i => i.event != null);
+  const { tt, fmtPrice } = useI18n();
+  const hasQty = items.some(i => i.quantity != null);
+  const hasFeature = items.some(i => i.feature != null);
   const hasOrig = items.some(i => i.orig != null);
+  const hasEvent = items.some(i => i.event != null);
+  const hasBase = items.some(i => i.base != null);
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200/60 bg-white">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-slate-50/80 text-slate-400 text-xs">
-            <th className="text-left px-3 py-2 font-medium">{t('table.name')}</th>
-            {hasOrig && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.original')}</th>}
-            {hasEvent && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.event')}</th>}
-            {hasBase && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">{t('table.base')}</th>}
-            <th className="w-10 px-2 py-2"></th>
+          <tr className="bg-slate-50/80 text-slate-400 text-[11px]">
+            <th className="text-left px-3 py-2 font-medium">시술명</th>
+            {hasQty && <th className="text-center px-2 py-2 font-medium whitespace-nowrap">용량</th>}
+            {hasFeature && <th className="text-center px-2 py-2 font-medium">구분</th>}
+            {hasOrig && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">정가</th>}
+            {hasEvent && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">이벤트가</th>}
+            {hasBase && <th className="text-right px-3 py-2 font-medium whitespace-nowrap">기본가</th>}
+            <th className="w-8 px-2 py-2"></th>
           </tr>
         </thead>
         <tbody>
@@ -412,18 +442,30 @@ function ItemTable({
               categoryName,
             };
             const checked = isChecked(compareItem);
-            const discount =
-              item.orig && item.event
-                ? Math.round((1 - item.event / item.orig) * 100)
-                : null;
-            const unitInfo = parseUnit(item.name);
+            const discount = item.orig && item.event
+              ? Math.round((1 - item.event / item.orig) * 100) : null;
+            const cleanName = item.displayName
+              ? (item.bodyPart ? `${item.bodyPart} ${item.displayName}` : item.displayName)
+              : tt(item.name);
 
             return (
-              <tr
-                key={i}
-                className="border-t border-slate-100/80 hover:bg-slate-50/50 transition"
-              >
-                <td className="px-3 py-2.5 text-slate-700">{tt(item.name)}</td>
+              <tr key={i} className="border-t border-slate-100/80 hover:bg-slate-50/50 transition">
+                <td className="px-3 py-2.5">
+                  <span className="text-sm text-slate-700">{cleanName}</span>
+                  {item.origin && (
+                    <span className="ml-1 text-[10px] text-slate-400">({item.origin})</span>
+                  )}
+                </td>
+                {hasQty && (
+                  <td className="text-center px-2 py-2.5 text-xs text-slate-500 whitespace-nowrap">
+                    {item.quantity != null ? `${item.quantity.toLocaleString()}${item.unit ?? ''}` : '—'}
+                  </td>
+                )}
+                {hasFeature && (
+                  <td className="text-center px-2 py-2.5">
+                    {item.feature ? <FeatureBadge feature={item.feature} /> : <span className="text-slate-200">—</span>}
+                  </td>
+                )}
                 {hasOrig && (
                   <td className="text-right px-3 py-2.5 text-slate-300 line-through text-xs whitespace-nowrap">
                     {fmtPrice(item.orig)}
@@ -437,17 +479,11 @@ function ItemTable({
                         <span className="ml-1 text-[10px] font-bold text-rose-500">-{discount}%</span>
                       )}
                     </span>
-                    {unitInfo && item.event != null && item.event > 0 && (
-                      <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.event / unitInfo.count))}/{tt(unitInfo.unit)}</p>
-                    )}
                   </td>
                 )}
                 {hasBase && (
                   <td className="text-right px-3 py-2.5 whitespace-nowrap">
                     <span className="font-medium text-slate-700">{fmtPrice(item.base)}</span>
-                    {unitInfo && item.base != null && item.base > 0 && (
-                      <p className="text-[10px] text-slate-400">{fmtPrice(Math.round(item.base / unitInfo.count))}/{tt(unitInfo.unit)}</p>
-                    )}
                   </td>
                 )}
                 <td className="text-center px-2 py-2.5">
