@@ -16,7 +16,7 @@ const SEOUL_BRANCHES = [
   { number: '01', name: '데이뷰의원 강서발산점',       district: 'gangseo',       address: '서울 강서구' },
   { number: '02', name: '데이뷰의원 마포홍대점',       district: 'mapo',          address: '서울 마포구' },
   { number: '04', name: '데이뷰의원 건대입구역점',     district: 'gwangjin',      address: '서울 광진구' },
-  { number: '07', name: '데이뷰의원 강남더프리미엄점', district: 'gangnam',       address: '서울 강남구' },
+  { number: '07', name: '데이뷰의원 강남더프리미엄점', district: 'seocho',        address: '서울 서초구' },
   { number: '08', name: '데이뷰의원 여의도점',         district: 'yeongdeungpo', address: '서울 영등포구' },
   { number: '09', name: '데이뷰의원 영등포점',         district: 'yeongdeungpo', address: '서울 영등포구' },
   { number: '11', name: '데이뷰의원 명동더프리미엄점', district: 'jung',          address: '서울 중구' },

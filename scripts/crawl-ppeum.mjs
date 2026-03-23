@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── 예쁨주의쁨의원 서울 지점 목록 ─────────────────────────────────
 const SEOUL_BRANCHES = [
-  { subdomain: 'sinnonhyeon', name: '예쁨주의쁨의원 강남본점', district: 'gangnam',   address: '서울 강남구' },
+  { subdomain: 'sinnonhyeon', name: '예쁨주의쁨의원 강남본점', district: 'seocho',    address: '서울 서초구' },
   { subdomain: 'jamsil',      name: '예쁨주의쁨의원 잠실점',   district: 'songpa',    address: '서울 송파구' },
   { subdomain: 'konkukuniv',  name: '예쁨주의쁨의원 건대점',   district: 'gwangjin',  address: '서울 광진구' },
 ];

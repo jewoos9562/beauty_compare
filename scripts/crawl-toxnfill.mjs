@@ -18,10 +18,10 @@ import { createClient } from '@supabase/supabase-js';
 // ── 톡스앤필 서울 지점 목록 ──────────────────────────────────────
 // Branch URLs: toxnfill{N}.com where N is the branch number
 const SEOUL_BRANCHES = [
-  { num: 1,  subdomain: 'gangnam',    name: '톡스앤필 강남본점',         district: 'gangnam',   address: '서울 강남구' },
+  { num: 1,  subdomain: 'gangnam',    name: '톡스앤필 강남본점',         district: 'seocho',    address: '서울 서초구' },
   { num: 2,  subdomain: 'apgujeong',  name: '톡스앤필 압구정점',         district: 'gangnam',   address: '서울 강남구' },
   { num: 6,  subdomain: 'konkuk',     name: '톡스앤필 건대점',           district: 'gwangjin',  address: '서울 광진구' },
-  { num: 9,  subdomain: 'sinnonhyeon',name: '톡스앤필 신논현점',         district: 'gangnam',   address: '서울 강남구' },
+  { num: 9,  subdomain: 'sinnonhyeon',name: '톡스앤필 신논현점',         district: 'seocho',    address: '서울 서초구' },
   { num: 10, subdomain: 'gwanak',     name: '톡스앤필 관악서울대입구점', district: 'gwanak',    address: '서울 관악구' },
   { num: 15, subdomain: 'nowon',      name: '톡스앤필 노원점',           district: 'nowon',     address: '서울 노원구' },
   { num: 17, subdomain: 'cheonho',    name: '톡스앤필 강동천호점',       district: 'gangdong',  address: '서울 강동구' },

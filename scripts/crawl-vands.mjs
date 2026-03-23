@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── 밴스의원 서울 지점 목록 ──────────────────────────────────────
 const SEOUL_BRANCHES = [
-  { subdomain: 'gangnam',       name: '밴스의원 강남점',     district: 'gangnam',      address: '서울 강남구' },
+  { subdomain: 'gangnam',       name: '밴스의원 강남점',     district: 'seocho',       address: '서울 서초구' },
   { subdomain: 'cheongdam',     name: '밴스의원 청담점',     district: 'gangnam',      address: '서울 강남구' },
   { subdomain: 'sinsa',         name: '밴스의원 신사점',     district: 'gangnam',      address: '서울 강남구' },
   { subdomain: 'samseong',      name: '밴스의원 삼성점',     district: 'gangnam',      address: '서울 강남구' },

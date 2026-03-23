@@ -20,7 +20,7 @@ const SEOUL_BRANCHES = [
   { number: 13, name: '닥터에버스 잠실점',       district: 'songpa',      address: '서울 송파구' },
   { number: 15, name: '닥터에버스 청담점',       district: 'gangnam',     address: '서울 강남구' },
   { number: 16, name: '닥터에버스 공덕점',       district: 'mapo',        address: '서울 마포구' },
-  { number: 19, name: '닥터에버스 강남점',       district: 'gangnam',     address: '서울 강남구' },
+  { number: 19, name: '닥터에버스 강남점',       district: 'seocho',      address: '서울 서초구' },
   { number: 20, name: '닥터에버스 명동점',       district: 'jung',        address: '서울 중구' },
   { number: 22, name: '닥터에버스 구로점',       district: 'guro',        address: '서울 구로구' },
   { number: 25, name: '닥터에버스 건대점',       district: 'gwangjin',    address: '서울 광진구' },

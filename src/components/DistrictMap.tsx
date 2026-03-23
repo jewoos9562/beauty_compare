@@ -211,20 +211,21 @@ export default function DistrictMap({ onSelect }: Props) {
           </div>
         </div>
 
-        {/* CTA cards */}
+        {/* CTA cards — dynamically generated from active districts */}
         <div className="mt-4 space-y-3">
-          {[
-            { id: 'gangnam', labelKey: 'district.gangnam', descKey: 'cta.gangnam.desc' },
-            { id: 'seongdong', labelKey: 'district.seongdong', descKey: 'cta.seongdong.desc' },
-            { id: 'gwangjin', labelKey: 'cta.gwangjin.label', descKey: 'cta.gwangjin.desc' },
-          ].map(area => (
-            <div key={area.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+          {DISTRICTS
+            .filter(d => activeDistricts.has(d.id))
+            .sort((a, b) => (activeDistricts.get(b.id) || 0) - (activeDistricts.get(a.id) || 0))
+            .map(d => (
+            <div key={d.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-violet-600">{t(area.labelKey)}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{t(area.descKey)}</p>
+                <p className="text-sm font-bold text-violet-600">{t('district.' + d.id) || d.name}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t('common.hospitals', { count: String(activeDistricts.get(d.id) || 0) })}
+                </p>
               </div>
               <button
-                onClick={() => onSelect(area.id)}
+                onClick={() => onSelect(d.id)}
                 className="shrink-0 px-4 py-2 bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-xs font-semibold rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
               >
                 {t('cta.view')}

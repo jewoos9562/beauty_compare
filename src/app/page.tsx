@@ -18,14 +18,14 @@ export type CompareItem = {
   categoryName: string;
 };
 
-const CHAIN_CFG: Record<string, { nameKey: string; border: string; badge: string; pill: string }> = {
-  toxnfill: { nameKey: 'chain.toxnfill', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600' },
-  uni:      { nameKey: 'chain.uni', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600' },
-  dayview:  { nameKey: 'chain.dayview', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500' },
-  vands:    { nameKey: 'chain.vands', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600' },
-  ppeum:    { nameKey: 'chain.ppeum', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500' },
-  evers:    { nameKey: 'chain.evers', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500' },
-  blivi:    { nameKey: 'chain.blivi', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500' },
+const CHAIN_CFG: Record<string, { nameKey: string; border: string; badge: string; pill: string; url: string }> = {
+  toxnfill: { nameKey: 'chain.toxnfill', border: 'border-l-violet-500', badge: 'bg-violet-100 text-violet-700', pill: 'bg-violet-600', url: 'https://toxnfill.com' },
+  uni:      { nameKey: 'chain.uni', border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700', pill: 'bg-emerald-600', url: 'https://uni114.co.kr' },
+  dayview:  { nameKey: 'chain.dayview', border: 'border-l-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-500', url: 'https://daybeauclinic.com' },
+  vands:    { nameKey: 'chain.vands', border: 'border-l-blue-500', badge: 'bg-blue-100 text-blue-700', pill: 'bg-blue-600', url: 'https://vandsclinic.com' },
+  ppeum:    { nameKey: 'chain.ppeum', border: 'border-l-pink-500', badge: 'bg-pink-100 text-pink-700', pill: 'bg-pink-500', url: 'https://ppeum.co.kr' },
+  evers:    { nameKey: 'chain.evers', border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700', pill: 'bg-amber-500', url: 'https://drevers.co.kr' },
+  blivi:    { nameKey: 'chain.blivi', border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700', pill: 'bg-rose-500', url: 'https://velyb.kr' },
 };
 
 const CHAIN_KEYS = Object.keys(CHAIN_CFG);
@@ -246,6 +246,11 @@ export default function Home() {
                   <div key={group.key} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${border} overflow-hidden`}>
                     <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge}`}>{group.name}</span>
+                      {group.cfg?.url && (
+                        <a href={group.cfg.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 transition" title={t('common.officialSite')}>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                      )}
                       {group.branches.length > 1 && (
                         <span className="text-[11px] text-slate-400">{t('common.branches', { count: String(group.branches.length) })}</span>
                       )}

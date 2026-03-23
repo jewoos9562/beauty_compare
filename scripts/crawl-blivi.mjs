@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── 블리비의원 서울 지점 목록 ──────────────────────────────────────
 const SEOUL_BRANCHES = [
-  { id: 'gangnam',       name: '블리비의원 강남역점',     branchParam: '강남역점',     district: 'gangnam',      address: '서울 강남구' },
+  { id: 'gangnam',       name: '블리비의원 강남역점',     branchParam: '강남역점',     district: 'seocho',       address: '서울 서초구' },
   { id: 'konkuk',        name: '블리비의원 건대점',       branchParam: '건대점',       district: 'gwangjin',     address: '서울 광진구' },
   { id: 'nowon',         name: '블리비의원 노원점',       branchParam: '노원점',       district: 'nowon',        address: '서울 노원구' },
   { id: 'myeongdong',    name: '블리비의원 명동점',       branchParam: '명동점',       district: 'jung',         address: '서울 중구' },
