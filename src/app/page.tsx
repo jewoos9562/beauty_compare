@@ -255,45 +255,54 @@ export default function Home() {
         {tab === 'clinics' ? (
           <>
             {/* Franchise-grouped clinic selector */}
-            <div className="space-y-2 mb-4">
-              {chainGroups.map(group => {
-                const cfg = group.cfg;
-                return (
-                  <div key={group.key} className="bg-white rounded-xl border border-slate-200/60 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                      <div className="flex items-center gap-1.5">
-                        {cfg && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
-                        <span className={`text-[12px] font-semibold ${cfg ? cfg.text : 'text-slate-600'}`}>{group.name}</span>
+            <div className="bg-white rounded-2xl border border-slate-200/60 p-3 mb-4 shadow-sm">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">{t('common.selectClinic')}</p>
+              <div className="space-y-1.5">
+                {chainGroups.map(group => {
+                  const cfg = group.cfg;
+                  return (
+                    <div key={group.key} className="bg-slate-50/70 rounded-xl overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 pt-2 pb-0.5">
+                        <div className="flex items-center gap-1.5">
+                          {cfg && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
+                          <span className={`text-[12px] font-semibold ${cfg ? cfg.text : 'text-slate-600'}`}>{group.name}</span>
+                        </div>
+                        {group.branches.length > 1 && (
+                          <span className="text-[11px] text-slate-300">{group.branches.length}</span>
+                        )}
                       </div>
-                      {group.branches.length > 1 && (
-                        <span className="text-[11px] text-slate-300">{group.branches.length}</span>
-                      )}
+                      <div className="flex gap-1.5 px-3 pb-2 overflow-x-auto hide-scrollbar">
+                        {group.branches.map(({ clinic, idx }) => {
+                          const isActive = activeClinicIdx === idx;
+                          const label = branchLabel(clinic.name, group.name);
+                          return (
+                            <button
+                              key={clinic.id}
+                              onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
+                              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                isActive
+                                  ? 'text-white shadow-sm'
+                                  : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                              }`}
+                              style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
+                            >
+                              {tt(label)}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto hide-scrollbar">
-                      {group.branches.map(({ clinic, idx }) => {
-                        const isActive = activeClinicIdx === idx;
-                        const label = branchLabel(clinic.name, group.name);
-                        return (
-                          <button
-                            key={clinic.id}
-                            onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
-                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                              isActive
-                                ? 'text-white shadow-sm'
-                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                            }`}
-                            style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
-                          >
-                            {tt(label)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
             {activeClinicIdx !== null ? (
+              <>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-slate-200/80" />
+                <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider">{tt(clinics[activeClinicIdx].name)}</span>
+                <div className="flex-1 h-px bg-slate-200/80" />
+              </div>
               <ClinicView
                 clinic={clinics[activeClinicIdx]}
                 toggleCompare={toggleCompare}
@@ -301,6 +310,7 @@ export default function Home() {
                 branchUrl={getBranchUrl(clinics[activeClinicIdx].id)}
                 chainColor={(() => { const ck = getChainKey(clinics[activeClinicIdx].id); return ck ? CHAIN_CFG[ck].color : null; })()}
               />
+              </>
             ) : (
               <div className="text-center py-16">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">

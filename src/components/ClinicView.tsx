@@ -89,11 +89,11 @@ export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl
   return (
     <div>
       {/* Clinic header */}
-      <div className="bg-white rounded-xl p-4 mb-4 border border-slate-200/60">
-        <div className="flex items-center gap-2 mb-2">
-          {chainColor && <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: chainColor }} />}
-          <h2 className="text-base font-bold text-slate-800">{tt(clinic.name)}</h2>
-        </div>
+      <div className="bg-white rounded-xl mb-4 border border-slate-200/60 flex overflow-hidden shadow-sm">
+        {/* Color accent bar */}
+        <div className="w-2 shrink-0" style={{ backgroundColor: chainColor || '#94a3b8' }} />
+        <div className="p-4 flex-1">
+        <h2 className="text-base font-bold text-slate-800 mb-1">{tt(clinic.name)}</h2>
         <p className="text-sm text-slate-500">{tt(clinic.address)}</p>
         {clinic.phone && <p className="text-sm text-slate-400">{clinic.phone}</p>}
         {clinic.note && (
@@ -122,6 +122,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               {t('common.viewMapReviews')}
           </a>
+        </div>
         </div>
       </div>
 
