@@ -42,19 +42,23 @@ function branchLabel(fullName: string, chainName: string): string {
 // Toxnfill branch numbers: gangnam=1, apgujeong=2, konkuk=6, sinnonhyeon=9, gwanak=10, nowon=15, cheonho=17, songpa=29, gangseo=32, myeongdong=35, mia=39, mokdong=41, hongdae=50
 const TOXNFILL_NUMS: Record<string, number> = { gangnam:1, apgujeong:2, konkuk:6, sinnonhyeon:9, gwanak:10, nowon:15, cheonho:17, songpa:29, gangseo:32, myeongdong:35, mia:39, mokdong:41, hongdae:50 };
 const UNI_DOMAINS: Record<string, string> = { gangnam:'uni114.co.kr', seolleung:'sluni114.co.kr', jamsil:'jsuni114.co.kr', wangsimni:'wsnuni114.co.kr', myeongdong:'mduni114.co.kr', hongdae:'hduni114.co.kr', yeongdeungpo:'ydpuni114.co.kr', magok:'mguni114.co.kr', konkuk:'gduni114.co.kr', guro:'gruni114.co.kr', yeouido:'yduni114.co.kr', cheonho:'chuni114.co.kr', mokdong:'mdguni114.co.kr', changdong:'cduni114.co.kr' };
+const BLIVI_PARAMS: Record<string, string> = { gangnam:'강남역점', konkuk:'건대점', nowon:'노원점', myeongdong:'명동점', mokdong:'목동점', balsan:'발산점', yeongdeungpo:'영등포점', yongsan:'용산점', jamsil:'잠실점', cheongnyangni:'청량리점', hongdae:'홍대점', cheongdam:'리저브청담점' };
 
 function getBranchUrl(clinicId: string): string | null {
   const [chain, branch] = clinicId.includes('_') ? clinicId.split('_', 2) : [clinicId, ''];
   switch (chain) {
-    case 'vands': return branch ? `https://${branch}.vandsclinic.com` : null;
+    case 'vands': return branch ? `https://${branch}.vandsclinic.co.kr` : null;
     case 'toxnfill': {
       const num = TOXNFILL_NUMS[branch];
       return num ? `https://toxnfill${num}.com` : 'https://toxnfill.com';
     }
     case 'daybeau': return branch ? `https://daybeauclinic${branch}.com` : null;
-    case 'ppeum': return branch ? `https://${branch}.ppeum.co.kr` : null;
-    case 'drevers': return branch ? `https://drevers${branch}.imweb.me` : null;
-    case 'blivi': return 'https://m.velyb.kr';
+    case 'ppeum': return branch ? `https://${branch}.ppeum.com` : null;
+    case 'drevers': return branch ? `https://evers${branch}.co.kr` : null;
+    case 'blivi': {
+      const param = BLIVI_PARAMS[branch];
+      return param ? `https://m.velyb.kr/community/community01.php?tb=event2&etc5=${encodeURIComponent(param)}` : 'https://m.velyb.kr';
+    }
     case 'uni': {
       const domain = UNI_DOMAINS[branch];
       return domain ? `https://${domain}` : 'https://uni114.co.kr';
