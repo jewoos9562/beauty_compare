@@ -6,6 +6,8 @@ import { TAG_CONFIG } from '@/data/clinics';
 import type { CompareItem } from '@/app/page';
 import { useI18n } from '@/context/I18nContext';
 import { groupItems } from '@/lib/group-treatments';
+import ReviewSummary from '@/components/ReviewSummary';
+import reviewsData from '@/data/reviews.json';
 
 function parseUnit(name: string): { count: number; unit: string } | null {
   const shot = name.match(/(\d+)\s*샷/);
@@ -105,6 +107,14 @@ export default function ClinicView({ clinic, toggleCompare, isChecked }: Props) 
           </a>
         </div>
       </div>
+
+      {/* Review summary */}
+      <ReviewSummary
+        clinicId={clinic.id}
+        clinicName={clinic.name}
+        clinicAddress={clinic.address}
+        reviewData={(reviewsData as Record<string, any>)[clinic.id] ?? null}
+      />
 
       {/* Search */}
       <div className="relative mb-3">
