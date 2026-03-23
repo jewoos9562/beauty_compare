@@ -232,6 +232,20 @@ async function main() {
   });
   const page = await context.newPage();
 
+  // Warm up: visit Google Maps once to handle cookie consent / initial popups
+  console.log('🔥 브라우저 워밍업...');
+  await page.goto('https://www.google.com/maps', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForTimeout(3000);
+  // Dismiss cookie consent if present
+  try {
+    const acceptBtn = page.locator('button:has-text("모두 수락"), button:has-text("Accept all"), button:has-text("동의"), form[action*="consent"] button').first();
+    if (await acceptBtn.isVisible({ timeout: 3000 })) {
+      await acceptBtn.click();
+      await page.waitForTimeout(2000);
+      console.log('  ✅ 쿠키 동의 처리 완료');
+    }
+  } catch {}
+
   const results = [];
 
   for (let i = 0; i < clinics.length; i++) {
