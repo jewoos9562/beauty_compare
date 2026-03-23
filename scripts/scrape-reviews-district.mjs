@@ -109,24 +109,28 @@ async function scrapeReviews(page, clinicName, clinicAddress) {
     } catch {}
   }
 
-  // Scroll to load reviews
-  const scrollable = page.locator('div.m6QErb.DxyBCb.kA9KIf.dS8AEf').first();
-  const reviewPanel = page.locator('div[role="main"]').first();
+  // Scroll to load reviews — find the deepest scrollable container with reviews
   let reviews = [];
   let previousCount = 0, noNewCount = 0;
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 60; i++) {
     reviews = await extractReviews(page);
     if (i % 5 === 0 || reviews.length !== previousCount)
       console.log(`    📜 Scroll ${i + 1}: ${reviews.length} reviews`);
-    if (reviews.length === previousCount) { noNewCount++; if (noNewCount >= 3) break; }
-    else noNewCount = 0;
+    if (reviews.length === previousCount) {
+      noNewCount++;
+      if (noNewCount >= 5) break;
+    } else {
+      noNewCount = 0;
+    }
     previousCount = reviews.length;
-    try {
-      if (await scrollable.isVisible({ timeout: 1000 })) await scrollable.evaluate(el => el.scrollBy(0, 3000));
-      else await reviewPanel.evaluate(el => el.scrollBy(0, 3000));
-    } catch { await page.mouse.wheel(0, 3000); }
-    await page.waitForTimeout(1500);
+    await page.evaluate(() => {
+      const containers = [...document.querySelectorAll('div')].filter(el =>
+        el.scrollHeight > el.clientHeight + 50 && el.querySelectorAll('div[data-review-id]').length > 0
+      ).sort((a, b) => b.scrollHeight - a.scrollHeight);
+      if (containers[0]) containers[0].scrollBy(0, 5000);
+    });
+    await page.waitForTimeout(2000);
   }
 
   // Expand "더보기"
