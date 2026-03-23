@@ -146,8 +146,12 @@ async function scrapeReviews(page, clinicName, clinicAddress) {
 async function extractReviews(page) {
   return page.evaluate(() => {
     const els = document.querySelectorAll('div[data-review-id]');
+    const seen = new Set();
     return [...els].map(el => {
       try {
+        const reviewId = el.getAttribute('data-review-id');
+        if (seen.has(reviewId)) return null; // dedupe
+        seen.add(reviewId);
         const starEl = el.querySelector('span.kvMYJc');
         const m = (starEl?.getAttribute('aria-label') || '').match(/(\d)/);
         const rating = m ? parseInt(m[1]) : null;
