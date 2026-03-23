@@ -101,7 +101,16 @@ export default function Home() {
       map.get(key)!.branches.push({ clinic, idx });
     });
     // Sort branches within each group by name ascending
-    groups.forEach(g => g.branches.sort((a, b) => a.clinic.name.localeCompare(b.clinic.name, 'ko', { numeric: true })));
+    const branchSortKey = (name: string) => {
+      const m = name.match(/(.*?)\d+호?(점.*)$/);
+      if (m) { const n = parseInt(name.match(/(\d+)호?점/)?.[1] || '0'); return { base: m[1] + m[2], num: n }; }
+      return { base: name, num: 0 };
+    };
+    groups.forEach(g => g.branches.sort((a, b) => {
+      const ka = branchSortKey(a.clinic.name), kb = branchSortKey(b.clinic.name);
+      const cmp = ka.base.localeCompare(kb.base, 'ko');
+      return cmp !== 0 ? cmp : ka.num - kb.num;
+    }));
     return groups;
   }, [clinics, t]);
 
