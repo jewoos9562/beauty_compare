@@ -39,6 +39,30 @@ function branchLabel(fullName: string, chainName: string): string {
   return cleaned || fullName;
 }
 
+// Toxnfill branch numbers: gangnam=1, apgujeong=2, konkuk=6, sinnonhyeon=9, gwanak=10, nowon=15, cheonho=17, songpa=29, gangseo=32, myeongdong=35, mia=39, mokdong=41, hongdae=50
+const TOXNFILL_NUMS: Record<string, number> = { gangnam:1, apgujeong:2, konkuk:6, sinnonhyeon:9, gwanak:10, nowon:15, cheonho:17, songpa:29, gangseo:32, myeongdong:35, mia:39, mokdong:41, hongdae:50 };
+const UNI_DOMAINS: Record<string, string> = { gangnam:'uni114.co.kr', seolleung:'sluni114.co.kr', jamsil:'jsuni114.co.kr', wangsimni:'wsnuni114.co.kr', myeongdong:'mduni114.co.kr', hongdae:'hduni114.co.kr', yeongdeungpo:'ydpuni114.co.kr', magok:'mguni114.co.kr', konkuk:'gduni114.co.kr', guro:'gruni114.co.kr', yeouido:'yduni114.co.kr', cheonho:'chuni114.co.kr', mokdong:'mdguni114.co.kr', changdong:'cduni114.co.kr' };
+
+function getBranchUrl(clinicId: string): string | null {
+  const [chain, branch] = clinicId.includes('_') ? clinicId.split('_', 2) : [clinicId, ''];
+  switch (chain) {
+    case 'vands': return branch ? `https://${branch}.vandsclinic.com` : null;
+    case 'toxnfill': {
+      const num = TOXNFILL_NUMS[branch];
+      return num ? `https://toxnfill${num}.com` : 'https://toxnfill.com';
+    }
+    case 'daybeau': return branch ? `https://daybeauclinic${branch}.com` : null;
+    case 'ppeum': return branch ? `https://${branch}.ppeum.co.kr` : null;
+    case 'drevers': return branch ? `https://drevers${branch}.imweb.me` : null;
+    case 'blivi': return 'https://m.velyb.kr';
+    case 'uni': {
+      const domain = UNI_DOMAINS[branch];
+      return domain ? `https://${domain}` : 'https://uni114.co.kr';
+    }
+    default: return null;
+  }
+}
+
 export default function Home() {
   const { t, tt, lang, currency, rateLabel, setLang, setCurrency } = useI18n();
   const [showWelcome, setShowWelcome] = useState<boolean | null>(null);
@@ -236,11 +260,6 @@ export default function Home() {
                         {cfg && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
                         <span className={`text-[12px] font-semibold ${cfg ? cfg.text : 'text-slate-600'}`}>{group.name}</span>
                       </div>
-                      {cfg?.url && (
-                        <a href={cfg.url} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-slate-500 transition" title={t('common.officialSite')}>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                        </a>
-                      )}
                       {group.branches.length > 1 && (
                         <span className="text-[11px] text-slate-300">{group.branches.length}</span>
                       )}
@@ -249,19 +268,38 @@ export default function Home() {
                       {group.branches.map(({ clinic, idx }) => {
                         const isActive = activeClinicIdx === idx;
                         const label = branchLabel(clinic.name, group.name);
+                        const branchUrl = getBranchUrl(clinic.id);
                         return (
-                          <button
-                            key={clinic.id}
-                            onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
-                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                              isActive
-                                ? 'text-white shadow-sm'
-                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                            }`}
-                            style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
-                          >
-                            {tt(label)}
-                          </button>
+                          <div key={clinic.id} className="shrink-0 flex items-center gap-0.5">
+                            <button
+                              onClick={() => setActiveClinicIdx(prev => prev === idx ? null : idx)}
+                              className={`px-3 py-1.5 text-xs font-medium transition ${
+                                isActive
+                                  ? 'text-white shadow-sm'
+                                  : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                              } ${branchUrl ? 'rounded-l-lg' : 'rounded-lg'}`}
+                              style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
+                            >
+                              {tt(label)}
+                            </button>
+                            {branchUrl && (
+                              <a
+                                href={branchUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-center px-1.5 py-1.5 text-xs transition ${
+                                  isActive
+                                    ? 'text-white/70 hover:text-white'
+                                    : 'bg-slate-50 text-slate-300 hover:text-sky-500 hover:bg-sky-50'
+                                } rounded-r-lg border-l ${isActive ? 'border-white/20' : 'border-slate-200/60'}`}
+                                style={isActive && cfg ? { backgroundColor: cfg.color } : isActive ? { backgroundColor: '#334155' } : undefined}
+                                title={t('common.officialSite')}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                              </a>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
