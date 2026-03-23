@@ -20,8 +20,8 @@ type Props = {
   reviewData: ReviewData | null;
 };
 
-function StarBar({ star, count, max }: { star: number; count: number; max: number }) {
-  const pct = max > 0 ? (count / max) * 100 : 0;
+function StarBar({ star, count, total }: { star: number; count: number; total: number }) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
   return (
     <div className="flex items-center gap-1.5 text-xs">
       <span className="text-slate-400 w-3 text-right">{star}</span>
@@ -29,9 +29,9 @@ function StarBar({ star, count, max }: { star: number; count: number; max: numbe
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
       </svg>
       <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${Math.max(pct, count > 0 ? 2 : 0)}%` }} />
       </div>
-      <span className="text-slate-300 w-6 text-right">{count}</span>
+      <span className="text-slate-300 w-8 text-right">{pct > 0 ? `${Math.round(pct)}%` : '0%'}</span>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export default function ReviewSummary({ clinicId, clinicName, clinicAddress, rev
   if (!reviewData) return null;
 
   const { rating, total, stars, summary, pros, cons, keywords, bestFor } = reviewData;
-  const maxStarCount = stars ? Math.max(...Object.values(stars), 1) : 1;
+  const starTotal = stars ? Object.values(stars).reduce((a, b) => a + b, 0) : 0;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinicName + ' ' + clinicAddress)}`;
 
   return (
@@ -72,7 +72,7 @@ export default function ReviewSummary({ clinicId, clinicName, clinicAddress, rev
         {stars && (
           <div className="flex-1 space-y-0.5">
             {[5, 4, 3, 2, 1].map(s => (
-              <StarBar key={s} star={s} count={stars[String(s)] || 0} max={maxStarCount} />
+              <StarBar key={s} star={s} count={stars[String(s)] || 0} total={starTotal} />
             ))}
           </div>
         )}
