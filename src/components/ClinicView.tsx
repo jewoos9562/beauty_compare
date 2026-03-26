@@ -209,18 +209,12 @@ function CategorySection({
   const [expanded, setExpanded] = useState(true);
   const [subFilters, setSubFilters] = useState<Set<string>>(new Set());
   const [purposeFilters, setPurposeFilters] = useState<Set<string>>(new Set());
+  const [areaFilters, setAreaFilters] = useState<Set<string>>(new Set());
 
-  const toggleSub = (sub: string) => {
-    setSubFilters(prev => {
+  const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, val: string) => {
+    setter(prev => {
       const next = new Set(prev);
-      next.has(sub) ? next.delete(sub) : next.add(sub);
-      return next;
-    });
-  };
-  const togglePurpose = (kw: string) => {
-    setPurposeFilters(prev => {
-      const next = new Set(prev);
-      next.has(kw) ? next.delete(kw) : next.add(kw);
+      next.has(val) ? next.delete(val) : next.add(val);
       return next;
     });
   };
@@ -237,7 +231,7 @@ function CategorySection({
 
   const hasMultipleSubs = subCategories.size > 1;
 
-  // Apply both filters (AND between dimensions, OR within each dimension)
+  // Apply all filters (AND between dimensions, OR within each)
   const filteredItems = useMemo(() => {
     return category.items.filter(item => {
       if (subFilters.size > 0 && !subFilters.has(item.master_sub || '')) return false;
@@ -245,15 +239,20 @@ function CategorySection({
         const itemPurposes = item.purpose?.split('/').map(p => p.trim()) || [];
         if (!itemPurposes.some(p => purposeFilters.has(p))) return false;
       }
+      if (areaFilters.size > 0 && !areaFilters.has(item.area || '')) return false;
       return true;
     });
-  }, [category.items, subFilters, purposeFilters]);
+  }, [category.items, subFilters, purposeFilters, areaFilters]);
 
-  // Purpose keywords scoped to current sub filter selection
-  const purposeKeywords = useMemo(() => {
-    const scopedItems = subFilters.size > 0
+  // Scoped items (after sub filter) for deriving purpose/area options
+  const scopedItems = useMemo(() => {
+    return subFilters.size > 0
       ? category.items.filter(item => subFilters.has(item.master_sub || ''))
       : category.items;
+  }, [category.items, subFilters]);
+
+  // Purpose keywords scoped to sub selection
+  const purposeKeywords = useMemo(() => {
     const kws = new Set<string>();
     for (const item of scopedItems) {
       if (item.purpose) {
@@ -264,22 +263,43 @@ function CategorySection({
       }
     }
     return [...kws].sort();
-  }, [category.items, subFilters]);
+  }, [scopedItems]);
 
-  // Reset purpose filters that are no longer valid when sub changes
+  // Area keywords scoped to sub + purpose selection
+  const areaKeywords = useMemo(() => {
+    let items = scopedItems;
+    if (purposeFilters.size > 0) {
+      items = items.filter(item => {
+        const ps = item.purpose?.split('/').map(p => p.trim()) || [];
+        return ps.some(p => purposeFilters.has(p));
+      });
+    }
+    const areas = new Map<string, number>();
+    for (const item of items) {
+      const a = item.area || '';
+      if (a) areas.set(a, (areas.get(a) || 0) + 1);
+    }
+    return areas;
+  }, [scopedItems, purposeFilters]);
+
+  // Decide which filter rows to show: purpose if >1 unique, area if >1 unique
+  const showPurposeFilter = purposeKeywords.length > 1;
+  const showAreaFilter = areaKeywords.size > 1;
+
+  // Reset invalid filters when scope changes
   useMemo(() => {
     if (purposeFilters.size > 0) {
-      const validPurposes = new Set(purposeKeywords);
-      const invalid = [...purposeFilters].filter(p => !validPurposes.has(p));
-      if (invalid.length > 0) {
-        setPurposeFilters(prev => {
-          const next = new Set(prev);
-          invalid.forEach(p => next.delete(p));
-          return next;
-        });
-      }
+      const valid = new Set(purposeKeywords);
+      const invalid = [...purposeFilters].filter(p => !valid.has(p));
+      if (invalid.length > 0) setPurposeFilters(prev => { const n = new Set(prev); invalid.forEach(p => n.delete(p)); return n; });
     }
   }, [purposeKeywords]);
+  useMemo(() => {
+    if (areaFilters.size > 0) {
+      const invalid = [...areaFilters].filter(a => !areaKeywords.has(a));
+      if (invalid.length > 0) setAreaFilters(prev => { const n = new Set(prev); invalid.forEach(a => n.delete(a)); return n; });
+    }
+  }, [areaKeywords]);
 
   // Group filtered items by master_sub (중분류) for display
   const subGroups = useMemo(() => {
@@ -318,9 +338,9 @@ function CategorySection({
 
       {expanded && <>
         {/* Filter rows */}
-        {(hasMultipleSubs || purposeKeywords.length > 0) && (
+        {(hasMultipleSubs || showPurposeFilter || showAreaFilter) && (
           <div className="ml-5 mb-2 space-y-1.5">
-            {/* 중분류 filter row — 복수 선택 */}
+            {/* 중분류 filter row */}
             {hasMultipleSubs && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">분류</span>
@@ -337,7 +357,7 @@ function CategorySection({
                 {[...subCategories.entries()].map(([sub, count]) => (
                   <button
                     key={sub}
-                    onClick={() => toggleSub(sub)}
+                    onClick={() => toggleSet(setSubFilters, sub)}
                     className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
                       subFilters.has(sub)
                         ? 'bg-slate-700 text-white border-slate-700'
@@ -349,8 +369,8 @@ function CategorySection({
                 ))}
               </div>
             )}
-            {/* 목적 keyword filter row — 복수 선택, 중분류 범위에 맞춰 표시 */}
-            {purposeKeywords.length > 0 && (
+            {/* 목적 keyword filter row */}
+            {showPurposeFilter && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">목적</span>
                 <button
@@ -366,7 +386,7 @@ function CategorySection({
                 {purposeKeywords.map(kw => (
                   <button
                     key={kw}
-                    onClick={() => togglePurpose(kw)}
+                    onClick={() => toggleSet(setPurposeFilters, kw)}
                     className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
                       purposeFilters.has(kw)
                         ? 'bg-sky-600 text-white'
@@ -374,6 +394,35 @@ function CategorySection({
                     }`}
                   >
                     {kw}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* 부위 filter row */}
+            {showAreaFilter && (
+              <div className="flex gap-1 flex-wrap items-center">
+                <span className="text-[10px] text-amber-600 font-medium mr-1 shrink-0">부위</span>
+                <button
+                  onClick={() => setAreaFilters(new Set())}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
+                    areaFilters.size === 0
+                      ? 'bg-amber-600 text-white border-amber-600'
+                      : 'bg-white text-amber-700 border-amber-200 hover:border-amber-400'
+                  }`}
+                >
+                  전체
+                </button>
+                {[...areaKeywords.entries()].map(([area, count]) => (
+                  <button
+                    key={area}
+                    onClick={() => toggleSet(setAreaFilters, area)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
+                      areaFilters.has(area)
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-amber-700 border-amber-200 hover:border-amber-400'
+                    }`}
+                  >
+                    {area} <span className="opacity-60">{count}</span>
                   </button>
                 ))}
               </div>
