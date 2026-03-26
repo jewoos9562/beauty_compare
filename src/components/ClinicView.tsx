@@ -229,7 +229,7 @@ function CategorySection({
     return subs;
   }, [category.items]);
 
-  const hasMultipleSubs = subCategories.size > 1;
+  const hasSubs = subCategories.size > 0;
 
   // Apply all filters (AND between dimensions, OR within each)
   const filteredItems = useMemo(() => {
@@ -282,8 +282,8 @@ function CategorySection({
     return areas;
   }, [scopedItems, purposeFilters]);
 
-  // Decide which filter rows to show: purpose if >1 unique, area if >1 unique
-  const showPurposeFilter = purposeKeywords.length > 1;
+  // Show filter rows when there's at least 1 option
+  const showPurposeFilter = purposeKeywords.length > 0;
   const showAreaFilter = areaKeywords.size > 1;
 
   // Reset invalid filters when scope changes
@@ -338,10 +338,10 @@ function CategorySection({
 
       {expanded && <>
         {/* Filter rows */}
-        {(hasMultipleSubs || showPurposeFilter || showAreaFilter) && (
+        {(hasSubs || showPurposeFilter || showAreaFilter) && (
           <div className="ml-5 mb-2 space-y-1.5">
             {/* 중분류 filter row */}
-            {hasMultipleSubs && (
+            {hasSubs && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">분류</span>
                 <button
