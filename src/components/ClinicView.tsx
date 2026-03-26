@@ -206,6 +206,7 @@ function CategorySection({
   const { t, tt } = useI18n();
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
+  const [expanded, setExpanded] = useState(true);
   const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
 
   // Collect unique purpose keywords for filter pills
@@ -245,7 +246,16 @@ function CategorySection({
 
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-2 mb-1.5">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 mb-1.5 text-left group"
+      >
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          className={`text-slate-400 transition-transform shrink-0 ${expanded ? 'rotate-90' : ''}`}
+        >
+          <path d="M9 18l6-6-6-6" />
+        </svg>
         <h3 className="text-sm font-bold text-slate-800">{tt(category.name)}</h3>
         {tagCfg && tag && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded ${tagCfg.bg} ${tagCfg.color} font-semibold`}>
@@ -253,38 +263,39 @@ function CategorySection({
           </span>
         )}
         <span className="text-[10px] text-slate-400">{filteredItems.length}개</span>
-      </div>
+      </button>
 
-      {/* Purpose keyword filter pills */}
-      {purposeKeywords.length > 1 && (
-        <div className="flex gap-1 flex-wrap mb-2">
-          <button
-            onClick={() => setPurposeFilter(null)}
-            className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-              purposeFilter === null
-                ? 'bg-sky-600 text-white'
-                : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
-            }`}
-          >
-            전체
-          </button>
-          {purposeKeywords.map(kw => (
+      {expanded && <>
+        {/* Purpose keyword filter pills */}
+        {purposeKeywords.length > 1 && (
+          <div className="flex gap-1 flex-wrap mb-2 ml-5">
             <button
-              key={kw}
-              onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
+              onClick={() => setPurposeFilter(null)}
               className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-                purposeFilter === kw
+                purposeFilter === null
                   ? 'bg-sky-600 text-white'
                   : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
               }`}
             >
-              {kw}
+              전체
             </button>
-          ))}
-        </div>
-      )}
+            {purposeKeywords.map(kw => (
+              <button
+                key={kw}
+                onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
+                  purposeFilter === kw
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
+                }`}
+              >
+                {kw}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {hasSubs ? (
+        {hasSubs ? (
         <div className="space-y-2">
           {[...subGroups.entries()].map(([subName, items]) => (
             <SubCategoryGroup
@@ -307,6 +318,7 @@ function CategorySection({
           isChecked={isChecked}
         />
       )}
+      </>}
     </div>
   );
 }
