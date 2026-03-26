@@ -206,34 +206,85 @@ function CategorySection({
   const { t, tt } = useI18n();
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
+  const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
 
-  // Group items by master_sub (중분류) if available
+  // Collect unique purpose keywords for filter pills
+  const purposeKeywords = useMemo(() => {
+    const kws = new Set<string>();
+    for (const item of category.items) {
+      if (item.purpose) {
+        for (const p of item.purpose.split('/')) {
+          const trimmed = p.trim();
+          if (trimmed) kws.add(trimmed);
+        }
+      }
+    }
+    return [...kws].sort();
+  }, [category.items]);
+
+  // Filter items by purpose keyword
+  const filteredItems = useMemo(() => {
+    if (!purposeFilter) return category.items;
+    return category.items.filter(item =>
+      item.purpose?.split('/').some(p => p.trim() === purposeFilter)
+    );
+  }, [category.items, purposeFilter]);
+
+  // Group filtered items by master_sub (중분류)
   const subGroups = useMemo(() => {
     const map = new Map<string, TreatmentItem[]>();
-    for (const item of category.items) {
+    for (const item of filteredItems) {
       const sub = item.master_sub || '기타';
       if (!map.has(sub)) map.set(sub, []);
       map.get(sub)!.push(item);
     }
     return map;
-  }, [category.items]);
+  }, [filteredItems]);
 
   const hasSubs = subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타'));
 
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-1.5">
         <h3 className="text-sm font-bold text-slate-800">{tt(category.name)}</h3>
         {tagCfg && tag && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded ${tagCfg.bg} ${tagCfg.color} font-semibold`}>
             {tagCfg.label}
           </span>
         )}
-        <span className="text-[10px] text-slate-400">{category.items.length}개</span>
+        <span className="text-[10px] text-slate-400">{filteredItems.length}개</span>
       </div>
 
+      {/* Purpose keyword filter pills */}
+      {purposeKeywords.length > 1 && (
+        <div className="flex gap-1 flex-wrap mb-2">
+          <button
+            onClick={() => setPurposeFilter(null)}
+            className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
+              purposeFilter === null
+                ? 'bg-sky-600 text-white'
+                : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
+            }`}
+          >
+            전체
+          </button>
+          {purposeKeywords.map(kw => (
+            <button
+              key={kw}
+              onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
+                purposeFilter === kw
+                  ? 'bg-sky-600 text-white'
+                  : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
+              }`}
+            >
+              {kw}
+            </button>
+          ))}
+        </div>
+      )}
+
       {hasSubs ? (
-        // 중분류별 접이식 그룹
         <div className="space-y-2">
           {[...subGroups.entries()].map(([subName, items]) => (
             <SubCategoryGroup
@@ -248,9 +299,8 @@ function CategorySection({
           ))}
         </div>
       ) : (
-        // 중분류 없으면 기존 방식
         <FlatItemList
-          items={category.items}
+          items={filteredItems}
           clinicName={clinicName}
           categoryName={category.name}
           toggleCompare={toggleCompare}
@@ -409,28 +459,38 @@ function TreatmentRow({
       ? Math.round((1 - item.event / item.orig) * 100)
       : null;
 
-  const meta: string[] = [];
-  if (item.volume_or_count) meta.push(item.volume_or_count);
-  if (item.area) meta.push(item.area);
-
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
       <div className="flex-1 min-w-0">
-        <span className="text-sm text-slate-700">{tt(item.name)}</span>
-        {meta.length > 0 && (
-          <span className="text-[10px] text-slate-400 ml-1.5">{meta.join(' · ')}</span>
-        )}
-        {item.promo && (
-          <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 font-medium">{item.promo}</span>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm text-slate-700">{tt(item.name)}</span>
+          {item.volume_or_count && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
+              {item.volume_or_count}
+            </span>
+          )}
+          {item.area && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
+              {item.area}
+            </span>
+          )}
+          {item.promo && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 font-medium border border-rose-100">
+              {item.promo}
+            </span>
+          )}
+        </div>
         {item.purpose && (
           <div className="flex gap-1 mt-0.5 flex-wrap">
             {item.purpose.split('/').map((p, i) => (
-              <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 text-sky-600">
-                {p.trim()}
+              <span key={i} className="text-[10px] px-1 py-0.5 rounded text-sky-500">
+                #{p.trim()}
               </span>
             ))}
           </div>
+        )}
+        {item.notes && (
+          <p className="text-[10px] text-slate-400 mt-0.5">{item.notes}</p>
         )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
