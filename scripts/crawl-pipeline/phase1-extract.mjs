@@ -8,6 +8,7 @@
 
 import * as cheerio from 'cheerio';
 import Anthropic from '@anthropic-ai/sdk';
+import puppeteer from 'puppeteer';
 import { fetchPage, fetchImageAsBase64, delay, log } from './utils.mjs';
 
 const anthropic = new Anthropic();
@@ -270,6 +271,161 @@ export async function extractTextFromImages(imageInfos, maxImages = 30) {
   return results;
 }
 
+// ── Puppeteer 팝업 슬라이드 캡처 ─────────────────────────────────
+export async function capturePopupSlides(baseUrl, options = {}) {
+  const { timeout = 15000 } = options;
+  log('info', `Puppeteer 팝업 캡처 시작: ${baseUrl}`);
+
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1400, height: 900 });
+
+    await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout });
+    await delay(3000);
+
+    // ── Strategy 1: multiPopup 구조 (bannerButton + imgCell) ──
+    const popupData = await page.evaluate(() => {
+      const popup = document.querySelector('#multiPopup');
+      if (!popup) return null;
+
+      const buttons = [...popup.querySelectorAll('.bannerButton')];
+      const images = [...popup.querySelectorAll('.imgCell img[data-src], .imgCell img[src]')];
+      // 마지막 이미지는 종종 진료시간 등 (src만 있고 data-src 없는 것)
+      const allImgs = [...popup.querySelectorAll('.imgCell a img, .imgCell > img')];
+
+      return {
+        type: 'multiPopup',
+        buttonTexts: buttons.map(b => b.textContent.trim()),
+        buttonCount: buttons.length,
+        imageUrls: allImgs.map(img => img.getAttribute('data-src') || img.getAttribute('src')).filter(Boolean),
+        imageCount: allImgs.length,
+      };
+    });
+
+    if (popupData && popupData.buttonCount > 0) {
+      log('info', `  multiPopup 감지: ${popupData.buttonCount}개 탭, ${popupData.imageCount}개 이미지`);
+
+      const origin = new URL(baseUrl).origin;
+      const screenshots = [];
+
+      // 이미지 URL을 직접 다운로드 → base64 변환 (스크린샷보다 정확)
+      for (let i = 0; i < popupData.imageUrls.length; i++) {
+        try {
+          let imgUrl = popupData.imageUrls[i];
+          if (imgUrl.startsWith('/')) imgUrl = origin + imgUrl;
+
+          const { base64, mediaType } = await fetchImageAsBase64(imgUrl);
+          const tabText = popupData.buttonTexts[i] || `slide_${i}`;
+
+          screenshots.push({ tabText, base64, mediaType });
+          log('info', `  이미지 ${i + 1}/${popupData.imageUrls.length}: "${tabText.slice(0, 40)}"`);
+        } catch (e) {
+          log('warn', `  이미지 ${i + 1} 다운로드 실패: ${e.message}`);
+        }
+      }
+
+      log('info', `  팝업 이미지 ${screenshots.length}개 다운로드 완료`);
+      return screenshots;
+    }
+
+    // ── Strategy 2: Generic 팝업/모달 감지 ──
+    const genericPopup = await page.evaluate(() => {
+      const candidates = document.querySelectorAll('div, section');
+      for (const el of candidates) {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity) > 0;
+        const isOverlay = zIndex > 100 || style.position === 'fixed';
+        const hasSize = el.offsetWidth > 300 && el.offsetHeight > 300;
+        const classId = (el.className + ' ' + el.id).toLowerCase();
+
+        if (isVisible && isOverlay && hasSize && /popup|pop|layer|modal|event|banner/.test(classId)) {
+          return el.id ? `#${el.id}` : `.${el.className.split(' ')[0]}`;
+        }
+      }
+      return null;
+    });
+
+    if (genericPopup) {
+      log('info', `  Generic 팝업 발견: ${genericPopup}`);
+      const el = await page.$(genericPopup);
+      if (el) {
+        const screenshot = await el.screenshot({ encoding: 'base64' });
+        return [{ tabText: 'popup', base64: screenshot, mediaType: 'image/png' }];
+      }
+    }
+
+    log('warn', '  팝업을 찾을 수 없음');
+    return [];
+  } catch (e) {
+    log('warn', `Puppeteer 팝업 캡처 실패: ${e.message}`);
+    return [];
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
+// ── 팝업 스크린샷 VLM OCR ────────────────────────────────────────
+export async function ocrPopupScreenshots(screenshots) {
+  if (screenshots.length === 0) return [];
+
+  const anthropic = new Anthropic();
+  const results = [];
+  const batchSize = 3; // 팝업 이미지는 큰 편이므로 배치 작게
+
+  for (let i = 0; i < screenshots.length; i += batchSize) {
+    const batch = screenshots.slice(i, i + batchSize);
+    log('info', `  팝업 OCR 배치 ${i + 1}-${Math.min(i + batchSize, screenshots.length)}/${screenshots.length}`);
+
+    const content = [];
+    for (const shot of batch) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: shot.mediaType, data: shot.base64 },
+      });
+    }
+
+    content.push({
+      type: 'text',
+      text: `이 이미지들은 한국 피부과/성형외과의 팝업 이벤트 배너입니다.
+각 이미지에서 보이는 모든 텍스트를 그대로 추출해주세요.
+특히 시술명, 가격, 단위(cc, 샷, 바이알 등), 할인율, 조건(VAT별도 등)에 주의해주세요.
+
+규칙:
+- 이미지에 보이는 텍스트를 최대한 정확하게 전사
+- 가격은 숫자와 원/만원 단위 포함
+- 취소선 가격도 "(취소선)" 표시하여 포함
+- 조건(10cc이상시, VAT별도 등)도 반드시 포함
+- 시술명이 없거나 가격 정보가 없는 이미지는 "가격정보없음"으로 표시`,
+    });
+
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content }],
+      });
+
+      const text = response.content[0].text.trim();
+      results.push({
+        tabTexts: batch.map(b => b.tabText),
+        rawText: text,
+      });
+    } catch (e) {
+      log('warn', `  팝업 OCR 실패: ${e.message}`);
+    }
+
+    await delay(1000);
+  }
+
+  return results;
+}
+
 // ── Phase 1 오케스트레이터 ──────────────────────────────────────
 export async function phase1Extract(url, options = {}) {
   const { maxPages = 100, maxImages = 30 } = options;
@@ -309,6 +465,23 @@ export async function phase1Extract(url, options = {}) {
     }
   } else if (allImages.length > 0) {
     log('warn', 'ANTHROPIC_API_KEY 없음 - 이미지 OCR 건너뜀');
+  }
+
+  // 4. Puppeteer 팝업 캡처 + OCR
+  let popupTexts = [];
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const popupShots = await capturePopupSlides(url);
+      if (popupShots.length > 0) {
+        popupTexts = await ocrPopupScreenshots(popupShots);
+        for (const pt of popupTexts) {
+          allText.push(`\n=== POPUP EVENT (${pt.tabTexts.join(', ')}) ===\n${pt.rawText}`);
+        }
+        log('success', `팝업 ${popupShots.length}개 슬라이드에서 ${popupTexts.length}개 OCR 결과`);
+      }
+    } catch (e) {
+      log('warn', `팝업 캡처 단계 실패 (non-fatal): ${e.message}`);
+    }
   }
 
   const combinedText = allText.join('\n');
