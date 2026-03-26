@@ -318,7 +318,7 @@ function CategorySection({
 
       {expanded && <>
         {/* Filter rows */}
-        {(hasMultipleSubs || purposeKeywords.length > 1) && (
+        {(hasMultipleSubs || purposeKeywords.length > 0) && (
           <div className="ml-5 mb-2 space-y-1.5">
             {/* 중분류 filter row — 복수 선택 */}
             {hasMultipleSubs && (
@@ -350,7 +350,7 @@ function CategorySection({
               </div>
             )}
             {/* 목적 keyword filter row — 복수 선택, 중분류 범위에 맞춰 표시 */}
-            {purposeKeywords.length > 1 && (
+            {purposeKeywords.length > 0 && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">목적</span>
                 <button
