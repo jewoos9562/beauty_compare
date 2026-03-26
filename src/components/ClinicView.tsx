@@ -40,8 +40,8 @@ export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl
     else hasBase = true;
   });
 
-  const allFilterKeys = ['first','event','hot','weekday','best','new','botox','filler','lifting','skinbooster','laser','hair_removal','skincare','body','neck','male'];
-  const allFilters = allFilterKeys.map(key => ({ key, label: t('tag.' + key) }));
+  const allFilterKeys = ['lifting','filler','botox','skin','body','hair_removal','prescription','certificate','unclassified','first','event','hot','weekday','best','new','skinbooster','laser','skincare','neck','male'];
+  const allFilters = allFilterKeys.map(key => ({ key, label: TAG_CONFIG[key]?.label || key }));
 
   const filters = [
     { key: 'all', label: t('filter.all') },
@@ -207,7 +207,18 @@ function CategorySection({
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
 
-  const grouped = useMemo(() => groupItems(category.items), [category.items]);
+  // Group items by master_sub (중분류) if available
+  const subGroups = useMemo(() => {
+    const map = new Map<string, TreatmentItem[]>();
+    for (const item of category.items) {
+      const sub = item.master_sub || '기타';
+      if (!map.has(sub)) map.set(sub, []);
+      map.get(sub)!.push(item);
+    }
+    return map;
+  }, [category.items]);
+
+  const hasSubs = subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타'));
 
   return (
     <div className="mb-5">
@@ -215,11 +226,116 @@ function CategorySection({
         <h3 className="text-sm font-bold text-slate-800">{tt(category.name)}</h3>
         {tagCfg && tag && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded ${tagCfg.bg} ${tagCfg.color} font-semibold`}>
-            {t('tag.' + tag)}
+            {tagCfg.label}
           </span>
         )}
+        <span className="text-[10px] text-slate-400">{category.items.length}개</span>
       </div>
 
+      {hasSubs ? (
+        // 중분류별 접이식 그룹
+        <div className="space-y-2">
+          {[...subGroups.entries()].map(([subName, items]) => (
+            <SubCategoryGroup
+              key={subName}
+              subName={subName}
+              items={items}
+              clinicName={clinicName}
+              categoryName={category.name}
+              toggleCompare={toggleCompare}
+              isChecked={isChecked}
+            />
+          ))}
+        </div>
+      ) : (
+        // 중분류 없으면 기존 방식
+        <FlatItemList
+          items={category.items}
+          clinicName={clinicName}
+          categoryName={category.name}
+          toggleCompare={toggleCompare}
+          isChecked={isChecked}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 중분류 접이식 그룹 */
+function SubCategoryGroup({
+  subName,
+  items,
+  clinicName,
+  categoryName,
+  toggleCompare,
+  isChecked,
+}: {
+  subName: string;
+  items: TreatmentItem[];
+  clinicName: string;
+  categoryName: string;
+  toggleCompare: (item: CompareItem) => void;
+  isChecked: (item: CompareItem) => boolean;
+}) {
+  const { tt } = useI18n();
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="rounded-xl border border-slate-200/60 bg-white overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-3 py-2 bg-slate-50/50 hover:bg-slate-50 transition text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-700">{tt(subName)}</span>
+          <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+            {items.length}개
+          </span>
+        </div>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className={`text-slate-300 transition-transform ${expanded ? 'rotate-180' : ''}`}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {expanded && (
+        <div className="divide-y divide-slate-100/80">
+          {items.map((item, i) => (
+            <TreatmentRow
+              key={i}
+              item={item}
+              clinicName={clinicName}
+              categoryName={categoryName}
+              toggleCompare={toggleCompare}
+              isChecked={isChecked}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Flat list (no sub-categories) using groupItems for quantity grouping */
+function FlatItemList({
+  items,
+  clinicName,
+  categoryName,
+  toggleCompare,
+  isChecked,
+}: {
+  items: TreatmentItem[];
+  clinicName: string;
+  categoryName: string;
+  toggleCompare: (item: CompareItem) => void;
+  isChecked: (item: CompareItem) => boolean;
+}) {
+  const { t, tt } = useI18n();
+  const grouped = useMemo(() => groupItems(items), [items]);
+
+  return (
+    <>
       {grouped.groups.length > 0 && (
         <div className="space-y-2 mb-3">
           {grouped.groups.map((group) => (
@@ -228,7 +344,7 @@ function CategorySection({
               baseName={group.baseName}
               items={group.items}
               clinicName={clinicName}
-              categoryName={category.name}
+              categoryName={categoryName}
               toggleCompare={toggleCompare}
               isChecked={isChecked}
             />
@@ -240,7 +356,7 @@ function CategorySection({
         <ItemTable
           items={grouped.singles}
           clinicName={clinicName}
-          categoryName={category.name}
+          categoryName={categoryName}
           toggleCompare={toggleCompare}
           isChecked={isChecked}
         />
@@ -255,12 +371,93 @@ function CategorySection({
           <ItemTable
             items={grouped.sets}
             clinicName={clinicName}
-            categoryName={category.name}
+            categoryName={categoryName}
             toggleCompare={toggleCompare}
             isChecked={isChecked}
           />
         </div>
       )}
+    </>
+  );
+}
+
+/** Single treatment row with v2 metadata */
+function TreatmentRow({
+  item,
+  clinicName,
+  categoryName,
+  toggleCompare,
+  isChecked,
+}: {
+  item: TreatmentItem;
+  clinicName: string;
+  categoryName: string;
+  toggleCompare: (item: CompareItem) => void;
+  isChecked: (item: CompareItem) => boolean;
+}) {
+  const { tt, fmtPrice } = useI18n();
+  const bestPrice = item.event ?? item.base ?? item.orig;
+  const compareItem: CompareItem = {
+    clinicName,
+    itemName: item.name,
+    price: bestPrice ?? 0,
+    categoryName,
+  };
+  const checked = isChecked(compareItem);
+  const discount =
+    item.orig && item.event
+      ? Math.round((1 - item.event / item.orig) * 100)
+      : null;
+
+  const meta: string[] = [];
+  if (item.volume_or_count) meta.push(item.volume_or_count);
+  if (item.area) meta.push(item.area);
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-slate-700">{tt(item.name)}</span>
+        {meta.length > 0 && (
+          <span className="text-[10px] text-slate-400 ml-1.5">{meta.join(' · ')}</span>
+        )}
+        {item.promo && (
+          <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 font-medium">{item.promo}</span>
+        )}
+        {item.purpose && (
+          <div className="flex gap-1 mt-0.5 flex-wrap">
+            {item.purpose.split('/').map((p, i) => (
+              <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 text-sky-600">
+                {p.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        {item.orig != null && item.event != null && (
+          <span className="text-xs text-slate-300 line-through">{fmtPrice(item.orig)}</span>
+        )}
+        {item.event != null ? (
+          <span className="text-sm font-semibold text-sky-600">
+            {fmtPrice(item.event)}
+            {discount != null && discount > 0 && (
+              <span className="ml-1 text-[10px] font-bold text-rose-500">-{discount}%</span>
+            )}
+          </span>
+        ) : item.base != null ? (
+          <span className="text-sm font-medium text-slate-700">{fmtPrice(item.base)}</span>
+        ) : item.orig != null ? (
+          <span className="text-sm text-slate-500">{fmtPrice(item.orig)}</span>
+        ) : (
+          <span className="text-xs text-slate-300">가격문의</span>
+        )}
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() => toggleCompare(compareItem)}
+          className="w-4 h-4 cursor-pointer rounded"
+        />
+      </div>
     </div>
   );
 }

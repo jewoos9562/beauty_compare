@@ -11,7 +11,8 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
       categories (
         id, name, tag, sort_order,
         treatments (
-          name, orig_price, event_price, base_price, sort_order
+          name, orig_price, event_price, base_price, sort_order,
+          volume_or_count, area, purpose, notes, master_sub, master_treatment, promo
         )
       )
     `)
@@ -65,6 +66,13 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
             orig: t.orig_price,
             event: t.event_price,
             base: t.base_price,
+            volume_or_count: t.volume_or_count ?? null,
+            area: t.area ?? null,
+            purpose: t.purpose ?? null,
+            notes: t.notes ?? null,
+            master_sub: t.master_sub ?? null,
+            master_treatment: t.master_treatment ?? null,
+            promo: t.promo ?? null,
           }));
         return { name: cat.name, tag: cat.tag, items };
       }),
