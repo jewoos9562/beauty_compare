@@ -185,6 +185,7 @@ export default function ClinicView({ clinic, toggleCompare, isChecked, branchUrl
             clinicName={clinic.name}
             toggleCompare={toggleCompare}
             isChecked={isChecked}
+            hasSearch={q.length > 0}
           />
         ))
       )}
@@ -197,16 +198,20 @@ function CategorySection({
   clinicName,
   toggleCompare,
   isChecked,
+  hasSearch,
 }: {
   category: Category;
   clinicName: string;
   toggleCompare: (item: CompareItem) => void;
   isChecked: (item: CompareItem) => boolean;
+  hasSearch?: boolean;
 }) {
   const { t, tt } = useI18n();
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
-  const [expanded, setExpanded] = useState(true);
+  const [manualExpanded, setManualExpanded] = useState(false);
+  // Search active → always expanded; no search → manual toggle (default collapsed)
+  const expanded = hasSearch || manualExpanded;
   const [subFilters, setSubFilters] = useState<Set<string>>(new Set());
   const [purposeFilters, setPurposeFilters] = useState<Set<string>>(new Set());
   const [areaFilters, setAreaFilters] = useState<Set<string>>(new Set());
@@ -318,7 +323,7 @@ function CategorySection({
   return (
     <div className="mb-5">
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setManualExpanded(!manualExpanded)}
         className="w-full flex items-center gap-2 mb-1.5 text-left group"
       >
         <svg
