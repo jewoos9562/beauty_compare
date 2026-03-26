@@ -6,24 +6,12 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { MASTER_LIST, MAJOR_TO_TAG, SUB_TO_TAG } from './master-list.mjs';
+import { MASTER_LIST, MAJOR_TO_TAG, SUB_TO_TAG, buildMasterSummary } from './master-list.mjs';
 import { log } from './utils.mjs';
 import crypto from 'crypto';
 
 const anthropic = new Anthropic();
 
-// ── 마스터 리스트 요약 (LLM 프롬프트용) ────────────────────────
-function buildMasterSummary() {
-  const grouped = {};
-  for (const item of MASTER_LIST) {
-    const key = `${item.major} > ${item.sub}`;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(item.name);
-  }
-  return Object.entries(grouped)
-    .map(([key, names]) => `${key}: ${names.join(', ')}`)
-    .join('\n');
-}
 const MASTER_SUMMARY = buildMasterSummary();
 
 // ══════════════════════════════════════════════════════════════════
@@ -126,16 +114,22 @@ function filterPriceLines(text) {
 
 const CATEGORY_HEADERS = {
   '보톡스': '보톡스', '윤곽주사': '보톡스',
-  '필러': '필러', '실리프팅': '리프팅',
-  '레이저리프팅': '리프팅', '탄력/리프팅': '리프팅',
-  '스킨부스터': '스킨부스터', '부스터필러': '스킨부스터',
+  // 대분류 매칭
+  '보톡스': '보톡스', '윤곽주사': '보톡스',
+  '필러': '필러',
+  '실리프팅': '리프팅', '실 리프팅': '리프팅',
+  '레이저리프팅': '리프팅', '탄력/리프팅': '리프팅', '레이저 리프팅': '리프팅',
+  '스킨부스터': '피부-스킨부스터', '부스터필러': '피부-스킨부스터',
+  '주사류': '피부-스킨부스터', '줄기세포': '피부-스킨부스터',
   '제모': '제모', '젠틀맥스': '제모',
-  '여드름': '여드름/흉터', '점제거': '여드름/흉터',
-  '미백': '미백/색소', '기미': '미백/색소', '색소': '미백/색소', '홍조': '미백/색소',
-  '스킨케어': '스킨케어', '피부재생': '스킨케어', '주사류': '스킨부스터',
-  '다이어트': '바디', '퀵제로팻': '바디', '제로팻': '바디',
-  '줄기세포': '스킨부스터',
-  '비급여항목': '비급여항목', '코스메틱': '기타',
+  '여드름': '피부-여드름/흉터', '점제거': '피부-여드름/흉터',
+  '미백': '피부-미백/토닝', '기미': '피부-미백/토닝', '색소': '피부-미백/토닝', '홍조': '피부-미백/토닝',
+  '피부/미백': '피부-미백/토닝', '기미/색소/홍조': '피부-미백/토닝',
+  '스킨케어': '피부-일반관리', '피부재생': '피부-여드름/흉터',
+  '다이어트': '바디', '퀵제로팻': '바디', '제로팻': '바디', '지방분해': '바디',
+  '비급여항목': '제증명', '코스메틱': '미분류',
+  '제증명': '제증명', '수수료': '제증명',
+  '약처방': '약처방',
 };
 
 function detectCategory(text) {
@@ -346,43 +340,59 @@ function buildRefinePrompt(items) {
   return `당신은 한국 피부과/성형외과 시술 데이터 전문가입니다.
 아래는 클리닉 홈페이지에서 추출한 시술 항목 리스트입니다. 각 항목의 raw_name을 분석하여 구조화해주세요.
 
-## 마스터 분류 체계
+## 마스터 분류 체계 (대분류 > 중분류: 시술명[목적키워드])
 ${MASTER_SUMMARY}
 
+## 대분류 목록
+- 리프팅 (레이저 리프팅, 실 리프팅)
+- 필러 (얼굴 필러, 바디 필러)
+- 보톡스 (얼굴 보톡스, 바디 보톡스)
+- 피부 (미백/토닝, 스킨부스터, 여드름/흉터, 일반관리)
+- 바디 (지방분해주사, 바디필러, 바디토닝)
+- 제모 (부위별 제모)
+- 약처방 (다이어트 약)
+- 제증명 (진단서, 소견서, 확인서 등 서류 수수료)
+
 ## 분해 규칙
-- treatment_name: 순수 시술명 (용량/부위/프로모션/국산수입 제외)
+- treatment_name: 순수 시술명 (용량/부위/프로모션/국산수입 제외). 마스터 리스트에 있는 이름과 최대한 일치시킬 것
 - volume_or_count: 용량/횟수 (예: "50U", "2cc", "100샷", "1회", "3줄") 또는 null
 - area: 시술 부위 (예: "사각턱", "겨드랑이", "전체얼굴", "이마", "코") 또는 null
 - promo: 프로모션/조건 (예: "무제한", "1+1", "체험가", "첫방문") 또는 null
-- master_treatment: 마스터 리스트의 정확한 시술명 또는 null
-- master_major: 대분류 또는 null
+- purpose: 목적 키워드 (마스터 리스트의 목적 참고, "/"는 OR. 예: "주름", "탄력", "미백", "지방", "모공", "다한증") 또는 null
+- master_treatment: 마스터 리스트의 **정확한** 시술명 또는 null. 반드시 위 리스트에 있는 이름만 사용
+- master_major: 대분류 (리프팅/필러/보톡스/피부/바디/제모/약처방/제증명/미분류)
 - master_sub: 중분류 또는 null
 - notes: 국산/수입산, 브랜드명, 기타 (예: "국산", "수입산-쥬비덤") 또는 null
 
+## 제증명 판별 규칙
+- "진단서", "소견서", "확인서", "진료확인서", "일반진단서", "사본" 등 → master_major: "제증명"
+- 실제 시술이 아닌 서류 발급 수수료는 모두 "제증명"으로 분류
+
+## 볼륨필러 / 주름필러 분류 규칙
+- "볼륨필러"는 부위를 알 수 없을 때 master_treatment을 null로. 부위가 명시되면 해당 부위 필러로 매칭 (예: 볼 → "옆볼 필러")
+- "주름필러"도 부위별로 매칭. 부위 불명 시 null
+
 ## 예시
-- "사각턱보톡스 50유닛 | 구분:국산" → treatment_name: "사각턱 보톡스", volume: "50유닛", area: "사각턱", notes: "국산", master: "사각턱 보톡스"
-- "볼륨필러(아띠에르) | 구분:국산 | 특이:1cc 당" → treatment_name: "볼륨필러", volume: "1cc", area: null, notes: "국산-아띠에르", master: "볼륨필러"
-- "볼륨필러(쥬비덤) | 구분:수입산 | 특이:1cc 당" → treatment_name: "볼륨필러", volume: "1cc", area: null, notes: "수입산-쥬비덤", master: "볼륨필러"
-- "주름필러 (뉴라미스) | 구분:수입산 | 특이:1줄 당" → treatment_name: "주름필러", volume: "1줄", area: null, notes: "수입산-뉴라미스", master: "주름필러"
-- "하이코 | 구분:수입산 | 특이:5줄 당" → treatment_name: "하이코", volume: "5줄", area: null, notes: "수입산", master: "하이코"
-- "무제한 코필러" → treatment_name: "코 필러", area: "코", promo: "무제한", master: "코 필러"
-- "남자 인중 + 콧수염 | 구분:1회" → treatment_name: "제모", volume: "1회", area: "인중+콧수염", notes: "남성"
-- "인모드리프팅 | 구분:1회 | 특이:*시간/부위별 가격 상이" → treatment_name: "인모드", volume: "1회", area: null, master: "인모드"
-- "슈링크 유니버스 | 구분:1회 | 특이:100샷 기준" → treatment_name: "슈링크 유니버스", volume: "100샷", area: null, master: "슈링크 유니버스"
-- "젠틀맥스프로플러스 여자 겨드랑이 1회" → treatment_name: "젠틀맥스 프로 플러스", volume: "1회", area: "겨드랑이", notes: "여성"
-- "피코토닝+피코지우개 1회" → treatment_name: "피코토닝+피코지우개", volume: "1회", notes: "패키지"
-- "얼굴점제거 | 구분:2mm이하" → treatment_name: "점제거", volume: null, area: "얼굴", notes: "2mm이하", master: "점제거"
-- "검버섯 | 구분:새끼손톱크기" → treatment_name: "검버섯 제거", volume: null, area: null, notes: "새끼손톱크기"
+- "사각턱보톡스 50유닛 | 구분:국산" → {treatment_name:"사각턱 보톡스", volume:"50유닛", area:"사각턱", purpose:"근육", notes:"국산", master_treatment:"사각턱 보톡스", master_major:"보톡스", master_sub:"얼굴 보톡스"}
+- "볼륨필러(아띠에르) | 구분:국산 | 특이:1cc 당" → {treatment_name:"볼륨필러", volume:"1cc", purpose:"볼륨", notes:"국산-아띠에르", master_major:"필러", master_sub:"얼굴 필러"}
+- "주름필러(뉴라미스) | 구분:수입산 | 특이:1줄 당" → {treatment_name:"주름필러", volume:"1줄", purpose:"주름", notes:"수입산-뉴라미스", master_major:"필러", master_sub:"얼굴 필러"}
+- "남자 인중+콧수염 | 구분:1회" → {treatment_name:"인중 제모", volume:"1회", area:"인중+콧수염", purpose:"제모", notes:"남성", master_treatment:"인중 제모", master_major:"제모", master_sub:"부위별 제모"}
+- "슈링크 유니버스 | 구분:1회 | 특이:100샷 기준" → {treatment_name:"슈링크 유니버스", volume:"100샷", purpose:"지방/리프팅", master_treatment:"슈링크 유니버스", master_major:"리프팅", master_sub:"레이저 리프팅"}
+- "무제한 코필러" → {treatment_name:"코 필러", area:"코", promo:"무제한", purpose:"볼륨", master_treatment:"코 필러", master_major:"필러", master_sub:"얼굴 필러"}
+- "일반진단서" → {treatment_name:"일반진단서", master_major:"제증명"}
+- "리쥬란힐러 1cc 입술" → {treatment_name:"입술리쥬란", volume:"1cc", area:"입술", purpose:"주름/탄력/수분", master_treatment:"입술리쥬란", master_major:"피부", master_sub:"스킨부스터"}
+- "포텐자콜라스터 | 구분:1회" → {treatment_name:"포텐자", volume:"1회", purpose:"모공/흉터", master_treatment:"포텐자", master_major:"피부", master_sub:"여드름/흉터"}
 
 ## 주의사항
 - "구분:" 뒤의 값은 국산/수입산일 수도 있고, 용량(1회, 2cc)일 수도 있고, 크기(2mm이하)일 수도 있음 → 의미를 파악해서 올바른 필드에 배치
 - "특이:" 뒤의 값은 보통 단위당 정보(1cc 당, 100샷 기준)이거나 조건(*부위별 가격 상이) → 단위정보는 volume_or_count로, 조건은 notes로
 - 중분류가 "제모"인 경우: raw_name에서 부위를 추출해 area로, "남자/여자/여성" → notes에 "남성/여성"으로
 - 브랜드명이 괄호 안에 있으면 (쥬비덤, 아띠에르 등) notes에 추출
+- 목적(purpose)은 해당 시술이 어떤 목적으로 사용되는지. 슬래시(/)는 OR 의미
 
 ## 출력 형식 (JSON만, 다른 텍스트 없이)
 [
-  {"idx": 1, "treatment_name": "...", "volume_or_count": "...", "area": "...", "promo": "...", "master_treatment": "...", "master_major": "...", "master_sub": "...", "notes": "..."},
+  {"idx": 1, "treatment_name": "...", "volume_or_count": "...", "area": "...", "promo": "...", "purpose": "...", "master_treatment": "...", "master_major": "...", "master_sub": "...", "notes": "..."},
   ...
 ]
 
@@ -419,7 +429,7 @@ async function refineWithLlm(items) {
         for (const item of batch) {
           allRefined.push({
             treatment_name: item.raw_name,
-            volume_or_count: null, area: null, promo: null,
+            volume_or_count: null, area: null, promo: null, purpose: null,
             master_treatment: null, master_major: null, master_sub: null, notes: null,
           });
         }
@@ -457,6 +467,7 @@ async function refineWithLlm(items) {
             volume_or_count: refined.volume_or_count || null,
             area: refined.area || null,
             promo: refined.promo || null,
+            purpose: refined.purpose || null,
             master_treatment: refined.master_treatment || null,
             master_major: refined.master_major || null,
             master_sub: refined.master_sub || null,
@@ -465,7 +476,7 @@ async function refineWithLlm(items) {
         } else {
           allRefined.push({
             treatment_name: batch[j].raw_name,
-            volume_or_count: null, area: null, promo: null,
+            volume_or_count: null, area: null, promo: null, purpose: null,
             master_treatment: null, master_major: null, master_sub: null, notes: null,
           });
         }

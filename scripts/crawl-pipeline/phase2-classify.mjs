@@ -14,20 +14,9 @@ import { chunkText, log } from './utils.mjs';
 
 const anthropic = new Anthropic();
 
-// 마스터 리스트를 프롬프트용 간결한 형태로 변환
-function buildMasterListSummary() {
-  const grouped = {};
-  for (const item of MASTER_LIST) {
-    const key = `${item.major} > ${item.sub}`;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(item.name);
-  }
-  return Object.entries(grouped)
-    .map(([key, names]) => `${key}: ${names.join(', ')}`)
-    .join('\n');
-}
+import { buildMasterSummary } from './master-list.mjs';
 
-const MASTER_SUMMARY = buildMasterListSummary();
+const MASTER_SUMMARY = buildMasterSummary();
 
 function buildPrompt(rawText) {
   return `당신은 한국 피부과/성형외과 가격 데이터 전문가입니다.
@@ -50,10 +39,11 @@ ${MASTER_SUMMARY}
       "volume_or_count": "용량 or 횟수 (예: 100샷, 2cc, 50U, 1회, 3줄, 1시린지) 또는 null",
       "area": "부위 (예: 전체얼굴, 눈, 이마, 겨드랑이, 팔자, 사각턱) 또는 null",
       "promo": "프로모션 종류/조건 (예: 첫방문, 1+1, 체험가, 이벤트, 화수목, 남성전용, 1년무제한) 또는 null",
-      "master_treatment": "마스터 리스트의 시술명 (매핑 가능한 경우) 또는 null",
-      "master_major": "대분류 또는 null",
+      "purpose": "목적 키워드 (주름, 탄력, 미백, 색소, 지방, 모공, 수분, 제모, 다한증 등) 또는 null",
+      "master_treatment": "마스터 리스트의 정확한 시술명 또는 null",
+      "master_major": "대분류: 리프팅/필러/보톡스/피부/바디/제모/약처방/제증명",
       "master_sub": "중분류 또는 null",
-      "category_name": "사이트에서 이 시술이 속한 카테고리명 (보톡스, 필러, 리프팅 등 대분류 수준)",
+      "category_name": "= master_major와 동일",
       "orig_price": null,
       "event_price": null,
       "notes": null
@@ -76,12 +66,15 @@ ${MASTER_SUMMARY}
 - "볼륨필러(쥬비덤) 1cc" → treatment_name: "볼륨필러 (쥬비덤)", volume_or_count: "1cc", area: null, promo: null
 - "피코토닝 1+1 이벤트" → treatment_name: "피코 토닝", volume_or_count: null, area: null, promo: "1+1"
 
-## category_name 규칙 (중요!)
-- category_name은 반드시 다음 중 하나로 통일: 보톡스, 필러, 리프팅, 스킨부스터, 제모, 스킨케어, 미백/색소, 여드름/흉터, 바디, 일반관리, 비급여항목
-- 사이트에서 "보톡스/윤곽주사"라고 되어있어도 → "보톡스"
+## category_name/master_major 규칙 (중요!)
+- 반드시 다음 중 하나: 리프팅, 필러, 보톡스, 피부, 바디, 제모, 약처방, 제증명
+- 스킨부스터/미백/여드름/스킨케어 → master_major: "피부", master_sub: 해당 중분류
+- "보톡스/윤곽주사" → "보톡스"
 - "필러/실리프팅" → 필러는 "필러", 실리프팅은 "리프팅"
 - "레이저리프팅" → "리프팅"
 - "최신제모 젠틀맥스프로플러스" → "제모"
+- 진단서/소견서/확인서 등 서류 수수료 → "제증명"
+- 다이어트약/마운자로/위고비 → "약처방"
 
 ## 가격 규칙
 - 가격은 숫자만 (쉼표, 원, 만원 제거). 예: "35만원" → 350000, "9,900원" → 9900
@@ -164,11 +157,11 @@ function mergeTreatments(a, b) {
     volume_or_count: a.volume_or_count || b.volume_or_count,
     area: a.area || b.area,
     promo: a.promo || b.promo,
+    purpose: a.purpose || b.purpose,
     master_treatment: a.master_treatment || b.master_treatment,
     master_major: a.master_major || b.master_major,
     master_sub: a.master_sub || b.master_sub,
     category_name: a.category_name || b.category_name,
-    // 가격: 0/null이 아닌 쪽 우선
     orig_price: a.orig_price || b.orig_price,
     event_price: a.event_price || b.event_price,
     notes: a.notes || b.notes,
@@ -239,70 +232,27 @@ function deduplicateTreatments(treatments) {
   return result;
 }
 
-// ── 카테고리명 정규화 ────────────────────────────────────────────
-const CATEGORY_NORMALIZE = {
-  '보톡스/윤곽주사': '보톡스',
-  '윤곽주사': '보톡스',
-  '필러/실리프팅': '필러',
-  '레이저리프팅': '리프팅',
-  '실리프팅': '리프팅',
-  '탄력/리프팅': '리프팅',
-  '최신제모': '제모',
-  '부위별 제모': '제모',
-  '제모예약': '제모',
-  '미백/기미/홍조/색소': '미백/색소',
-  '기미/색소/홍조': '미백/색소',
-  '피부/미백/기미/색소': '미백/색소',
-  '피부재생': '스킨케어',
-  '피부관리': '스킨케어',
-  '일반관리': '스킨케어',
-  '주사류': '스킨부스터',
-  '줄기세포': '스킨부스터',
-  '안티에이징': '스킨부스터',
-  '다이어트': '바디',
-  '바디리프팅': '바디',
-  '바디토닝': '바디',
-  '지방분해': '바디',
-  '제로팻주사': '바디',
-  '제로팻주사(얼굴/바디)': '바디',
-  '퀵제로팻': '바디',
-  '비급여항목': '비급여항목',
-};
+// ── 카테고리명 정규화 → master_major 기준 ─────────────────────────
+const VALID_MAJORS = ['리프팅', '필러', '보톡스', '피부', '바디', '제모', '약처방', '제증명', '미분류'];
 
-function normalizeCategory(catName) {
-  if (!catName) return '기타';
-  // 정확 매핑
-  if (CATEGORY_NORMALIZE[catName]) return CATEGORY_NORMALIZE[catName];
-  // 부분 매칭
-  for (const [key, val] of Object.entries(CATEGORY_NORMALIZE)) {
-    if (catName.includes(key)) return val;
-  }
-  // 기본 키워드 매칭
-  if (/보톡스|톡신/.test(catName)) return '보톡스';
+function normalizeToMajor(catName) {
+  if (!catName) return '미분류';
+  if (VALID_MAJORS.includes(catName)) return catName;
+
+  // 키워드 기반 매핑
+  if (/보톡스|톡신|윤곽주사/.test(catName)) return '보톡스';
   if (/필러/.test(catName)) return '필러';
-  if (/리프팅|써마지|울쎄라|슈링크|인모드/.test(catName)) return '리프팅';
-  if (/부스터|리쥬란|쥬베룩/.test(catName)) return '스킨부스터';
+  if (/리프팅|써마지|울쎄라|슈링크|인모드|실리프팅/.test(catName)) return '리프팅';
+  if (/부스터|리쥬란|쥬베룩|스킨부스터|주사류|줄기세포/.test(catName)) return '피부';
   if (/제모/.test(catName)) return '제모';
-  if (/색소|토닝|미백|기미/.test(catName)) return '미백/색소';
-  if (/여드름|흉터|모공/.test(catName)) return '여드름/흉터';
-  if (/스킨케어|관리|클렌징|LED/.test(catName)) return '스킨케어';
-  if (/바디|다이어트|지방/.test(catName)) return '바디';
-  return catName; // 정규화 안 되면 원본 유지
+  if (/색소|토닝|미백|기미|홍조|IPL/.test(catName)) return '피부';
+  if (/여드름|흉터|모공|포텐자|실펌/.test(catName)) return '피부';
+  if (/스킨케어|관리|클렌징|LED|필링/.test(catName)) return '피부';
+  if (/바디|다이어트|지방|제로팻/.test(catName)) return '바디';
+  if (/약처방|마운자로|위고비/.test(catName)) return '약처방';
+  if (/제증명|진단서|확인서|소견서|수수료|비급여/.test(catName)) return '제증명';
+  return '미분류';
 }
-
-const CATEGORY_TAG = {
-  '보톡스': 'botox',
-  '필러': 'filler',
-  '리프팅': 'lifting',
-  '스킨부스터': 'skinbooster',
-  '제모': 'hair_removal',
-  '미백/색소': 'laser',
-  '여드름/흉터': 'skincare',
-  '스킨케어': 'skincare',
-  '바디': 'body',
-  '일반관리': 'skincare',
-  '비급여항목': null,
-};
 
 // ── 결과를 최종 포맷으로 변환 ────────────────────────────────────
 function convertToOutputFormat(allTreatments, clinicInfo) {
@@ -314,9 +264,9 @@ function convertToOutputFormat(allTreatments, clinicInfo) {
   const categoryMap = new Map();
 
   for (const t of deduped) {
-    const rawCat = t.category_name || t.master_major || '기타';
-    const catName = normalizeCategory(rawCat);
-    const tag = CATEGORY_TAG[catName] || MAJOR_TO_TAG[t.master_major] || null;
+    const rawCat = t.master_major || t.category_name || '미분류';
+    const catName = normalizeToMajor(rawCat);
+    const tag = MAJOR_TO_TAG[catName] || null;
 
     if (!categoryMap.has(catName)) {
       categoryMap.set(catName, { name: catName, tag, items: [] });
@@ -330,9 +280,11 @@ function convertToOutputFormat(allTreatments, clinicInfo) {
       volume_or_count: t.volume_or_count || null,
       area: t.area || null,
       promo: t.promo || null,
+      purpose: t.purpose || null,
       orig_price: t.orig_price || null,
       event_price: t.event_price || null,
       master_treatment: t.master_treatment || null,
+      master_sub: t.master_sub || null,
       notes: t.notes || null,
     });
   }
@@ -353,7 +305,7 @@ function convertToOutputFormat(allTreatments, clinicInfo) {
     .filter(c => c.items.length > 0)
     .sort((a, b) => {
       // 주요 카테고리 순서
-      const order = ['보톡스', '필러', '리프팅', '스킨부스터', '미백/색소', '여드름/흉터', '스킨케어', '제모', '바디', '비급여항목'];
+      const order = ['리프팅', '필러', '보톡스', '피부', '바디', '제모', '약처방', '제증명', '미분류'];
       const ai = order.indexOf(a.name);
       const bi = order.indexOf(b.name);
       if (ai >= 0 && bi >= 0) return ai - bi;

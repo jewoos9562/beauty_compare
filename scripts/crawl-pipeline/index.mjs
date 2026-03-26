@@ -41,41 +41,48 @@ function parseArgs() {
   };
 }
 
-// ── 카테고리 태그 매핑 ───────────────────────────────────────────
-const CATEGORY_TAG = {
-  '보톡스': 'botox',
-  '필러': 'filler',
-  '리프팅': 'lifting',
-  '스킨부스터': 'skinbooster',
-  '제모': 'hair_removal',
-  '미백/색소': 'laser',
-  '여드름/흉터': 'skincare',
-  '스킨케어': 'skincare',
-  '바디': 'body',
-  '비급여항목': null,
-  '기타': null,
+// ── 카테고리: master_major 기반 (새 마스터 리스트) ─────────────────
+// 정규식 category_name → master_major 정규화
+const CATEGORY_NORMALIZE = {
+  '피부-스킨부스터': '피부',
+  '피부-미백/토닝': '피부',
+  '피부-여드름/흉터': '피부',
+  '피부-일반관리': '피부',
 };
 
-const CATEGORY_ORDER = ['보톡스', '필러', '리프팅', '스킨부스터', '미백/색소', '여드름/흉터', '스킨케어', '제모', '바디', '비급여항목'];
+const CATEGORY_ORDER = ['리프팅', '필러', '보톡스', '피부', '바디', '제모', '약처방', '제증명', '미분류'];
 
 // ── 정규식 결과 + LLM 결과 병합 ─────────────────────────────────
+function resolveMajor(item) {
+  // LLM이 판단한 master_major 우선, 없으면 정규식 category_name 정규화
+  if (item.master_major && CATEGORY_ORDER.includes(item.master_major)) return item.master_major;
+  const catName = item.category_name || '';
+  const normalized = CATEGORY_NORMALIZE[catName] || catName;
+  if (CATEGORY_ORDER.includes(normalized)) return normalized;
+  return '미분류';
+}
+
 function mergeResults(regexItems, llmResult, clinicInfo) {
   const categoryMap = new Map();
 
-  // 1. 정규식 항목 추가
+  // 1. 정규식 항목 추가 — master_major 기반 카테고리
   for (const item of regexItems) {
-    const catName = item.category_name || '기타';
+    const catName = resolveMajor(item);
+    const tag = MAJOR_TO_TAG[catName] || null;
     if (!categoryMap.has(catName)) {
-      categoryMap.set(catName, { name: catName, tag: CATEGORY_TAG[catName] || null, items: [] });
+      categoryMap.set(catName, { name: catName, tag, items: [] });
     }
     categoryMap.get(catName).items.push({
       treatment_name: item.treatment_name,
       volume_or_count: item.volume_or_count,
       area: item.area,
       promo: item.promo,
+      purpose: item.purpose,
       orig_price: item.orig_price,
       event_price: item.event_price,
       master_treatment: item.master_treatment,
+      master_major: item.master_major,
+      master_sub: item.master_sub,
       notes: item.notes,
       source: item.source,
     });
@@ -85,12 +92,16 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
   let llmItemCount = 0;
   if (llmResult?.categories) {
     for (const cat of llmResult.categories) {
-      const catName = cat.name;
-      if (!categoryMap.has(catName)) {
-        categoryMap.set(catName, { name: catName, tag: cat.tag || CATEGORY_TAG[catName] || null, items: [] });
+      // Phase 2 결과도 master_major 기반으로 정규화
+      const catName = CATEGORY_ORDER.includes(cat.name) ? cat.name
+        : CATEGORY_NORMALIZE[cat.name] || cat.name;
+      const resolvedCat = CATEGORY_ORDER.includes(catName) ? catName : '미분류';
+      const tag = MAJOR_TO_TAG[resolvedCat] || null;
+      if (!categoryMap.has(resolvedCat)) {
+        categoryMap.set(resolvedCat, { name: resolvedCat, tag, items: [] });
       }
       for (const item of cat.items) {
-        categoryMap.get(catName).items.push({ ...item, source: 'llm' });
+        categoryMap.get(resolvedCat).items.push({ ...item, source: 'llm' });
         llmItemCount++;
       }
     }
@@ -123,8 +134,11 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
             volume_or_count: existing.volume_or_count || item.volume_or_count,
             area: existing.area || item.area,
             promo: existing.promo || item.promo,
+            purpose: existing.purpose || item.purpose,
             orig_price: existing.orig_price || item.orig_price,
             master_treatment: existing.master_treatment || item.master_treatment,
+            master_major: existing.master_major || item.master_major,
+            master_sub: existing.master_sub || item.master_sub,
             notes: existing.notes || item.notes,
             source: 'merged',
           });
@@ -289,8 +303,10 @@ Options:
         const vol = item.volume_or_count ? ` ${item.volume_or_count}` : '';
         const area = item.area ? ` [${item.area}]` : '';
         const promo = item.promo ? ` (${item.promo})` : '';
+        const purpose = item.purpose ? ` {${item.purpose}}` : '';
+        const sub = item.master_sub ? ` [${item.master_sub}]` : '';
         const src = item.source ? ` <${item.source}>` : '';
-        console.log(`     - ${item.treatment_name}${vol}${area}${promo}: ${price}${src}`);
+        console.log(`     - ${item.treatment_name}${vol}${area}${promo}${purpose}${sub}: ${price}${src}`);
       }
       if (cat.items.length > 5) console.log(`     ... +${cat.items.length - 5}개`);
     }
