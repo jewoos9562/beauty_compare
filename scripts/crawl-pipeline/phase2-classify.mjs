@@ -157,30 +157,86 @@ async function classifyChunk(rawText, chunkIndex, totalChunks) {
   }
 }
 
-// ── 글로벌 중복 제거 ─────────────────────────────────────────────
+// ── 두 항목 병합 (정보가 더 많은 쪽 우선) ─────────────────────────
+function mergeTreatments(a, b) {
+  return {
+    treatment_name: a.treatment_name || b.treatment_name,
+    volume_or_count: a.volume_or_count || b.volume_or_count,
+    area: a.area || b.area,
+    promo: a.promo || b.promo,
+    master_treatment: a.master_treatment || b.master_treatment,
+    master_major: a.master_major || b.master_major,
+    master_sub: a.master_sub || b.master_sub,
+    category_name: a.category_name || b.category_name,
+    // 가격: 0/null이 아닌 쪽 우선
+    orig_price: a.orig_price || b.orig_price,
+    event_price: a.event_price || b.event_price,
+    notes: a.notes || b.notes,
+  };
+}
+
+// ── 글로벌 중복 제거 & 병합 ──────────────────────────────────────
 function deduplicateTreatments(treatments) {
-  const seen = new Map(); // key → treatment (가장 정보가 많은 것 유지)
+  // 1단계: 시술명+용량+부위+가격 완전 일치 → 단순 dedup
+  // 2단계: 시술명+용량+부위 일치 but 한쪽 가격 없음 → 병합
+  const byIdentity = new Map(); // normKey → treatment[]
 
   for (const t of treatments) {
-    // 중복 판별 키: 시술명 + 용량 + 부위 + 이벤트가격
     const normName = (t.treatment_name || '').replace(/\s+/g, '').toLowerCase();
     const normVol = (t.volume_or_count || '').replace(/\s+/g, '').toLowerCase();
     const normArea = (t.area || '').replace(/\s+/g, '').toLowerCase();
-    const price = t.event_price || t.orig_price || 0;
-    const key = `${normName}_${normVol}_${normArea}_${price}`;
+    const identityKey = `${normName}_${normVol}_${normArea}`;
 
-    if (!seen.has(key)) {
-      seen.set(key, t);
-    } else {
-      // 더 정보가 많은 것으로 교체 (master_treatment이 있는 것 우선)
-      const existing = seen.get(key);
-      if (!existing.master_treatment && t.master_treatment) {
-        seen.set(key, t);
-      }
+    if (!byIdentity.has(identityKey)) {
+      byIdentity.set(identityKey, []);
     }
+    byIdentity.get(identityKey).push(t);
   }
 
-  return [...seen.values()];
+  const result = [];
+  for (const [, group] of byIdentity) {
+    if (group.length === 1) {
+      result.push(group[0]);
+      continue;
+    }
+
+    // 같은 identity 그룹 내에서 가격별로 서브그룹
+    const byPrice = new Map();
+    const noPriceItems = [];
+
+    for (const t of group) {
+      const priceKey = `${t.event_price || 0}_${t.orig_price || 0}`;
+      if (!t.event_price && !t.orig_price) {
+        // 가격 없는 항목 → 나중에 가격 있는 항목에 병합
+        noPriceItems.push(t);
+      } else if (!byPrice.has(priceKey)) {
+        byPrice.set(priceKey, t);
+      } else {
+        // 같은 가격 → 병합
+        byPrice.set(priceKey, mergeTreatments(byPrice.get(priceKey), t));
+      }
+    }
+
+    // 가격 없는 항목들을 가격 있는 항목에 병합
+    if (noPriceItems.length > 0 && byPrice.size > 0) {
+      for (const noPrice of noPriceItems) {
+        // 첫 번째 가격 있는 항목에 병합 (promo 등 정보 합치기)
+        const firstKey = byPrice.keys().next().value;
+        byPrice.set(firstKey, mergeTreatments(byPrice.get(firstKey), noPrice));
+      }
+    } else if (noPriceItems.length > 0 && byPrice.size === 0) {
+      // 전부 가격 없음 → 하나로 병합
+      let merged = noPriceItems[0];
+      for (let i = 1; i < noPriceItems.length; i++) {
+        merged = mergeTreatments(merged, noPriceItems[i]);
+      }
+      byPrice.set('no_price', merged);
+    }
+
+    result.push(...byPrice.values());
+  }
+
+  return result;
 }
 
 // ── 카테고리명 정규화 ────────────────────────────────────────────
