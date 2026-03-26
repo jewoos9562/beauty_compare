@@ -207,9 +207,22 @@ function CategorySection({
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
   const [expanded, setExpanded] = useState(true);
+  const [subFilter, setSubFilter] = useState<string | null>(null);
   const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
 
-  // Collect unique purpose keywords for filter pills
+  // Collect unique sub-categories (중분류)
+  const subCategories = useMemo(() => {
+    const subs = new Map<string, number>();
+    for (const item of category.items) {
+      const sub = item.master_sub || '';
+      if (sub) subs.set(sub, (subs.get(sub) || 0) + 1);
+    }
+    return subs;
+  }, [category.items]);
+
+  const hasMultipleSubs = subCategories.size > 1;
+
+  // Collect unique purpose keywords
   const purposeKeywords = useMemo(() => {
     const kws = new Set<string>();
     for (const item of category.items) {
@@ -223,15 +236,16 @@ function CategorySection({
     return [...kws].sort();
   }, [category.items]);
 
-  // Filter items by purpose keyword
+  // Apply both filters
   const filteredItems = useMemo(() => {
-    if (!purposeFilter) return category.items;
-    return category.items.filter(item =>
-      item.purpose?.split('/').some(p => p.trim() === purposeFilter)
-    );
-  }, [category.items, purposeFilter]);
+    return category.items.filter(item => {
+      if (subFilter && (item.master_sub || '') !== subFilter) return false;
+      if (purposeFilter && !item.purpose?.split('/').some(p => p.trim() === purposeFilter)) return false;
+      return true;
+    });
+  }, [category.items, subFilter, purposeFilter]);
 
-  // Group filtered items by master_sub (중분류)
+  // Group filtered items by master_sub (중분류) for display
   const subGroups = useMemo(() => {
     const map = new Map<string, TreatmentItem[]>();
     for (const item of filteredItems) {
@@ -242,7 +256,8 @@ function CategorySection({
     return map;
   }, [filteredItems]);
 
-  const hasSubs = subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타'));
+  // Show grouped view when there are multiple subs and no sub filter is active
+  const showGrouped = !subFilter && (subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타')));
 
   return (
     <div className="mb-5">
@@ -266,58 +281,94 @@ function CategorySection({
       </button>
 
       {expanded && <>
-        {/* Purpose keyword filter pills */}
-        {purposeKeywords.length > 1 && (
-          <div className="flex gap-1 flex-wrap mb-2 ml-5">
-            <button
-              onClick={() => setPurposeFilter(null)}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-                purposeFilter === null
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
-              }`}
-            >
-              전체
-            </button>
-            {purposeKeywords.map(kw => (
-              <button
-                key={kw}
-                onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-                  purposeFilter === kw
-                    ? 'bg-sky-600 text-white'
-                    : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
-                }`}
-              >
-                {kw}
-              </button>
-            ))}
+        {/* Filter rows */}
+        {(hasMultipleSubs || purposeKeywords.length > 1) && (
+          <div className="ml-5 mb-2 space-y-1.5">
+            {/* 중분류 filter row */}
+            {hasMultipleSubs && (
+              <div className="flex gap-1 flex-wrap items-center">
+                <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">분류</span>
+                <button
+                  onClick={() => setSubFilter(null)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
+                    subFilter === null
+                      ? 'bg-slate-700 text-white border-slate-700'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  전체
+                </button>
+                {[...subCategories.entries()].map(([sub, count]) => (
+                  <button
+                    key={sub}
+                    onClick={() => setSubFilter(subFilter === sub ? null : sub)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
+                      subFilter === sub
+                        ? 'bg-slate-700 text-white border-slate-700'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    {sub} <span className="opacity-60">{count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* 목적 keyword filter row */}
+            {purposeKeywords.length > 1 && (
+              <div className="flex gap-1 flex-wrap items-center">
+                <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">목적</span>
+                <button
+                  onClick={() => setPurposeFilter(null)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
+                    purposeFilter === null
+                      ? 'bg-sky-600 text-white'
+                      : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
+                  }`}
+                >
+                  전체
+                </button>
+                {purposeKeywords.map(kw => (
+                  <button
+                    key={kw}
+                    onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
+                      purposeFilter === kw
+                        ? 'bg-sky-600 text-white'
+                        : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
+                    }`}
+                  >
+                    {kw}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {hasSubs ? (
-        <div className="space-y-2">
-          {[...subGroups.entries()].map(([subName, items]) => (
-            <SubCategoryGroup
-              key={subName}
-              subName={subName}
-              items={items}
-              clinicName={clinicName}
-              categoryName={category.name}
-              toggleCompare={toggleCompare}
-              isChecked={isChecked}
-            />
-          ))}
-        </div>
-      ) : (
-        <FlatItemList
-          items={filteredItems}
-          clinicName={clinicName}
-          categoryName={category.name}
-          toggleCompare={toggleCompare}
-          isChecked={isChecked}
-        />
-      )}
+        {/* Items display */}
+        {showGrouped ? (
+          <div className="space-y-2">
+            {[...subGroups.entries()].map(([subName, items]) => (
+              <SubCategoryGroup
+                key={subName}
+                subName={subName}
+                items={items}
+                clinicName={clinicName}
+                categoryName={category.name}
+                toggleCompare={toggleCompare}
+                isChecked={isChecked}
+              />
+            ))}
+          </div>
+        ) : (
+          <FlatItemList
+            items={filteredItems}
+            clinicName={clinicName}
+            categoryName={category.name}
+            toggleCompare={toggleCompare}
+            isChecked={isChecked}
+          />
+        )}
       </>}
     </div>
   );
