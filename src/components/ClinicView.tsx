@@ -207,8 +207,23 @@ function CategorySection({
   const tag = category.tag;
   const tagCfg = tag ? TAG_CONFIG[tag] : null;
   const [expanded, setExpanded] = useState(true);
-  const [subFilter, setSubFilter] = useState<string | null>(null);
-  const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
+  const [subFilters, setSubFilters] = useState<Set<string>>(new Set());
+  const [purposeFilters, setPurposeFilters] = useState<Set<string>>(new Set());
+
+  const toggleSub = (sub: string) => {
+    setSubFilters(prev => {
+      const next = new Set(prev);
+      next.has(sub) ? next.delete(sub) : next.add(sub);
+      return next;
+    });
+  };
+  const togglePurpose = (kw: string) => {
+    setPurposeFilters(prev => {
+      const next = new Set(prev);
+      next.has(kw) ? next.delete(kw) : next.add(kw);
+      return next;
+    });
+  };
 
   // Collect unique sub-categories (중분류)
   const subCategories = useMemo(() => {
@@ -222,10 +237,25 @@ function CategorySection({
 
   const hasMultipleSubs = subCategories.size > 1;
 
-  // Collect unique purpose keywords
+  // Apply both filters (AND between dimensions, OR within each dimension)
+  const filteredItems = useMemo(() => {
+    return category.items.filter(item => {
+      if (subFilters.size > 0 && !subFilters.has(item.master_sub || '')) return false;
+      if (purposeFilters.size > 0) {
+        const itemPurposes = item.purpose?.split('/').map(p => p.trim()) || [];
+        if (!itemPurposes.some(p => purposeFilters.has(p))) return false;
+      }
+      return true;
+    });
+  }, [category.items, subFilters, purposeFilters]);
+
+  // Purpose keywords scoped to current sub filter selection
   const purposeKeywords = useMemo(() => {
+    const scopedItems = subFilters.size > 0
+      ? category.items.filter(item => subFilters.has(item.master_sub || ''))
+      : category.items;
     const kws = new Set<string>();
-    for (const item of category.items) {
+    for (const item of scopedItems) {
       if (item.purpose) {
         for (const p of item.purpose.split('/')) {
           const trimmed = p.trim();
@@ -234,16 +264,22 @@ function CategorySection({
       }
     }
     return [...kws].sort();
-  }, [category.items]);
+  }, [category.items, subFilters]);
 
-  // Apply both filters
-  const filteredItems = useMemo(() => {
-    return category.items.filter(item => {
-      if (subFilter && (item.master_sub || '') !== subFilter) return false;
-      if (purposeFilter && !item.purpose?.split('/').some(p => p.trim() === purposeFilter)) return false;
-      return true;
-    });
-  }, [category.items, subFilter, purposeFilter]);
+  // Reset purpose filters that are no longer valid when sub changes
+  useMemo(() => {
+    if (purposeFilters.size > 0) {
+      const validPurposes = new Set(purposeKeywords);
+      const invalid = [...purposeFilters].filter(p => !validPurposes.has(p));
+      if (invalid.length > 0) {
+        setPurposeFilters(prev => {
+          const next = new Set(prev);
+          invalid.forEach(p => next.delete(p));
+          return next;
+        });
+      }
+    }
+  }, [purposeKeywords]);
 
   // Group filtered items by master_sub (중분류) for display
   const subGroups = useMemo(() => {
@@ -256,8 +292,8 @@ function CategorySection({
     return map;
   }, [filteredItems]);
 
-  // Show grouped view when there are multiple subs and no sub filter is active
-  const showGrouped = !subFilter && (subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타')));
+  // Show grouped when multiple subs visible and not filtering to specific subs
+  const showGrouped = subFilters.size !== 1 && (subGroups.size > 1 || (subGroups.size === 1 && !subGroups.has('기타')));
 
   return (
     <div className="mb-5">
@@ -284,14 +320,14 @@ function CategorySection({
         {/* Filter rows */}
         {(hasMultipleSubs || purposeKeywords.length > 1) && (
           <div className="ml-5 mb-2 space-y-1.5">
-            {/* 중분류 filter row */}
+            {/* 중분류 filter row — 복수 선택 */}
             {hasMultipleSubs && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">분류</span>
                 <button
-                  onClick={() => setSubFilter(null)}
+                  onClick={() => setSubFilters(new Set())}
                   className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
-                    subFilter === null
+                    subFilters.size === 0
                       ? 'bg-slate-700 text-white border-slate-700'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                   }`}
@@ -301,9 +337,9 @@ function CategorySection({
                 {[...subCategories.entries()].map(([sub, count]) => (
                   <button
                     key={sub}
-                    onClick={() => setSubFilter(subFilter === sub ? null : sub)}
+                    onClick={() => toggleSub(sub)}
                     className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
-                      subFilter === sub
+                      subFilters.has(sub)
                         ? 'bg-slate-700 text-white border-slate-700'
                         : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                     }`}
@@ -313,14 +349,14 @@ function CategorySection({
                 ))}
               </div>
             )}
-            {/* 목적 keyword filter row */}
+            {/* 목적 keyword filter row — 복수 선택, 중분류 범위에 맞춰 표시 */}
             {purposeKeywords.length > 1 && (
               <div className="flex gap-1 flex-wrap items-center">
                 <span className="text-[10px] text-slate-400 font-medium mr-1 shrink-0">목적</span>
                 <button
-                  onClick={() => setPurposeFilter(null)}
+                  onClick={() => setPurposeFilters(new Set())}
                   className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-                    purposeFilter === null
+                    purposeFilters.size === 0
                       ? 'bg-sky-600 text-white'
                       : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
                   }`}
@@ -330,9 +366,9 @@ function CategorySection({
                 {purposeKeywords.map(kw => (
                   <button
                     key={kw}
-                    onClick={() => setPurposeFilter(purposeFilter === kw ? null : kw)}
+                    onClick={() => togglePurpose(kw)}
                     className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
-                      purposeFilter === kw
+                      purposeFilters.has(kw)
                         ? 'bg-sky-600 text-white'
                         : 'bg-sky-50 text-sky-600 hover:bg-sky-100'
                     }`}
