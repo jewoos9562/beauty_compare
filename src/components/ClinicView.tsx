@@ -215,6 +215,7 @@ function CategorySection({
   const [subFilters, setSubFilters] = useState<Set<string>>(new Set());
   const [purposeFilters, setPurposeFilters] = useState<Set<string>>(new Set());
   const [areaFilters, setAreaFilters] = useState<Set<string>>(new Set());
+  const [genderFilter, setGenderFilter] = useState<string | null>(null);
 
   const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, val: string) => {
     setter(prev => {
@@ -236,6 +237,23 @@ function CategorySection({
 
   const hasSubs = subCategories.size > 0;
 
+  // Gender detection for 제모 category
+  const getGender = (item: TreatmentItem): string => {
+    const text = ((item.notes || '') + ' ' + (item.area || '') + ' ' + (item.name || '')).toLowerCase();
+    if (/남성|남자|male/.test(text)) return '남성';
+    if (/여성|여자|female/.test(text)) return '여성';
+    return '공통';
+  };
+
+  const genderCounts = useMemo(() => {
+    if (tag !== 'hair_removal') return null;
+    const counts: Record<string, number> = { '남성': 0, '여성': 0, '공통': 0 };
+    for (const item of category.items) {
+      counts[getGender(item)]++;
+    }
+    return (counts['남성'] > 0 || counts['여성'] > 0) ? counts : null;
+  }, [category.items, tag]);
+
   // Apply all filters (AND between dimensions, OR within each)
   const filteredItems = useMemo(() => {
     return category.items.filter(item => {
@@ -245,9 +263,10 @@ function CategorySection({
         if (!itemPurposes.some(p => purposeFilters.has(p))) return false;
       }
       if (areaFilters.size > 0 && !areaFilters.has(item.area || '')) return false;
+      if (genderFilter && getGender(item) !== genderFilter) return false;
       return true;
     });
-  }, [category.items, subFilters, purposeFilters, areaFilters]);
+  }, [category.items, subFilters, purposeFilters, areaFilters, genderFilter]);
 
   // Scoped items (after sub filter) for deriving purpose/area options
   const scopedItems = useMemo(() => {
@@ -343,8 +362,32 @@ function CategorySection({
 
       {expanded && <div className="px-3 pb-3">
         {/* Filter rows */}
-        {(hasSubs || showPurposeFilter || showAreaFilter) && (
+        {(hasSubs || showPurposeFilter || showAreaFilter || genderCounts) && (
           <div className="ml-5 mb-2 space-y-1.5">
+            {/* 성별 filter row (제모 only) */}
+            {genderCounts && (
+              <div className="flex gap-1 flex-wrap items-center">
+                <span className="text-[10px] text-pink-500 font-medium mr-1 shrink-0">성별</span>
+                {([null, '남성', '여성', '공통'] as const).map(g => {
+                  const label = g === null ? '전체' : g;
+                  const count = g === null ? category.items.length : genderCounts[g];
+                  if (g !== null && count === 0) return null;
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setGenderFilter(g)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium transition border ${
+                        genderFilter === g
+                          ? 'bg-pink-600 text-white border-pink-600'
+                          : 'bg-white text-pink-700 border-pink-200 hover:border-pink-400'
+                      }`}
+                    >
+                      {label} {g !== null && <span className="opacity-60">{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {/* 중분류 filter row */}
             {hasSubs && (
               <div className="flex gap-1 flex-wrap items-center">

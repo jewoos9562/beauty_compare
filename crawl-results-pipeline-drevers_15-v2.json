@@ -1,0 +1,3147 @@
+[
+  {
+    "clinic": {
+      "id": "drevers_15",
+      "district_id": "gangnam",
+      "name": "닥터에버스 청담점",
+      "address": "서울",
+      "phone": "",
+      "note": "",
+      "color": "from-indigo-500 to-blue-400"
+    },
+    "categories": [
+      {
+        "name": "리프팅",
+        "tag": "lifting",
+        "items": [
+          {
+            "treatment_name": "덴서티",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "덴서티",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "볼뉴머",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/주름/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "볼뉴머",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "슈링크 유니버스",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "슈링크 유니버스",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울쎄라 프라임",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "울쎄라 프라임",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "온다",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "패키지",
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": 890000,
+            "master_treatment": "온다",
+            "master_sub": "레이저 리프팅",
+            "notes": "래디어스 1실린지와 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "온다",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "패키지",
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": 1390000,
+            "master_treatment": "온다",
+            "master_sub": "레이저 리프팅",
+            "notes": "래디어스 1실린지, 리바이브 1cc과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "올리지오",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/주름/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "올리지오",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인모드",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "레이저 리프팅",
+            "notes": "텐써마로도 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리프테라",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "리프테라",
+            "master_sub": "레이저 리프팅",
+            "notes": "리프테라2로 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리니어지",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "리니어지",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "텐써마",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "텐쎄라",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인모드 FX",
+            "volume_or_count": null,
+            "area": "풀페이스",
+            "promo": null,
+            "purpose": "지방, 탄력",
+            "orig_price": 88200,
+            "event_price": 45000,
+            "master_treatment": "인모드 FX",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인모드 FX",
+            "volume_or_count": null,
+            "area": "풀페이스",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 437000,
+            "event_price": 350000,
+            "master_treatment": "인모드 FX",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인모드 FX+FORMA",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방, 탄력, 주름",
+            "orig_price": 233300,
+            "event_price": 119000,
+            "master_treatment": "인모드 FX+FORMA",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "슈링크 유니버스",
+            "volume_or_count": "100샷",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 49000,
+            "event_price": 25000,
+            "master_treatment": "슈링크 유니버스",
+            "master_sub": "레이저 리프팅",
+            "notes": "펜타입 변경 가능",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "슈링크 유니버스",
+            "volume_or_count": "100샷",
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": 186000,
+            "event_price": 149000,
+            "master_treatment": "슈링크 유니버스",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "슈링크 유니버스",
+            "volume_or_count": "200샷",
+            "area": "눈",
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 96000,
+            "event_price": 49000,
+            "master_treatment": "아이슈링크",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리니어지",
+            "volume_or_count": "100샷",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 56800,
+            "event_price": 29000,
+            "master_treatment": "리니어지",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리프테라",
+            "volume_or_count": "5000샷",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 174500,
+            "event_price": 89000,
+            "master_treatment": "리프테라",
+            "master_sub": "레이저 리프팅",
+            "notes": "리프테라2",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "텐쎄라",
+            "volume_or_count": "100라인",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 117600,
+            "event_price": 60000,
+            "master_treatment": null,
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "덴서티",
+            "volume_or_count": "300샷",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅, 미백",
+            "orig_price": 1156800,
+            "event_price": 590000,
+            "master_treatment": "덴서티",
+            "master_sub": "레이저 리프팅",
+            "notes": "클래식팁",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "써마지 FLX",
+            "volume_or_count": "100샷",
+            "area": "눈",
+            "promo": null,
+            "purpose": "탄력, 주름",
+            "orig_price": 323500,
+            "event_price": 165000,
+            "master_treatment": "아이써마지",
+            "master_sub": "레이저 리프팅",
+            "notes": "텐써마 (아이팁 변경 가능)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "포텐자 다이아",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 주름, 모공",
+            "orig_price": 488200,
+            "event_price": 249000,
+            "master_treatment": "포텐자 다이아",
+            "master_sub": "레이저 리프팅",
+            "notes": "DDR+DIA 리프팅 (모노폴라/바이폴라)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울쎄라",
+            "volume_or_count": "100샷",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": 647000,
+            "event_price": 330000,
+            "master_treatment": "울쎄라 프라임",
+            "master_sub": "레이저 리프팅",
+            "notes": "울쎄라피 프라임",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인모드 FORMA",
+            "volume_or_count": null,
+            "area": "풀페이스",
+            "promo": null,
+            "purpose": "탄력/주름",
+            "orig_price": 625000,
+            "event_price": 500000,
+            "master_treatment": "인모드 FORMA",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울쎄라 프라임",
+            "volume_or_count": "100샷",
+            "area": null,
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": 3625000,
+            "event_price": 2900000,
+            "master_treatment": "울쎄라 프라임",
+            "master_sub": "레이저 리프팅",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "온다",
+            "volume_or_count": null,
+            "area": "얼굴",
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": 3125000,
+            "event_price": 2500000,
+            "master_treatment": "온다",
+            "master_sub": "레이저 리프팅",
+            "notes": "리프팅 시술",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "온다",
+            "volume_or_count": null,
+            "area": "바디",
+            "promo": null,
+            "purpose": "지방/리프팅",
+            "orig_price": 5625000,
+            "event_price": 4500000,
+            "master_treatment": "온다",
+            "master_sub": "레이저 리프팅",
+            "notes": "바디 리프팅",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM 물방울 리프팅",
+            "volume_or_count": "20분",
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/리프팅",
+            "orig_price": 1487000,
+            "event_price": 1190000,
+            "master_treatment": "쿨소닉",
+            "master_sub": "레이저 리프팅",
+            "notes": "광채 필메드+모델링팩 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "써마지",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 주름, 리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "써마지 FLX",
+            "master_sub": "레이저 리프팅",
+            "notes": "구체적 모델명 없음 (써마지 FLX 또는 아이써마지 가능)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리프테라2",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "리프테라[지방/리프팅]",
+            "master_sub": "레이저 리프팅",
+            "notes": "텍스트에는 리프테라2로 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "써마지 FLX",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력/주름/리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "써마지 FLX",
+            "master_sub": "레이저 리프팅",
+            "notes": "텍스트에 '텐써마'로 표기됨",
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "필러",
+        "tag": "filler",
+        "items": [
+          {
+            "treatment_name": "필러",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "부위 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "브이올렛",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "에그라인",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스컬트라",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "스컬트라",
+            "master_sub": "얼굴 필러",
+            "notes": "브랜드: 갈더마",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울트라콜",
+            "volume_or_count": "200",
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "울트라콜 200",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "레디어스",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "이벤트",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "브랜드: 멀츠, 콜라겐부스터",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "턱끝 필러",
+            "volume_or_count": "1cc",
+            "area": "턱끝",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 76400,
+            "event_price": 39000,
+            "master_treatment": "턱끝 필러",
+            "master_sub": "얼굴 필러",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "턱끝 필러",
+            "volume_or_count": "1cc",
+            "area": "턱끝",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 390100,
+            "event_price": 199000,
+            "master_treatment": "턱끝 필러",
+            "master_sub": "얼굴 필러",
+            "notes": "쥬비덤",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "입술 필러",
+            "volume_or_count": "1cc",
+            "area": "입술/입꼬리",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 213700,
+            "event_price": 109000,
+            "master_treatment": "입술 필러",
+            "master_sub": "얼굴 필러",
+            "notes": "국산 리쥬비엘",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "눈밑 필러",
+            "volume_or_count": "2cc",
+            "area": "눈밑고랑",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 313700,
+            "event_price": 160000,
+            "master_treatment": "눈밑 필러",
+            "master_sub": "얼굴 필러",
+            "notes": "에버클 V",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "쥬베룩 볼륨",
+            "volume_or_count": "1시린지",
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 686200,
+            "event_price": 350000,
+            "master_treatment": "쥬베룩 볼륨",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스컬트라",
+            "volume_or_count": "1시린지",
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 1117600,
+            "event_price": 570000,
+            "master_treatment": "스컬트라",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "1시린지",
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 1549000,
+            "event_price": 790000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "1실린지",
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": 8112000,
+            "event_price": 6490000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "1실린지",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 890000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "온다 리프팅과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "1실린지",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 1190000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "리바이브 1cc과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "1실린지",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 1390000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "리바이브 1cc, 온다 리프팅과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "관자 필러",
+            "volume_or_count": null,
+            "area": "관자",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "관자 필러[볼륨]",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "옆볼 필러",
+            "volume_or_count": null,
+            "area": "옆볼",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "옆볼 필러[볼륨]",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "입술 필러",
+            "volume_or_count": null,
+            "area": "입술",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "입술 필러[볼륨]",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울트라콜 200",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "콜라겐 볼륨 부스터",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "마스터 분류에 없음, 필러 카테고리로 추정",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "쥬베룩 볼륨",
+            "volume_or_count": null,
+            "area": "이마, 관자",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "쥬베룩 볼륨[볼륨]",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "힙스컬트라",
+            "volume_or_count": null,
+            "area": "힙, 골반",
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "스컬트라[볼륨]",
+            "master_sub": "바디 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울트라콜",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨/콜라겐",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "레스틸렌",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 필러",
+            "notes": "브랜드명, 세부 제품명 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "2실린지",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 2190000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "쥬베룩 볼륨 1병(이마, 관자)과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "래디어스",
+            "volume_or_count": "2실린지",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 1790000,
+            "master_treatment": "래디어스",
+            "master_sub": "얼굴 필러",
+            "notes": "목 스킨케어(보톡스 국산 2cc, 목 LDM 12분, 스네일 보습관리)과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "쥬베룩 볼륨",
+            "volume_or_count": "1병",
+            "area": "이마, 관자",
+            "promo": "패키지",
+            "purpose": "볼륨",
+            "orig_price": null,
+            "event_price": 2190000,
+            "master_treatment": "쥬베룩 볼륨",
+            "master_sub": "얼굴 필러",
+            "notes": "래디어스 2실린지와 세트 구성",
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "보톡스",
+        "tag": "botox",
+        "items": [
+          {
+            "treatment_name": "보톡스",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 보톡스",
+            "notes": "부위 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "1부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 14700,
+            "event_price": 7500,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "1부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 58800,
+            "event_price": 30000,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "제오민",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "1부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 113700,
+            "event_price": 58000,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "엘러간",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "4부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 54900,
+            "event_price": 28000,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "4부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 194100,
+            "event_price": 99000,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "제오민",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "주름보톡스",
+            "volume_or_count": "4부위",
+            "area": "이마/미간/눈썹산/눈가/눈밑/콧등/바니주름/자갈턱",
+            "promo": null,
+            "purpose": "주름",
+            "orig_price": 384300,
+            "event_price": 196000,
+            "master_treatment": "이마 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "엘러간",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "사각턱 보톡스",
+            "volume_or_count": "50U",
+            "area": "사각턱",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": 17600,
+            "event_price": 9000,
+            "master_treatment": "사각턱 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "사각턱 보톡스",
+            "volume_or_count": "50U",
+            "area": "사각턱",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": 264700,
+            "event_price": 135000,
+            "master_treatment": "사각턱 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "엘러간",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "사각턱 보톡스",
+            "volume_or_count": "50U",
+            "area": "사각턱",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": 111000,
+            "event_price": 89000,
+            "master_treatment": "사각턱 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "종아리 보톡스",
+            "volume_or_count": "100U",
+            "area": "종아리/허벅지/팔뚝/승모근",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": 68600,
+            "event_price": 35000,
+            "master_treatment": "종아리 보톡스",
+            "master_sub": "바디 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "종아리 보톡스",
+            "volume_or_count": "100U",
+            "area": "종아리/허벅지/팔뚝/승모근",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": 519600,
+            "event_price": 265000,
+            "master_treatment": "종아리 보톡스",
+            "master_sub": "바디 보톡스",
+            "notes": "엘러간",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스킨 보톡스",
+            "volume_or_count": null,
+            "area": "얼굴전체",
+            "promo": null,
+            "purpose": "주름, 탄력, 모공",
+            "orig_price": 88200,
+            "event_price": 45000,
+            "master_treatment": "스킨 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스킨 보톡스",
+            "volume_or_count": null,
+            "area": "얼굴전체",
+            "promo": null,
+            "purpose": "주름, 탄력, 모공",
+            "orig_price": 323500,
+            "event_price": 165000,
+            "master_treatment": "스킨 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "제오민",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스킨 보톡스",
+            "volume_or_count": null,
+            "area": "얼굴전체",
+            "promo": null,
+            "purpose": "주름, 탄력, 모공",
+            "orig_price": 390100,
+            "event_price": 199000,
+            "master_treatment": "스킨 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "엘러간",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "윤곽주사 에그쉐이핑",
+            "volume_or_count": "12cc",
+            "area": null,
+            "promo": null,
+            "purpose": "윤곽",
+            "orig_price": 123000,
+            "event_price": 99000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "승모근 보톡스",
+            "volume_or_count": null,
+            "area": "승모근",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "승모근 보톡스[근육]",
+            "master_sub": "바디 보톡스",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "종아리 보톡스",
+            "volume_or_count": null,
+            "area": "종아리",
+            "promo": null,
+            "purpose": "근육",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "종아리 보톡스[근육]",
+            "master_sub": "바디 보톡스",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "윤곽 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 윤곽",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "얼굴 보톡스",
+            "notes": "윤곽주사는 보톡스 카테고리로 분류",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스킨 보톡스",
+            "volume_or_count": "2cc",
+            "area": "목",
+            "promo": "패키지",
+            "purpose": "모공",
+            "orig_price": null,
+            "event_price": 1790000,
+            "master_treatment": "스킨 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산, 목 LDM 12분, 스네일 보습관리와 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스킨 보톡스",
+            "volume_or_count": "2cc",
+            "area": "손등",
+            "promo": "패키지",
+            "purpose": "모공",
+            "orig_price": null,
+            "event_price": 1790000,
+            "master_treatment": "스킨 보톡스",
+            "master_sub": "얼굴 보톡스",
+            "notes": "국산, 래디어스 2실린지와 세트 구성",
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "피부",
+        "tag": "skin",
+        "items": [
+          {
+            "treatment_name": "아쿠아필",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "피부관리",
+            "orig_price": 737000,
+            "event_price": 590000,
+            "master_treatment": "하이드라페이셜",
+            "master_sub": "일반관리",
+            "notes": "시그니처 아쿠아필",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "아쿠아필",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "첫방문",
+            "purpose": "여드름/피지",
+            "orig_price": null,
+            "event_price": 9900,
+            "master_treatment": "하이드라페이셜",
+            "master_sub": "일반관리",
+            "notes": "아쿠아필 1,2,3단계+모델링팩 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "진정/보습",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "LDM",
+            "master_sub": "일반관리",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리쥬란 힐러",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "리쥬란 힐러",
+            "master_sub": "스킨부스터",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "릴리이드",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "릴리이드",
+            "master_sub": "스킨부스터",
+            "notes": "릴리이드M로 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "필메드",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "스킨부스터",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "포텐자",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "모공, 흉터",
+            "orig_price": 311700,
+            "event_price": 159000,
+            "master_treatment": "포텐자",
+            "master_sub": "여드름/흉터",
+            "notes": "포텐자 (RF니들)+STC앰플",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "알라딘필링",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "여드름/피지",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "일반관리",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "피코 토닝",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백, 색소, 잡티",
+            "orig_price": 39200,
+            "event_price": 20000,
+            "master_treatment": "피코 토닝",
+            "master_sub": "미백/토닝",
+            "notes": "피코토닝+모델링팩",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "피코 토닝",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백/색소",
+            "orig_price": 123000,
+            "event_price": 99000,
+            "master_treatment": "피코 토닝",
+            "master_sub": "미백/토닝",
+            "notes": "모델링팩 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "피코 토닝",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "커스터마이징 화이트닝 스킨케어",
+            "purpose": "미백/색소",
+            "orig_price": 205800,
+            "event_price": 105000,
+            "master_treatment": "피코 토닝[미백/색소]",
+            "master_sub": "미백/토닝",
+            "notes": "이온자임+광채필메드(2cc)+LED재생레이저+모델링팩+EGF재생크림 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "스핏 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "이벤트",
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "소멸핏",
+            "master_sub": "스킨부스터",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "커스터마이징 스킨케어",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "카톡친구대상",
+            "purpose": "스킨케어",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "메디컬 스킨케어",
+            "master_sub": "일반관리",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "에버클",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "스킨부스터",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "필링",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "각질, 피지",
+            "orig_price": 17600,
+            "event_price": 9000,
+            "master_treatment": "필링",
+            "master_sub": "일반관리",
+            "notes": "아쿠아필 (1,2,3단계)+재생레이저+모델링팩",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "필링",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "피지, 피부결",
+            "orig_price": 156800,
+            "event_price": 80000,
+            "master_treatment": "필링",
+            "master_sub": "일반관리",
+            "notes": "라라필+LDM 12분+재생레이저+모델링팩",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "필링",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "커스터마이징 화이트닝 스킨케어",
+            "purpose": "여드름/피지",
+            "orig_price": 39000,
+            "event_price": 19900,
+            "master_treatment": "필링[여드름/피지]",
+            "master_sub": "일반관리",
+            "notes": "소노케어/크라이오/비타민관리 택 2",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "필링",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "커스터마이징 화이트닝 스킨케어",
+            "purpose": "여드름/피지",
+            "orig_price": 117600,
+            "event_price": 60000,
+            "master_treatment": "필링[여드름/피지]",
+            "master_sub": "일반관리",
+            "notes": "소노케어+LED재생레이저+모델링팩 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "20분",
+            "area": null,
+            "promo": null,
+            "purpose": "진정, 보습, 광채",
+            "orig_price": 235200,
+            "event_price": 120000,
+            "master_treatment": "LDM",
+            "master_sub": "일반관리",
+            "notes": "LDM물방울리프팅+광채필메드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "20분",
+            "area": null,
+            "promo": null,
+            "purpose": "진정, 보습",
+            "orig_price": 194100,
+            "event_price": 99000,
+            "master_treatment": "LDM",
+            "master_sub": "일반관리",
+            "notes": "LDM물방울리프팅+STC 엑소좀 앰플",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "토닝 레이저",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백, 색소, 모공, 혈관",
+            "orig_price": 56800,
+            "event_price": 29000,
+            "master_treatment": "토닝 레이저",
+            "master_sub": "미백/토닝",
+            "notes": "제네시스 (1064nm 롱펄스)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "바디 피코 토닝",
+            "volume_or_count": "1부위",
+            "area": null,
+            "promo": null,
+            "purpose": "색소, 피부톤",
+            "orig_price": 588200,
+            "event_price": 300000,
+            "master_treatment": "바디 피코 토닝",
+            "master_sub": "미백/토닝",
+            "notes": "바디 라라시크릿+바디 피코토닝",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "피코프락셀",
+            "volume_or_count": null,
+            "area": "얼굴 전체",
+            "promo": null,
+            "purpose": "모공, 흉터",
+            "orig_price": 194100,
+            "event_price": 99000,
+            "master_treatment": "피코프락셀",
+            "master_sub": "여드름/흉터",
+            "notes": "피코프락셀+STC앰플",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "줄기세포 주사",
+            "volume_or_count": "3cc",
+            "area": "페이스/두피/바디",
+            "promo": null,
+            "purpose": "재생, 탄력",
+            "orig_price": 1549000,
+            "event_price": 790000,
+            "master_treatment": "줄기세포 주사",
+            "master_sub": "스킨부스터",
+            "notes": "자가혈 줄기세포 주사",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "줄기세포 주사",
+            "volume_or_count": "3cc",
+            "area": null,
+            "promo": null,
+            "purpose": "재생, 탄력",
+            "orig_price": 3313700,
+            "event_price": 1690000,
+            "master_treatment": "줄기세포 주사",
+            "master_sub": "스킨부스터",
+            "notes": "자가혈 줄기세포 주사(3cc)+정맥주사(60cc) 항노화 재생 수액 프로그램",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "줄기세포 주사",
+            "volume_or_count": "3cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": 7375000,
+            "event_price": 5900000,
+            "master_treatment": "줄기세포 주사",
+            "master_sub": "스킨부스터",
+            "notes": "두피/페이스/바디 가능",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리즈네",
+            "volume_or_count": "1cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 115600,
+            "event_price": 59000,
+            "master_treatment": "리즈네",
+            "master_sub": "스킨부스터",
+            "notes": "PN 성분",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "아이리쥬란",
+            "volume_or_count": "1cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 194100,
+            "event_price": 99000,
+            "master_treatment": "아이리쥬란",
+            "master_sub": "스킨부스터",
+            "notes": "리쥬란아이 (연어DNA)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리쥬란 HB",
+            "volume_or_count": "1cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 233300,
+            "event_price": 119000,
+            "master_treatment": "리쥬란 HB",
+            "master_sub": "스킨부스터",
+            "notes": "2cc 이상 진행 시 크라이오+모델링팩 서비스",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리쥬란 힐러",
+            "volume_or_count": "2cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 311700,
+            "event_price": 159000,
+            "master_treatment": "리쥬란 힐러",
+            "master_sub": "스킨부스터",
+            "notes": "리쥬란힐러+LED재생레이저",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "PN 주사",
+            "volume_or_count": "3cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 147000,
+            "event_price": 75000,
+            "master_treatment": "PN 주사",
+            "master_sub": "스킨부스터",
+            "notes": "MTS+STC앰플+LED재생레이저",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "릴리이드",
+            "volume_or_count": "5cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": 186200,
+            "event_price": 95000,
+            "master_treatment": "릴리이드",
+            "master_sub": "스킨부스터",
+            "notes": "릴리이드M+LED재생레이저 (고용량 히알루론산)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "쥬베룩 스킨",
+            "volume_or_count": "2cc",
+            "area": null,
+            "promo": null,
+            "purpose": "모공, 흉터, 주름",
+            "orig_price": 370500,
+            "event_price": 189000,
+            "master_treatment": "쥬베룩 스킨",
+            "master_sub": "스킨부스터",
+            "notes": "광채쥬베룩 스킨부스터 (PLA+히알루론산)+LED재생레이저",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "쥬베룩 스킨",
+            "volume_or_count": "4cc",
+            "area": null,
+            "promo": null,
+            "purpose": "모공, 흉터, 주름",
+            "orig_price": 507800,
+            "event_price": 259000,
+            "master_treatment": "쥬베룩 스킨",
+            "master_sub": "스킨부스터",
+            "notes": "광채쥬베룩 스킨부스터+LED재생레이저",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "줄기세포 정맥주사",
+            "volume_or_count": "120cc",
+            "area": null,
+            "promo": null,
+            "purpose": "항노화, 재생",
+            "orig_price": 2237500,
+            "event_price": 1790000,
+            "master_treatment": "줄기세포 정맥주사",
+            "master_sub": "스킨부스터",
+            "notes": "자가혈 줄기세포 정맥주사 항노화 재생 수액 프로그램",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "제네시스 레이저",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "여드름/피지",
+            "orig_price": 187000,
+            "event_price": 150000,
+            "master_treatment": "여드름 레이저",
+            "master_sub": "여드름/흉터",
+            "notes": "추가 시술",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "릴리이드 M",
+            "volume_or_count": "2.5cc",
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": 487000,
+            "event_price": 390000,
+            "master_treatment": "릴리이드",
+            "master_sub": "스킨부스터",
+            "notes": "모델링팩 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "포텐자",
+            "volume_or_count": null,
+            "area": "풀페이스",
+            "promo": null,
+            "purpose": "모공/흉터",
+            "orig_price": 1237000,
+            "event_price": 990000,
+            "master_treatment": "포텐자",
+            "master_sub": "여드름/흉터",
+            "notes": "RF, 모델링팩 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "12분",
+            "area": null,
+            "promo": null,
+            "purpose": "진정/보습",
+            "orig_price": 248000,
+            "event_price": 199000,
+            "master_treatment": "LDM",
+            "master_sub": "일반관리",
+            "notes": "모델링팩 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "12분",
+            "area": null,
+            "promo": "커스터마이징 스킨케어",
+            "purpose": "진정/보습",
+            "orig_price": 78400,
+            "event_price": 40000,
+            "master_treatment": "LDM[진정/보습]",
+            "master_sub": "일반관리",
+            "notes": "스킨스크러버+LED재생레이저+모델링팩 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "12분",
+            "area": null,
+            "promo": "커스터마이징 스킨케어",
+            "purpose": "진정/보습",
+            "orig_price": 96000,
+            "event_price": 49000,
+            "master_treatment": "LDM[진정/보습]",
+            "master_sub": "일반관리",
+            "notes": "스킨스크러버+STC앰플(2cc)+모델링팩(압출+염증주사 10개까지 포함) 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "12분",
+            "area": null,
+            "promo": "커스터마이징 화이트닝 스킨케어",
+            "purpose": "진정/보습",
+            "orig_price": 194100,
+            "event_price": 99000,
+            "master_treatment": "LDM[진정/보습]",
+            "master_sub": "일반관리",
+            "notes": "LED재생레이저 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "비타민 관리",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "피부관리",
+            "orig_price": 737000,
+            "event_price": 590000,
+            "master_treatment": "메디컬 스킨케어",
+            "master_sub": "일반관리",
+            "notes": "시그니처 비타민 관리",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "백옥주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백",
+            "orig_price": 750000,
+            "event_price": 600000,
+            "master_treatment": "백옥주사",
+            "master_sub": "미백/토닝",
+            "notes": "올인원뷰티주사 구성(신데렐라주사+비타민C 포함)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "신데렐라주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백",
+            "orig_price": 750000,
+            "event_price": 600000,
+            "master_treatment": "신데렐라주사",
+            "master_sub": "미백/토닝",
+            "notes": "올인원뷰티주사 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "글루타치온 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "미백",
+            "orig_price": 750000,
+            "event_price": 600000,
+            "master_treatment": "글루타치온 주사",
+            "master_sub": "미백/토닝",
+            "notes": "올인원뷰티주사 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "골든 에너지 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "면역력/항산화",
+            "orig_price": 2237000,
+            "event_price": 1790000,
+            "master_treatment": null,
+            "master_sub": "미백/토닝",
+            "notes": "피로+면역력+항산화+영양 보충",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "물방울 리프팅",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 리프팅",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "스킨부스터",
+            "notes": "마스터 분류에 없음, 스킨부스터 카테고리로 추정",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "콜라겐 스킨부스터",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "스킨부스터",
+            "master_sub": "스킨부스터",
+            "notes": "브랜드: 콜라겐",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "릴리이드M",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름, 탄력, 수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "릴리이드[주름/탄력/수분]",
+            "master_sub": "스킨부스터",
+            "notes": "텍스트에는 릴리이드M으로 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "콜라겐",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "탄력, 재생",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "스킨부스터",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "여드름퀵 5주 패키지",
+            "volume_or_count": "5주",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "여드름, 피지",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "여드름/흉터",
+            "notes": "패키지 구성: 5주 치료",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "라라시크릿",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "모공, 흉터",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "시크릿[모공/흉터]",
+            "master_sub": "여드름/흉터",
+            "notes": "라라시크릿 플러스로 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "아쿠아필",
+            "volume_or_count": "1,2,3단계",
+            "area": null,
+            "promo": "커스터마이징 스킨케어",
+            "purpose": "여드름/피지",
+            "orig_price": 115600,
+            "event_price": 59000,
+            "master_treatment": "아쿠아필",
+            "master_sub": "일반관리",
+            "notes": "LDM물방울리프팅 12분+모델링팩 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "알라딘필링",
+            "volume_or_count": null,
+            "area": "등상부/등하부/가슴/팔하완/팔상완/종아리 택1",
+            "promo": "커스터마이징 스킨케어",
+            "purpose": "여드름/피지",
+            "orig_price": 331300,
+            "event_price": 169000,
+            "master_treatment": "알라딘필링",
+            "master_sub": "여드름/흉터",
+            "notes": "바디, 압출+염증주사+수딩크림마스크+EGF재생크림 포함 패키지",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "6분",
+            "area": null,
+            "promo": "커스터마이징 화이트닝 스킨케어",
+            "purpose": "진정/보습",
+            "orig_price": 784300,
+            "event_price": 400000,
+            "master_treatment": "LDM[진정/보습]",
+            "master_sub": "일반관리",
+            "notes": "바디 시크릿+피코착색토닝+시크릿 트리트먼트 재생크림 포함 패키지, 중복해서 여러부위 가능",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "물광주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "물광주사",
+            "master_sub": "스킨부스터",
+            "notes": "물방울 리프팅으로도 표기됨",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리바이브",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "리바이브",
+            "master_sub": "스킨부스터",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "시크릿",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "모공/흉터",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "시크릿",
+            "master_sub": "여드름/흉터",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리바이브",
+            "volume_or_count": "1cc",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": 1190000,
+            "master_treatment": "리바이브",
+            "master_sub": "스킨부스터",
+            "notes": "래디어스 1실린지와 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "리바이브",
+            "volume_or_count": "1cc",
+            "area": null,
+            "promo": "패키지",
+            "purpose": "주름/탄력/수분",
+            "orig_price": null,
+            "event_price": 1390000,
+            "master_treatment": "리바이브",
+            "master_sub": "스킨부스터",
+            "notes": "래디어스 1실린지, 온다 리프팅과 세트 구성",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "LDM",
+            "volume_or_count": "12분",
+            "area": "목",
+            "promo": "패키지",
+            "purpose": "진정/보습",
+            "orig_price": null,
+            "event_price": 1790000,
+            "master_treatment": "LDM",
+            "master_sub": "일반관리",
+            "notes": "래디어스 2실린지, 스킨 보톡스(목)와 세트 구성",
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "바디",
+        "tag": "body",
+        "items": [
+          {
+            "treatment_name": "바디 인모드",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "바디 인모드",
+            "master_sub": "바디토닝",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "걸그룹 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "지방분해주사",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "GPC 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "지방분해주사",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "울핏",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "지방분해주사",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "트리플바디",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "마스터 분류에 없음",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "얼굴 지방분해 주사",
+            "volume_or_count": "2cc",
+            "area": "페이스",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 333300,
+            "event_price": 170000,
+            "master_treatment": "얼굴 지방분해 주사",
+            "master_sub": "지방분해주사",
+            "notes": "브이올렛",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "얼굴 지방분해 주사",
+            "volume_or_count": "1부위",
+            "area": "페이스",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 350900,
+            "event_price": 179000,
+            "master_treatment": "얼굴 지방분해 주사",
+            "master_sub": "지방분해주사",
+            "notes": "청담 스핏",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "바디 지방분해 주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 78400,
+            "event_price": 40000,
+            "master_treatment": "바디 지방분해 주사",
+            "master_sub": "지방분해주사",
+            "notes": "바디지방분해주사 (걸그룹) 대용량",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "바디 지방분해 주사",
+            "volume_or_count": "1부위",
+            "area": null,
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 490100,
+            "event_price": 250000,
+            "master_treatment": "바디 지방분해 주사",
+            "master_sub": "지방분해주사",
+            "notes": "청담 스핏 바디",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "튠바디",
+            "volume_or_count": "30분",
+            "area": null,
+            "promo": null,
+            "purpose": "지방, 탄력",
+            "orig_price": 96000,
+            "event_price": 49000,
+            "master_treatment": "튠바디",
+            "master_sub": "바디토닝",
+            "notes": "트리플바디 (8패드)",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "바디 인모드",
+            "volume_or_count": "2패치",
+            "area": null,
+            "promo": null,
+            "purpose": "지방, 탄력",
+            "orig_price": 174500,
+            "event_price": 89000,
+            "master_treatment": "바디 인모드",
+            "master_sub": "바디토닝",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 페이스",
+            "volume_or_count": "1회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 431300,
+            "event_price": 220000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 페이스",
+            "volume_or_count": "3회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 1254900,
+            "event_price": 640000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 페이스",
+            "volume_or_count": "1회",
+            "area": "3부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 1098000,
+            "event_price": 560000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 페이스",
+            "volume_or_count": "3회",
+            "area": "3부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 3235200,
+            "event_price": 1650000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 바디",
+            "volume_or_count": "1회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 588200,
+            "event_price": 300000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 바디",
+            "volume_or_count": "3회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 1666600,
+            "event_price": 850000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 바디",
+            "volume_or_count": "1회",
+            "area": "3부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 1470500,
+            "event_price": 750000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏 바디",
+            "volume_or_count": "3회",
+            "area": "3부위",
+            "promo": null,
+            "purpose": "지방/탄력",
+            "orig_price": 4313700,
+            "event_price": 2200000,
+            "master_treatment": null,
+            "master_sub": "바디토닝",
+            "notes": "청담스핏 브랜드",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "바디 온다",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방, 탄력",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": "바디 온다[지방/탄력]",
+            "master_sub": "바디토닝",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담S핏",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "지방분해",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "지방분해주사",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏",
+            "volume_or_count": "1회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 320000,
+            "event_price": 220000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏",
+            "volume_or_count": "1회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 880000,
+            "event_price": 300000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏",
+            "volume_or_count": "3회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": 960000,
+            "event_price": 640000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "청담스핏",
+            "volume_or_count": "3회",
+            "area": "1부위",
+            "promo": null,
+            "purpose": "지방",
+            "orig_price": null,
+            "event_price": 850000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "제모",
+        "tag": "hair_removal",
+        "items": [
+          {
+            "treatment_name": "남성 제모",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "남성전용",
+            "purpose": "제모",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "부위별 제모",
+            "notes": "부위 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "여성 제모",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "제모",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "부위별 제모",
+            "notes": "부위 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "레이저 제모",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "제모",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": "부위별 제모",
+            "notes": "부위 불명확",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "겨드랑이 제모",
+            "volume_or_count": null,
+            "area": "겨드랑이/인중",
+            "promo": "여성",
+            "purpose": "제모",
+            "orig_price": 1900,
+            "event_price": 1000,
+            "master_treatment": "겨드랑이 제모",
+            "master_sub": "부위별 제모",
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "인중 제모",
+            "volume_or_count": null,
+            "area": "인중/앞턱",
+            "promo": "남성",
+            "purpose": "제모",
+            "orig_price": 19400,
+            "event_price": 9900,
+            "master_treatment": "인중 제모",
+            "master_sub": "부위별 제모",
+            "notes": null,
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "약처방",
+        "tag": "prescription",
+        "items": [
+          {
+            "treatment_name": "가다실",
+            "volume_or_count": "1회",
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 185000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "자궁경부암 백신",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "가다실",
+            "volume_or_count": "3회",
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 520000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "자궁경부암 백신",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "가다실",
+            "volume_or_count": "9가",
+            "area": null,
+            "promo": null,
+            "purpose": "자궁경부암 예방",
+            "orig_price": 362700,
+            "event_price": 185000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "부가세 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "가다실",
+            "volume_or_count": "9가",
+            "area": null,
+            "promo": "3회",
+            "purpose": "자궁경부암 예방",
+            "orig_price": 1019600,
+            "event_price": 520000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "부가세 포함",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "가다실",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "백신",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "백신",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "정맥주사",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "종합 건강",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "정맥주입 시술",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "약처방",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "종합",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "정맥 약처방",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": "약처방",
+            "orig_price": null,
+            "event_price": null,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "제증명",
+        "tag": "certificate",
+        "items": [
+          {
+            "treatment_name": "소견서",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 50000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "진단서",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 20000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "진료 확인서",
+            "volume_or_count": null,
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 3000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": null,
+            "source": "llm"
+          },
+          {
+            "treatment_name": "진료 기록 사본",
+            "volume_or_count": "1~5매",
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 1000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "1매당",
+            "source": "llm"
+          },
+          {
+            "treatment_name": "진료 기록 사본",
+            "volume_or_count": "6매 이상",
+            "area": null,
+            "promo": null,
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 100,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "1매당",
+            "source": "llm"
+          }
+        ]
+      },
+      {
+        "name": "미분류",
+        "tag": "unclassified",
+        "items": [
+          {
+            "treatment_name": "32호점 오픈기념 시술",
+            "volume_or_count": null,
+            "area": null,
+            "promo": "32호점오픈기념",
+            "purpose": null,
+            "orig_price": null,
+            "event_price": 32000,
+            "master_treatment": null,
+            "master_sub": null,
+            "notes": "최소 가격",
+            "source": "llm"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "phase1": {
+        "pages": 200,
+        "images": 334,
+        "chars": 379122
+      },
+      "phase15": {
+        "originalChars": 379122,
+        "afterDedup": 141441,
+        "afterFilter": 137328,
+        "regexExtracted": 0,
+        "unmatchedChars": 123014,
+        "savedPercent": "67.6",
+        "duration": "0.3"
+      },
+      "phase2": {
+        "totalRaw": 425,
+        "totalDeduped": 190,
+        "unmatchedCount": 145,
+        "unmatched": [
+          {
+            "raw_text": "물방울 리프팅",
+            "reason": "마스터 분류에 해당하는 시술명 없음. 물방울 리프팅이 마스터 리스트에 미등재"
+          },
+          {
+            "raw_text": "콜라겐 볼륨 부스터",
+            "reason": "마스터 분류에 정확히 매칭되는 시술명 없음"
+          },
+          {
+            "raw_text": "콜라겐 재생",
+            "reason": "마스터 분류에 정확히 매칭되는 시술명 없음"
+          },
+          {
+            "raw_text": "윤곽주사",
+            "reason": "마스터 분류상 보톡스 카테고리의 일부이나 구체적인 시술명 불명확"
+          },
+          {
+            "raw_text": "온다",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "올리지오",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "텐써마",
+            "reason": "중복 처리됨 (써마지 FLX로 이미 등록)"
+          },
+          {
+            "raw_text": "텐쎄라",
+            "reason": "마스터 리스트에 정확한 시술명 없음"
+          },
+          {
+            "raw_text": "볼뉴머",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "에그라인",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "울트라콜 200",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "필메드",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "알라딘필링",
+            "reason": "시술명만 있고 가격 정보 없음"
+          },
+          {
+            "raw_text": "GPC 주사",
+            "reason": "마스터 리스트에 없음"
+          },
+          {
+            "raw_text": "울핏",
+            "reason": "마스터 리스트에 없음"
+          },
+          {
+            "raw_text": "올리지오",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "볼뉴머",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "덴서티",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리프테라2",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리니어지",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "텐써마",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "텐쎄라",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "브이올렛",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "에그라인",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "스컬트라",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "울트라콜 200",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "에버클",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리쥬란힐러",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "필메드",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "알라딘필링",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "바디인모드",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "GPC 주사",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "걸그룹 주사",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "울핏",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "트리플바디",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "남성제모",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "여성제모",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "가다실",
+            "reason": "의료 서비스/백신으로 분류 불가"
+          },
+          {
+            "raw_text": "정맥주사",
+            "reason": "의료 서비스로 분류 불가"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~ 이벤트",
+            "reason": "구체적인 시술명 없음"
+          },
+          {
+            "raw_text": "첫방문 이벤트",
+            "reason": "구체적인 시술명 없음"
+          },
+          {
+            "raw_text": "커스터마이징 스킨케어",
+            "reason": "구체적인 시술명/가격 정보 없음"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트",
+            "reason": "가격만 있고 시술명이 명확하지 않음"
+          },
+          {
+            "raw_text": "100% 즉시 당첨! 풍선다트 이벤트",
+            "reason": "프로모션 이벤트이지 시술명이 아님"
+          },
+          {
+            "raw_text": "가다실｜백신｜정맥｜약처방",
+            "reason": "의료 서비스 항목으로 시술이 아님"
+          },
+          {
+            "raw_text": "콜라겐 재생",
+            "reason": "시술명이 불명확함 (스킨부스터와 혼동 가능)"
+          },
+          {
+            "raw_text": "페이스 스핏주사",
+            "reason": "부위가 명확하지 않음 (얼굴 부위 불명확)"
+          },
+          {
+            "raw_text": "시그니처 모공 흉터 패키지1",
+            "reason": "패키지 구성이 불명확하여 개별 시술명을 특정할 수 없음"
+          },
+          {
+            "raw_text": "라라시크릿 플러스",
+            "reason": "마스터 분류에 없음, 유사 제품을 찾을 수 없음"
+          },
+          {
+            "raw_text": "텐써마",
+            "reason": "정확한 시술명 불명확 (써마지 계열인지 다른 제품인지 불명확)"
+          },
+          {
+            "raw_text": "텐쎄라",
+            "reason": "정확한 시술명 불명확, 마스터 분류에 없음"
+          },
+          {
+            "raw_text": "청담S핏",
+            "reason": "정확한 시술명 불명확, 마스터 분류에 없음"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "카테고리명이지 구체적 시술명이 아님"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트",
+            "reason": "구체적인 시술명 미명시, 가격만 제시"
+          },
+          {
+            "raw_text": "혜택이 팡팡! 100% 즉시 당첨! 풍선다트 이벤트",
+            "reason": "시술정보 없음, 이벤트 유형만 기재"
+          },
+          {
+            "raw_text": "평일한정특가",
+            "reason": "구체적인 시술명 미명시"
+          },
+          {
+            "raw_text": "콜라겐 볼륨 부스터",
+            "reason": "마스터 분류의 정확한 시술명 불명확 (콜라겐 또는 부스터 종류 명시 필요)"
+          },
+          {
+            "raw_text": "토닝｜색소｜잡티 개선",
+            "reason": "구체적인 시술명 미명시, 카테고리만 표기"
+          },
+          {
+            "raw_text": "콜라겐 재생｜스킨부스터",
+            "reason": "정확한 스킨부스터 제품명 미명시"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "구체적인 약물명 또는 시술명 미명시"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트",
+            "reason": "시술명이 없음, 가격만 있는 프로모션 문구"
+          },
+          {
+            "raw_text": "물방울 리프팅",
+            "reason": "마스터 리스트에 정확한 시술명 매핑 불가"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "구체적 시술명 없이 카테고리만 제시"
+          },
+          {
+            "raw_text": "걸그룹 주사",
+            "reason": "마스터 리스트에 없음, 상세 정보 부족"
+          },
+          {
+            "raw_text": "정맥주사/약처방",
+            "reason": "구체적 시술명 부재"
+          },
+          {
+            "raw_text": "덴서티",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "볼뉴머",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "슈링크 유니버스",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "울쎄라피 프라임",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "온다",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "올리지오",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "인모드",
+            "reason": "가격 정보 없음, 구체적 제품명 불명확"
+          },
+          {
+            "raw_text": "텐써마",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "텐쎄라",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리프테라2",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리니어지",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "보톡스",
+            "reason": "가격 정보 없음, 부위 불명확"
+          },
+          {
+            "raw_text": "필러",
+            "reason": "가격 정보 없음, 부위 불명확"
+          },
+          {
+            "raw_text": "브이올렛",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "에그라인",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "윤곽주사",
+            "reason": "가격 정보 없음, 구체적 제품명 불명확"
+          },
+          {
+            "raw_text": "스컬트라",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "울트라콜 200",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "에버클",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "레디어스",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "리쥬란힐러",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "릴리이드M",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "필메드",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "포텐자",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "바디인모드",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "걸그룹 주사",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "GPC 주사",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "울핏",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "트리플바디",
+            "reason": "마스터 분류에 없음, 가격 정보 없음"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "가격 정보 없음"
+          },
+          {
+            "raw_text": "남성제모",
+            "reason": "가격 정보 없음, 부위 불명확"
+          },
+          {
+            "raw_text": "여성제모",
+            "reason": "가격 정보 없음, 부위 불명확"
+          },
+          {
+            "raw_text": "가다실",
+            "reason": "백신으로 미용 시술 범위 외, 가격 정보 없음"
+          },
+          {
+            "raw_text": "정맥",
+            "reason": "의료 처치로 미용 시술 범위 외, 가격 정보 없음"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트",
+            "reason": "구체적 시술명 없음"
+          },
+          {
+            "raw_text": "풍선다트 이벤트",
+            "reason": "구체적 시술명 없음, 경품 이벤트"
+          },
+          {
+            "raw_text": "브이올렛",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "에그라인",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "에버클",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "필메드",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "알라딘필링",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "걸그룹 주사",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "GPC 주사",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "트리플바디",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "윤곽주사",
+            "reason": "구체적 시술명 미상세, 보톡스 카테고리로만 분류 가능하나 구체적 시술 불명확"
+          },
+          {
+            "raw_text": "스핏 주사",
+            "reason": "마스터 분류에 존재하지 않음"
+          },
+          {
+            "raw_text": "가다실",
+            "reason": "백신 시술로 마스터 분류에 존재하지 않음 (약처방 범주이나 구체적 시술 분류 불가)"
+          },
+          {
+            "raw_text": "백신",
+            "reason": "구체적 시술명 미상세"
+          },
+          {
+            "raw_text": "정맥",
+            "reason": "구체적 시술명 미상세"
+          },
+          {
+            "raw_text": "약처방",
+            "reason": "구체적 시술명 미상세"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "구체적 시술명 미상세"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트(~03.27)",
+            "reason": "구체적 시술명 없이 가격 범위만 표시된 프로모션 광고"
+          },
+          {
+            "raw_text": "풍선다트 이벤트(~03.27)",
+            "reason": "이벤트명만 있고 시술명 불명확"
+          },
+          {
+            "raw_text": "평일한정특가(카톡친구대상)",
+            "reason": "프로모션만 있고 시술명 없음"
+          },
+          {
+            "raw_text": "각질·피지관리",
+            "reason": "분류 광고 카테고리명, 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "여드름 피부·모공·흉터",
+            "reason": "분류 광고 카테고리명, 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "토닝·색소·잡티 개선",
+            "reason": "분류 광고 카테고리명, 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "주름·윤곽·콜라겐 볼륨",
+            "reason": "분류 광고 카테고리명, 구체적 시술명 불분명"
+          },
+          {
+            "raw_text": "콜라겐 재생·스킨부스터",
+            "reason": "분류 광고 카테고리명"
+          },
+          {
+            "raw_text": "탄력·리프팅",
+            "reason": "분류 광고 카테고리명"
+          },
+          {
+            "raw_text": "바디라인·다이어트",
+            "reason": "분류 광고 카테고리명"
+          },
+          {
+            "raw_text": "가다실·백신·정맥·약처방",
+            "reason": "분류 광고 카테고리명"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "메뉴명/분류명이지만 구체적 시술명 불명확"
+          },
+          {
+            "raw_text": "텐써마/텐쎄라",
+            "reason": "약칭/축약형으로 정확한 제품명 불명확 (써마지 FLX와 동일 제품으로 추정)"
+          },
+          {
+            "raw_text": "색소·잡티·기미",
+            "reason": "분류 광고 카테고리명"
+          },
+          {
+            "raw_text": "커스터마이징 스킨케어",
+            "reason": "프로모션/이벤트 성격의 상품으로 구체적 시술명 불명확"
+          },
+          {
+            "raw_text": "콜라겐 볼륨 부스터",
+            "reason": "구체적 시술명이 아닌 카테고리 표현"
+          },
+          {
+            "raw_text": "콜라겐 재생",
+            "reason": "구체적 시술명이 아닌 카테고리 표현"
+          },
+          {
+            "raw_text": "텐써마",
+            "reason": "텐써마는 써마지 FLX와 중복되는 표기로 추정되나, 정확한 구분 불명"
+          },
+          {
+            "raw_text": "텐쎄라",
+            "reason": "텐쎄라는 명확한 시술명이 아니거나 오기로 추정"
+          },
+          {
+            "raw_text": "인모드",
+            "reason": "구체적 제품명 없이 일반적 표기로 어떤 인모드 제품인지 불명확"
+          },
+          {
+            "raw_text": "다이어트 클리닉",
+            "reason": "클리닉 카테고리로 구체적 시술이 아님"
+          },
+          {
+            "raw_text": "32호점 오픈기념 32,000원~이벤트",
+            "reason": "이벤트 문구로 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "첫방문 이벤트",
+            "reason": "이벤트 카테고리로 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "평일한정특가",
+            "reason": "프로모션 정보로 구체적 시술명 없음"
+          },
+          {
+            "raw_text": "제공된 텍스트 전체",
+            "reason": "의료 피부과/성형외과 시술 가격 정보가 포함되지 않음. 텍스트는 '닥터에버스' 프랜차이즈 개원 안내, 개인정보 처리방침, 연락처 폼 등 기업 운영 정보만 포함됨"
+          },
+          {
+            "raw_text": "레디어스 1실린지+리페인 1cc",
+            "reason": "리페인은 마스터 분류에 없는 시술명 (리바이브로 추정되나 정확하지 않음)"
+          },
+          {
+            "raw_text": "레디어스 2실린지+쥬베룩률륭 1병(이마,관자)",
+            "reason": "쥬베룩률륭은 오타로 보이며 마스터 분류에 없음 (쥬베룩 볼륨으로 추정)"
+          },
+          {
+            "raw_text": "스네일 보습관리",
+            "reason": "마스터 분류에 없는 시술명 (정확한 분류 불가)"
+          },
+          {
+            "raw_text": "취소선 가격 정보: 5,200원 → 45,000원, 2,040원 → 25,000원, 35,290원 → 300,000원",
+            "reason": "구체적인 시술명이 없어 매핑 불가"
+          }
+        ],
+        "chunks": 12,
+        "duration": "775.1"
+      },
+      "totalItems": 190,
+      "regexItems": 0,
+      "llmItems": 190
+    }
+  }
+]
