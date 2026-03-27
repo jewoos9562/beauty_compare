@@ -18,6 +18,61 @@ function parseUnit(name: string): { count: number; unit: string } | null {
   return null;
 }
 
+/** Parse notes field into brand/origin badge + remaining text */
+function parseNotes(notes: string | null | undefined): { brand: string | null; origin: '국산' | '수입산' | null; extra: string | null } {
+  if (!notes) return { brand: null, origin: null, extra: null };
+  const parts = notes.split(',').map(p => p.trim());
+  let brand: string | null = null;
+  let origin: '국산' | '수입산' | null = null;
+  const extras: string[] = [];
+
+  for (const part of parts) {
+    if (/^국산-/.test(part)) {
+      origin = '국산';
+      brand = part.replace(/^국산-/, '');
+    } else if (/^수입산-/.test(part)) {
+      origin = '수입산';
+      brand = part.replace(/^수입산-/, '');
+    } else if (part === '국산') {
+      origin = '국산';
+    } else if (part === '수입산') {
+      origin = '수입산';
+    } else if (/^(뉴라미스|벨로테로|레스틸렌|아띠에르|쥬비덤|엘러간|제오민|코어톡스|디스포트|독일산|미국산|넥소좀|브라이톤|더마샤인|리투오)/.test(part)) {
+      brand = part;
+    } else {
+      extras.push(part);
+    }
+  }
+  return { brand, origin, extra: extras.length > 0 ? extras.join(', ') : null };
+}
+
+/** Render brand/origin badges */
+function NoteBadges({ notes }: { notes: string | null | undefined }) {
+  const { brand, origin, extra } = parseNotes(notes);
+  if (!brand && !origin && !extra) return null;
+  return (
+    <>
+      {origin && (
+        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium border ${
+          origin === '국산'
+            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+            : 'bg-blue-50 text-blue-600 border-blue-100'
+        }`}>
+          {origin}
+        </span>
+      )}
+      {brand && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 font-medium border border-teal-100">
+          {brand}
+        </span>
+      )}
+      {extra && (
+        <span className="text-[10px] text-slate-400">{extra}</span>
+      )}
+    </>
+  );
+}
+
 type Props = {
   clinic: Clinic;
   toggleCompare: (item: CompareItem) => void;
@@ -675,6 +730,7 @@ function TreatmentRow({
               {item.promo}
             </span>
           )}
+          <NoteBadges notes={item.notes} />
         </div>
         {item.purpose && (
           <div className="flex gap-1 mt-0.5 flex-wrap">
@@ -684,9 +740,6 @@ function TreatmentRow({
               </span>
             ))}
           </div>
-        )}
-        {item.notes && (
-          <p className="text-[10px] text-slate-400 mt-0.5">{item.notes}</p>
         )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
@@ -800,6 +853,7 @@ function TreatmentGroup({
                         {item.promo}
                       </span>
                     )}
+                    <NoteBadges notes={item.notes} />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -913,6 +967,7 @@ function ItemTable({
                         {item.promo}
                       </span>
                     )}
+                    <NoteBadges notes={item.notes} />
                   </div>
                 </td>
                 {hasOrig && (
