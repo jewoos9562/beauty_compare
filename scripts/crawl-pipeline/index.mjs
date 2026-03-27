@@ -16,8 +16,63 @@ import fs from 'fs';
 import { phase1Extract } from './phase1-extract.mjs';
 import { phase15Preprocess } from './phase1-preprocess.mjs';
 import { phase2Classify } from './phase2-classify.mjs';
-import { MAJOR_TO_TAG, SUB_TO_TAG } from './master-list.mjs';
+import { MAJOR_TO_TAG, SUB_TO_TAG, MASTER_LIST, buildAliasMap } from './master-list.mjs';
 import { log } from './utils.mjs';
+
+// ── Alias auto-detection for mergeResults ──────────────────────────
+const ALIAS_LOOKUP = new Map(); // normAlias → { alias, masterName }
+for (const m of MASTER_LIST) {
+  for (const a of m.aliases || []) {
+    const normAlias = a.replace(/\s+/g, '').toLowerCase();
+    const normMaster = m.name.replace(/\s+/g, '').toLowerCase();
+    if (normAlias !== normMaster) {
+      if (!ALIAS_LOOKUP.has(normAlias)) {
+        ALIAS_LOOKUP.set(normAlias, { alias: a, masterName: m.name, master: m });
+      }
+    }
+  }
+}
+
+// Volume/count patterns to extract from remaining text after alias removal
+const VOL_PATTERN = /(\d+(?:\.\d+)?)\s*(cc|ml|유닛|unit|샷|줄|부위|회|kj|mg|개)/i;
+const AREA_PATTERN = /(얼굴|눈밑|눈가|이마|볼|턱|코|입술|목|팔|다리|종아리|겨드랑이|브라질리언|인중|콧수염|사각턱|승모근|손등|발등|하관|앞목)/;
+
+function autoEnrichAlias(item) {
+  if (item.clinic_alias) return item; // already set
+  const rawTn = item.treatment_name || '';
+  const tn = rawTn.replace(/\s+/g, '').toLowerCase();
+  for (const [normAlias, { alias, masterName, master }] of ALIAS_LOOKUP) {
+    if (tn.includes(normAlias)) {
+      // Extract volume/area from the remaining text after the alias
+      const remaining = rawTn.replace(new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '').trim();
+      // Also try removing the normalized version
+      const remaining2 = rawTn.replace(/\s+/g, '').replace(new RegExp(normAlias, 'i'), '').trim();
+
+      let volume = item.volume_or_count || null;
+      let area = item.area || null;
+      if (!volume) {
+        const volMatch = (remaining || remaining2).match(VOL_PATTERN);
+        if (volMatch) volume = `${volMatch[1]}${volMatch[2]}`;
+      }
+      if (!area) {
+        const areaMatch = (remaining || remaining2).match(AREA_PATTERN);
+        if (areaMatch) area = areaMatch[1];
+      }
+
+      return {
+        ...item,
+        clinic_alias: alias,
+        treatment_name: masterName,
+        volume_or_count: volume,
+        area: area,
+        master_treatment: item.master_treatment || masterName,
+        master_major: item.master_major || master.major,
+        master_sub: item.master_sub || master.sub,
+      };
+    }
+  }
+  return item;
+}
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -74,6 +129,7 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
     }
     categoryMap.get(catName).items.push({
       treatment_name: item.treatment_name,
+      clinic_alias: item.clinic_alias || null,
       volume_or_count: item.volume_or_count,
       area: item.area,
       promo: item.promo,
@@ -150,6 +206,17 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
   }
 
   log('info', `  병합 dedup: ${totalBefore} → ${totalAfter} (정규식 ${regexItems.length} + LLM ${llmItemCount})`);
+
+  // 3.5. Auto-enrich clinic_alias from master list aliases
+  let aliasEnriched = 0;
+  for (const cat of categoryMap.values()) {
+    cat.items = cat.items.map(item => {
+      const enriched = autoEnrichAlias(item);
+      if (enriched.clinic_alias && !item.clinic_alias) aliasEnriched++;
+      return enriched;
+    });
+  }
+  if (aliasEnriched > 0) log('info', `  별칭 자동 감지: ${aliasEnriched}개`);
 
   // 4. 카테고리 정렬
   const categories = [...categoryMap.values()]

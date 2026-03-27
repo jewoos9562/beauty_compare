@@ -18,40 +18,59 @@ function parseUnit(name: string): { count: number; unit: string } | null {
   return null;
 }
 
-/** Parse notes field into brand/origin badge + remaining text */
-function parseNotes(notes: string | null | undefined): { brand: string | null; origin: '국산' | '수입산' | null; extra: string | null } {
-  if (!notes) return { brand: null, origin: null, extra: null };
-  const parts = notes.split(',').map(p => p.trim());
+/** Parse notes field into clinic alias + origin + brand + extra */
+function parseNotes(notes: string | null | undefined): {
+  clinicAlias: string | null;
+  origin: string | null;
+  brand: string | null;
+  extra: string | null;
+} {
+  if (!notes) return { clinicAlias: null, origin: null, brand: null, extra: null };
+
+  let remaining = notes;
+  let clinicAlias: string | null = null;
+
+  // Extract [alias] prefix
+  const aliasMatch = remaining.match(/^\[([^\]]+)\]\s*/);
+  if (aliasMatch) {
+    clinicAlias = aliasMatch[1];
+    remaining = remaining.slice(aliasMatch[0].length);
+  }
+
+  const parts = remaining.split(',').map(p => p.trim()).filter(Boolean);
   let brand: string | null = null;
-  let origin: '국산' | '수입산' | null = null;
+  let origin: string | null = null;
   const extras: string[] = [];
 
+  const ORIGINS = ['국산', '미국산', '독일산', '수입산', '프랑스산', '스위스산', '일본산'];
+  const BRANDS = ['뉴라미스','벨로테로','레스틸렌','아띠에르','쥬비덤','엘러간','제오민','코어톡스','디스포트','넥소좀','브라이톤','더마샤인','리투오'];
+
   for (const part of parts) {
-    if (/^국산-/.test(part)) {
-      origin = '국산';
-      brand = part.replace(/^국산-/, '');
-    } else if (/^수입산-/.test(part)) {
-      origin = '수입산';
-      brand = part.replace(/^수입산-/, '');
-    } else if (part === '국산') {
-      origin = '국산';
-    } else if (part === '수입산') {
-      origin = '수입산';
-    } else if (/^(뉴라미스|벨로테로|레스틸렌|아띠에르|쥬비덤|엘러간|제오민|코어톡스|디스포트|독일산|미국산|넥소좀|브라이톤|더마샤인|리투오)/.test(part)) {
-      brand = part;
-    } else {
-      extras.push(part);
+    // "국산-아띠에르", "미국산-엘러간" etc.
+    const dashMatch = part.match(/^(국산|수입산|미국산|독일산|프랑스산)-(.+)/);
+    if (dashMatch) {
+      origin = dashMatch[1];
+      brand = dashMatch[2];
+      continue;
     }
+    if (ORIGINS.includes(part)) { origin = part; continue; }
+    if (BRANDS.some(b => part.startsWith(b))) { brand = part; continue; }
+    extras.push(part);
   }
-  return { brand, origin, extra: extras.length > 0 ? extras.join(', ') : null };
+  return { clinicAlias, origin, brand, extra: extras.length > 0 ? extras.join(', ') : null };
 }
 
-/** Render brand/origin badges */
+/** Render clinic alias + brand/origin badges */
 function NoteBadges({ notes }: { notes: string | null | undefined }) {
-  const { brand, origin, extra } = parseNotes(notes);
-  if (!brand && !origin && !extra) return null;
+  const { clinicAlias, origin, brand, extra } = parseNotes(notes);
+  if (!clinicAlias && !brand && !origin && !extra) return null;
   return (
     <>
+      {clinicAlias && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 font-medium border border-indigo-100">
+          {clinicAlias}
+        </span>
+      )}
       {origin && (
         <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium border ${
           origin === '국산'

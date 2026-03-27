@@ -6,13 +6,49 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { MASTER_LIST, MAJOR_TO_TAG, SUB_TO_TAG, buildMasterSummary } from './master-list.mjs';
+import { MASTER_LIST, MAJOR_TO_TAG, SUB_TO_TAG, buildMasterSummary, buildAliasMap } from './master-list.mjs';
 import { log } from './utils.mjs';
 import crypto from 'crypto';
 
 const anthropic = new Anthropic();
 
 const MASTER_SUMMARY = buildMasterSummary();
+
+// ── Alias auto-detection: alias → { masterName, alias } ──────────
+const ALIAS_MAP = buildAliasMap(); // normalized alias string → master treatment name
+// Build reverse: masterName → Set of original alias strings (non-normalized)
+const MASTER_ALIASES_RAW = new Map();
+for (const m of MASTER_LIST) {
+  for (const a of m.aliases || []) {
+    const normAlias = a.replace(/\s+/g, '').toLowerCase();
+    const normMaster = m.name.replace(/\s+/g, '').toLowerCase();
+    if (normAlias !== normMaster) {
+      if (!MASTER_ALIASES_RAW.has(normAlias)) {
+        MASTER_ALIASES_RAW.set(normAlias, { alias: a, masterName: m.name });
+      }
+    }
+  }
+}
+
+/**
+ * Auto-detect clinic_alias from raw_name when LLM didn't populate it.
+ * If raw_name contains a known alias that maps to a different master name, return the alias.
+ */
+function detectClinicAlias(rawName, treatmentName) {
+  if (!rawName) return null;
+  const normRaw = rawName.replace(/\s+/g, '').toLowerCase();
+  // Check each known alias against the raw_name
+  for (const [normAlias, { alias, masterName }] of MASTER_ALIASES_RAW) {
+    if (normRaw.includes(normAlias)) {
+      // Verify the treatment was normalized to a different name
+      const normTreatment = (treatmentName || '').replace(/\s+/g, '').toLowerCase();
+      if (normTreatment !== normAlias) {
+        return alias;  // e.g., "모공톡신" for "스킨 보톡스"
+      }
+    }
+  }
+  return null;
+}
 
 // ══════════════════════════════════════════════════════════════════
 // 1. 텍스트 중복 제거
@@ -354,7 +390,8 @@ ${MASTER_SUMMARY}
 - 제증명 (진단서, 소견서, 확인서 등 서류 수수료)
 
 ## 분해 규칙
-- treatment_name: 순수 시술명 (용량/부위/프로모션/국산수입 제외). 마스터 리스트에 있는 이름과 최대한 일치시킬 것
+- treatment_name: 마스터 리스트의 시술명으로 통일. 별칭(aliases)에 해당하면 마스터 시술명으로 변환. (예: "모공톡신" → "스킨 보톡스")
+- clinic_alias: 클리닉이 사용하는 원래 이름이 마스터 시술명과 다를 경우 원래 이름 (예: "모공톡신", "밴스란힐러"). 같으면 null
 - volume_or_count: 용량/횟수 (예: "50U", "2cc", "100샷", "1회", "3줄") 또는 null
 - area: 시술 부위 (예: "사각턱", "겨드랑이", "전체얼굴", "이마", "코") 또는 null
 - promo: 프로모션/조건 (예: "무제한", "1+1", "체험가", "첫방문") 또는 null
@@ -362,7 +399,7 @@ ${MASTER_SUMMARY}
 - master_treatment: 마스터 리스트의 **정확한** 시술명 또는 null. 반드시 위 리스트에 있는 이름만 사용
 - master_major: 대분류 (리프팅/필러/보톡스/피부/바디/제모/약처방/제증명/미분류)
 - master_sub: 중분류 또는 null
-- notes: 국산/수입산, 브랜드명, 기타 (예: "국산", "수입산-쥬비덤") 또는 null
+- notes: 원산지(국산/미국산/독일산 등), 브랜드명, 기타. 원산지는 구체적으로 (예: "국산", "미국산", "독일산", "미국산-엘러간"). "수입산"만 있으면 구체적 국가를 추론하되, 모르면 "수입산" 유지
 
 ## 제증명 판별 규칙
 - "진단서", "소견서", "확인서", "진료확인서", "일반진단서", "사본" 등 → master_major: "제증명"
@@ -373,15 +410,16 @@ ${MASTER_SUMMARY}
 - "주름필러"도 부위별로 매칭. 부위 불명 시 null
 
 ## 예시
-- "사각턱보톡스 50유닛 | 구분:국산" → {treatment_name:"사각턱 보톡스", volume:"50유닛", area:"사각턱", purpose:"근육", notes:"국산", master_treatment:"사각턱 보톡스", master_major:"보톡스", master_sub:"얼굴 보톡스"}
-- "볼륨필러(아띠에르) | 구분:국산 | 특이:1cc 당" → {treatment_name:"볼륨필러", volume:"1cc", purpose:"볼륨", notes:"국산-아띠에르", master_major:"필러", master_sub:"얼굴 필러"}
-- "주름필러(뉴라미스) | 구분:수입산 | 특이:1줄 당" → {treatment_name:"주름필러", volume:"1줄", purpose:"주름", notes:"수입산-뉴라미스", master_major:"필러", master_sub:"얼굴 필러"}
-- "남자 인중+콧수염 | 구분:1회" → {treatment_name:"인중 제모", volume:"1회", area:"인중+콧수염", purpose:"제모", notes:"남성", master_treatment:"인중 제모", master_major:"제모", master_sub:"부위별 제모"}
-- "슈링크 유니버스 | 구분:1회 | 특이:100샷 기준" → {treatment_name:"슈링크 유니버스", volume:"100샷", purpose:"지방/리프팅", master_treatment:"슈링크 유니버스", master_major:"리프팅", master_sub:"레이저 리프팅"}
-- "무제한 코필러" → {treatment_name:"코 필러", area:"코", promo:"무제한", purpose:"볼륨", master_treatment:"코 필러", master_major:"필러", master_sub:"얼굴 필러"}
-- "일반진단서" → {treatment_name:"일반진단서", master_major:"제증명"}
-- "리쥬란힐러 1cc 입술" → {treatment_name:"입술리쥬란", volume:"1cc", area:"입술", purpose:"주름/탄력/수분", master_treatment:"입술리쥬란", master_major:"피부", master_sub:"스킨부스터"}
-- "포텐자콜라스터 | 구분:1회" → {treatment_name:"포텐자", volume:"1회", purpose:"모공/흉터", master_treatment:"포텐자", master_major:"피부", master_sub:"여드름/흉터"}
+- "사각턱보톡스 50유닛 | 구분:국산" → {treatment_name:"사각턱 보톡스", clinic_alias:null, volume:"50유닛", area:"사각턱", purpose:"근육", notes:"국산", master_treatment:"사각턱 보톡스", master_major:"보톡스", master_sub:"얼굴 보톡스"}
+- "모공톡신 1cc" → {treatment_name:"스킨 보톡스", clinic_alias:"모공톡신", volume:"1cc", purpose:"모공", notes:null, master_treatment:"스킨 보톡스", master_major:"보톡스", master_sub:"얼굴 보톡스"}
+- "밴스란힐러 1cc" → {treatment_name:"리쥬란 힐러", clinic_alias:"밴스란힐러", volume:"1cc", purpose:"탄력/주름/수분", master_treatment:"리쥬란 힐러", master_major:"피부", master_sub:"스킨부스터"}
+- "볼륨필러(아띠에르) | 구분:국산 | 특이:1cc 당" → {treatment_name:"볼륨필러", clinic_alias:null, volume:"1cc", purpose:"볼륨", notes:"국산-아띠에르", master_major:"필러", master_sub:"얼굴 필러"}
+- "엘러간주름보톡스 1부위" → {treatment_name:"주름 보톡스", clinic_alias:null, volume:null, area:null, purpose:"주름", notes:"미국산-엘러간", master_major:"보톡스", master_sub:"얼굴 보톡스"}
+- "제오민주름보톡스" → {treatment_name:"주름 보톡스", clinic_alias:null, notes:"독일산-제오민", master_major:"보톡스"}
+- "남자 인중+콧수염 | 구분:1회" → {treatment_name:"얼굴 제모", clinic_alias:null, volume:"1회", area:"인중+콧수염", purpose:"제모", notes:"남성", master_treatment:"얼굴 제모", master_major:"제모", master_sub:"부위별 제모"}
+- "슈링크 유니버스 | 구분:1회 | 특이:100샷 기준" → {treatment_name:"슈링크 유니버스", clinic_alias:null, volume:"100샷", master_treatment:"슈링크 유니버스", master_major:"리프팅", master_sub:"레이저 리프팅"}
+- "무제한 코필러" → {treatment_name:"코 필러", clinic_alias:null, area:"코", promo:"무제한", master_treatment:"코 필러", master_major:"필러", master_sub:"얼굴 필러"}
+- "포텐자콜라스터 | 구분:1회" → {treatment_name:"포텐자", clinic_alias:null, volume:"1회", purpose:"모공/흉터", master_treatment:"포텐자", master_major:"피부", master_sub:"여드름/흉터"}
 
 ## 주의사항
 - "구분:" 뒤의 값은 국산/수입산일 수도 있고, 용량(1회, 2cc)일 수도 있고, 크기(2mm이하)일 수도 있음 → 의미를 파악해서 올바른 필드에 배치
@@ -392,7 +430,7 @@ ${MASTER_SUMMARY}
 
 ## 출력 형식 (JSON만, 다른 텍스트 없이)
 [
-  {"idx": 1, "treatment_name": "...", "volume_or_count": "...", "area": "...", "promo": "...", "purpose": "...", "master_treatment": "...", "master_major": "...", "master_sub": "...", "notes": "..."},
+  {"idx": 1, "treatment_name": "...", "clinic_alias": "...", "volume_or_count": "...", "area": "...", "promo": "...", "purpose": "...", "master_treatment": "...", "master_major": "...", "master_sub": "...", "notes": "..."},
   ...
 ]
 
@@ -428,7 +466,7 @@ async function refineWithLlm(items) {
         // 실패 시 원본 유지
         for (const item of batch) {
           allRefined.push({
-            treatment_name: item.raw_name,
+            treatment_name: item.raw_name, clinic_alias: null,
             volume_or_count: null, area: null, promo: null, purpose: null,
             master_treatment: null, master_major: null, master_sub: null, notes: null,
           });
@@ -462,8 +500,14 @@ async function refineWithLlm(items) {
       for (let j = 0; j < batch.length; j++) {
         const refined = byIdx.get(j + 1);
         if (refined) {
+          // Auto-detect clinic_alias from raw_name if LLM didn't set it
+          let clinicAlias = refined.clinic_alias || null;
+          if (!clinicAlias) {
+            clinicAlias = detectClinicAlias(batch[j].raw_name, refined.treatment_name);
+          }
           allRefined.push({
             treatment_name: refined.treatment_name || batch[j].raw_name,
+            clinic_alias: clinicAlias,
             volume_or_count: refined.volume_or_count || null,
             area: refined.area || null,
             promo: refined.promo || null,
@@ -474,8 +518,11 @@ async function refineWithLlm(items) {
             notes: refined.notes || null,
           });
         } else {
+          // Also try auto-detect for unmatched items
+          const autoAlias = detectClinicAlias(batch[j].raw_name, batch[j].raw_name);
           allRefined.push({
             treatment_name: batch[j].raw_name,
+            clinic_alias: autoAlias,
             volume_or_count: null, area: null, promo: null, purpose: null,
             master_treatment: null, master_major: null, master_sub: null, notes: null,
           });
@@ -487,7 +534,7 @@ async function refineWithLlm(items) {
       log('error', `  LLM 호출 실패: ${e.message}`);
       for (const item of batch) {
         allRefined.push({
-          treatment_name: item.raw_name,
+          treatment_name: item.raw_name, clinic_alias: null,
           volume_or_count: null, area: null, promo: null,
           master_treatment: null, master_major: null, master_sub: null, notes: null,
         });
@@ -539,7 +586,7 @@ export async function phase15Preprocess(rawText, options = {}) {
   } else {
     // LLM 없이 원본 유지
     refinedItems = deduped.map(orig => ({
-      treatment_name: orig.raw_name,
+      treatment_name: orig.raw_name, clinic_alias: null,
       volume_or_count: null, area: null, promo: null,
       master_treatment: null, master_major: null, master_sub: null, notes: null,
       category_name: orig.category_name,
