@@ -599,6 +599,7 @@ function SubCategoryGroup({
 }) {
   const { tt } = useI18n();
   const [expanded, setExpanded] = useState(true);
+  const grouped = useMemo(() => groupItems(items), [items]);
 
   return (
     <div className="rounded-xl border border-slate-200/60 bg-white overflow-hidden">
@@ -621,9 +622,30 @@ function SubCategoryGroup({
       </button>
       {expanded && (
         <div className="divide-y divide-slate-100/80">
-          {items.map((item, i) => (
+          {grouped.groups.map((group) => (
+            <TreatmentGroup
+              key={group.baseName}
+              baseName={group.baseName}
+              items={group.items}
+              clinicName={clinicName}
+              categoryName={categoryName}
+              toggleCompare={toggleCompare}
+              isChecked={isChecked}
+            />
+          ))}
+          {grouped.singles.map((item, i) => (
             <TreatmentRow
-              key={i}
+              key={`s-${i}`}
+              item={item}
+              clinicName={clinicName}
+              categoryName={categoryName}
+              toggleCompare={toggleCompare}
+              isChecked={isChecked}
+            />
+          ))}
+          {grouped.sets.map((item, i) => (
+            <TreatmentRow
+              key={`set-${i}`}
               item={item}
               clinicName={clinicName}
               categoryName={categoryName}
