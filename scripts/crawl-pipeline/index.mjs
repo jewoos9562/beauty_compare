@@ -96,6 +96,55 @@ function parseArgs() {
   };
 }
 
+// ── Valid subcategories from CSV master list ─────────────────────
+const VALID_SUBS = new Set();
+const TREATMENT_TO_SUB = new Map(); // normalized treatment name → subcategory
+for (const m of MASTER_LIST) {
+  if (m.sub) {
+    VALID_SUBS.add(m.sub);
+    const normName = m.name.replace(/\s+/g, '').toLowerCase();
+    TREATMENT_TO_SUB.set(normName, m.sub);
+    // Also map aliases to subcategory
+    for (const a of m.aliases || []) {
+      TREATMENT_TO_SUB.set(a.replace(/\s+/g, '').toLowerCase(), m.sub);
+    }
+  }
+}
+
+/**
+ * Normalize master_sub to CSV-level subcategory.
+ * "레이저 리프팅 > 인모드 FX [지방감소/리프팅]" → "레이저 리프팅"
+ * Also assigns master_sub from treatment_name when missing.
+ */
+function normalizeMasterSub(item) {
+  let sub = item.master_sub || '';
+
+  // Strip "> treatment [tags]" suffix
+  if (sub.includes('>')) {
+    sub = sub.split('>')[0].trim();
+  }
+  // Strip [tags]
+  sub = sub.replace(/\s*\[[^\]]*\]\s*/g, '').trim();
+
+  // Validate against CSV subcategories
+  if (sub && VALID_SUBS.has(sub)) {
+    item.master_sub = sub;
+    return;
+  }
+
+  // Try to assign from treatment name
+  const normName = (item.treatment_name || '').replace(/\s+/g, '').toLowerCase();
+  if (TREATMENT_TO_SUB.has(normName)) {
+    item.master_sub = TREATMENT_TO_SUB.get(normName);
+    return;
+  }
+
+  // Fallback: keep existing or null
+  if (!VALID_SUBS.has(sub)) {
+    item.master_sub = null;
+  }
+}
+
 // ── 카테고리: master_major 기반 (새 마스터 리스트) ─────────────────
 // 정규식 category_name → master_major 정규화
 const CATEGORY_NORMALIZE = {
@@ -137,8 +186,9 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
 
   // 1. 정규식 항목 추가 — master_major 기반 카테고리 (enriched 사용)
   for (const item of enrichedRegex) {
-    // Clean treatment name
+    // Clean treatment name + normalize master_sub to CSV subcategories
     item.treatment_name = cleanTreatmentName(item.treatment_name);
+    normalizeMasterSub(item);
 
     const catName = resolveMajor(item);
     const tag = MAJOR_TO_TAG[catName] || null;
@@ -170,6 +220,7 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
         const item = autoEnrichAlias(rawItem);
         if (item.clinic_alias && !rawItem.clinic_alias) aliasEnriched++;
         item.treatment_name = cleanTreatmentName(item.treatment_name);
+        normalizeMasterSub(item);
         item.source = 'llm';
 
         // Use master_major from enrichment, fallback to LLM category
