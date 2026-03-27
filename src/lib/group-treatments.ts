@@ -3,6 +3,8 @@ export type Item = {
   orig: number | null;
   event: number | null;
   base?: number | null;
+  volume_or_count?: string | null;
+  area?: string | null;
 };
 
 export type ParsedTreatment = {
@@ -186,8 +188,19 @@ export function groupItems(items: Item[]): GroupedCategory {
       continue;
     }
 
+    // Use volume_or_count field if quantity not found in name
+    let quantity = parsed.quantity;
+    let unit = parsed.unit;
+    if (quantity === null && item.volume_or_count) {
+      const volParsed = findAllQuantityMatches(item.volume_or_count);
+      if (volParsed.length > 0) {
+        quantity = volParsed[0].quantity;
+        unit = volParsed[0].unit;
+      }
+    }
+
     const groupKey = normalizeForGrouping(parsed.baseName);
-    const enriched = { ...item, quantity: parsed.quantity, unit: parsed.unit };
+    const enriched = { ...item, quantity, unit };
     const existing = byGroupKey.get(groupKey);
     if (existing) {
       existing.items.push(enriched);
