@@ -52,13 +52,14 @@ export async function fetchClinics(districtId: string): Promise<Clinic[]> {
       note: row.note ?? '',
       color: row.color ?? '',
       categories: dedupedCats.map((cat: any): Category => {
-        // Deduplicate treatments within category (same name = duplicate)
+        // Deduplicate treatments within category (same name+volume+area+price = duplicate)
         const seenItems = new Set<string>();
         const items = (cat.treatments as any[])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
           .filter((t: any) => {
-            if (seenItems.has(t.name)) return false;
-            seenItems.add(t.name);
+            const key = `${t.name}|${t.volume_or_count ?? ''}|${t.area ?? ''}|${t.event_price ?? ''}`;
+            if (seenItems.has(key)) return false;
+            seenItems.add(key);
             return true;
           })
           .map((t: any): TreatmentItem => ({

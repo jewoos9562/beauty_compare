@@ -772,16 +772,35 @@ function TreatmentGroup({
                 : null;
             const label = item.quantity != null && item.unit
               ? `${item.quantity.toLocaleString()}${tt(item.unit)}`
+              : item.volume_or_count
+              ? tt(item.name)
               : tt(item.name);
             const unitInfo = parseUnit(item.name);
 
             return (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm text-slate-700">{label}</span>
-                  {item.quantity == null && (
-                    <span className="text-xs text-slate-300 ml-1">({tt(item.name)})</span>
-                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm text-slate-700">{label}</span>
+                    {item.quantity == null && !item.volume_or_count && (
+                      <span className="text-xs text-slate-300">({tt(item.name)})</span>
+                    )}
+                    {item.volume_or_count && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
+                        {item.volume_or_count}
+                      </span>
+                    )}
+                    {item.area && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
+                        {item.area}
+                      </span>
+                    )}
+                    {item.promo && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 font-medium border border-rose-100">
+                        {item.promo}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {item.orig != null && item.event != null && (
@@ -876,7 +895,26 @@ function ItemTable({
                 key={i}
                 className="border-t border-slate-100/80 hover:bg-slate-50/50 transition"
               >
-                <td className="px-3 py-2.5 text-slate-700">{tt(item.name)}</td>
+                <td className="px-3 py-2.5 text-slate-700">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span>{tt(item.name)}</span>
+                    {item.volume_or_count && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
+                        {item.volume_or_count}
+                      </span>
+                    )}
+                    {item.area && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
+                        {item.area}
+                      </span>
+                    )}
+                    {item.promo && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 font-medium border border-rose-100">
+                        {item.promo}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 {hasOrig && (
                   <td className="text-right px-3 py-2.5 text-slate-300 line-through text-xs whitespace-nowrap">
                     {fmtPrice(item.orig)}
