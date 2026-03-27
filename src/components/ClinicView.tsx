@@ -755,12 +755,9 @@ function TreatmentRow({
     <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm text-slate-700">{tt(item.name)}</span>
-          {item.volume_or_count && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
-              {item.volume_or_count}
-            </span>
-          )}
+          <span className="text-sm text-slate-700">
+            {tt(item.name)}{item.volume_or_count ? ` ${item.volume_or_count}` : ''}
+          </span>
           {item.area && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
               {item.area}
@@ -864,26 +861,17 @@ function TreatmentGroup({
               item.orig && item.event
                 ? Math.round((1 - item.event / item.orig) * 100)
                 : null;
-            const label = item.quantity != null && item.unit
-              ? `${item.quantity.toLocaleString()}${tt(item.unit)}`
-              : item.volume_or_count
-              ? tt(item.name)
-              : tt(item.name);
             const unitInfo = parseUnit(item.name);
+
+            // Build display label: name + volume/count inline
+            const volLabel = item.volume_or_count || (item.quantity != null && item.unit ? `${item.quantity}${item.unit}` : null);
+            const displayName = `${tt(item.name)}${volLabel ? ` ${volLabel}` : ''}`;
 
             return (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50/50 transition">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm text-slate-700">{label}</span>
-                    {item.quantity == null && !item.volume_or_count && (
-                      <span className="text-xs text-slate-300">({tt(item.name)})</span>
-                    )}
-                    {item.volume_or_count && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
-                        {item.volume_or_count}
-                      </span>
-                    )}
+                    <span className="text-sm text-slate-700">{displayName}</span>
                     {item.area && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
                         {item.area}
@@ -992,12 +980,7 @@ function ItemTable({
               >
                 <td className="px-3 py-2.5 text-slate-700">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span>{tt(item.name)}</span>
-                    {item.volume_or_count && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600 font-medium border border-violet-100">
-                        {item.volume_or_count}
-                      </span>
-                    )}
+                    <span>{tt(item.name)}{item.volume_or_count ? ` ${item.volume_or_count}` : ''}</span>
                     {item.area && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
                         {item.area}
