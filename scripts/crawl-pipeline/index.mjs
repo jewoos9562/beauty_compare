@@ -117,11 +117,29 @@ function resolveMajor(item) {
   return '미분류';
 }
 
+// Clean treatment_name: remove inline tags like [지방감소/리프팅]
+function cleanTreatmentName(name) {
+  if (!name) return name;
+  // Remove [...] suffixes that are purpose/tag annotations
+  return name.replace(/\s*\[[^\]]*\]\s*/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function mergeResults(regexItems, llmResult, clinicInfo) {
+  // 0. Auto-enrich aliases on ALL items BEFORE categorizing
+  let aliasEnriched = 0;
+  const enrichedRegex = regexItems.map(item => {
+    const enriched = autoEnrichAlias(item);
+    if (enriched.clinic_alias && !item.clinic_alias) aliasEnriched++;
+    return enriched;
+  });
+
   const categoryMap = new Map();
 
-  // 1. 정규식 항목 추가 — master_major 기반 카테고리
-  for (const item of regexItems) {
+  // 1. 정규식 항목 추가 — master_major 기반 카테고리 (enriched 사용)
+  for (const item of enrichedRegex) {
+    // Clean treatment name
+    item.treatment_name = cleanTreatmentName(item.treatment_name);
+
     const catName = resolveMajor(item);
     const tag = MAJOR_TO_TAG[catName] || null;
     if (!categoryMap.has(catName)) {
@@ -144,20 +162,23 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
     });
   }
 
-  // 2. LLM 항목 추가 (Phase 2가 있을 경우)
+  // 2. LLM 항목 추가 (Phase 2가 있을 경우) — also enrich aliases
   let llmItemCount = 0;
   if (llmResult?.categories) {
     for (const cat of llmResult.categories) {
-      // Phase 2 결과도 master_major 기반으로 정규화
-      const catName = CATEGORY_ORDER.includes(cat.name) ? cat.name
-        : CATEGORY_NORMALIZE[cat.name] || cat.name;
-      const resolvedCat = CATEGORY_ORDER.includes(catName) ? catName : '미분류';
-      const tag = MAJOR_TO_TAG[resolvedCat] || null;
-      if (!categoryMap.has(resolvedCat)) {
-        categoryMap.set(resolvedCat, { name: resolvedCat, tag, items: [] });
-      }
-      for (const item of cat.items) {
-        categoryMap.get(resolvedCat).items.push({ ...item, source: 'llm' });
+      for (const rawItem of cat.items) {
+        const item = autoEnrichAlias(rawItem);
+        if (item.clinic_alias && !rawItem.clinic_alias) aliasEnriched++;
+        item.treatment_name = cleanTreatmentName(item.treatment_name);
+        item.source = 'llm';
+
+        // Use master_major from enrichment, fallback to LLM category
+        const catName = resolveMajor({ ...item, category_name: cat.name });
+        const tag = MAJOR_TO_TAG[catName] || null;
+        if (!categoryMap.has(catName)) {
+          categoryMap.set(catName, { name: catName, tag, items: [] });
+        }
+        categoryMap.get(catName).items.push(item);
         llmItemCount++;
       }
     }
@@ -207,15 +228,6 @@ function mergeResults(regexItems, llmResult, clinicInfo) {
 
   log('info', `  병합 dedup: ${totalBefore} → ${totalAfter} (정규식 ${regexItems.length} + LLM ${llmItemCount})`);
 
-  // 3.5. Auto-enrich clinic_alias from master list aliases
-  let aliasEnriched = 0;
-  for (const cat of categoryMap.values()) {
-    cat.items = cat.items.map(item => {
-      const enriched = autoEnrichAlias(item);
-      if (enriched.clinic_alias && !item.clinic_alias) aliasEnriched++;
-      return enriched;
-    });
-  }
   if (aliasEnriched > 0) log('info', `  별칭 자동 감지: ${aliasEnriched}개`);
 
   // 4. 카테고리 정렬

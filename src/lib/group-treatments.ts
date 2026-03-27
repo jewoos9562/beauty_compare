@@ -219,12 +219,18 @@ export function groupItems(items: Item[]): GroupedCategory {
     if (group.items.length === 1) {
       singles.push(group.items[0]);
     } else {
-      // Sort items by quantity ascending (nulls first)
+      // Sort items by quantity ascending, then by price ascending
       group.items.sort((a, b) => {
-        if (a.quantity === null && b.quantity === null) return 0;
-        if (a.quantity === null) return -1;
-        if (b.quantity === null) return -1;
-        return a.quantity - b.quantity;
+        // First by quantity
+        if (a.quantity !== null || b.quantity !== null) {
+          if (a.quantity === null) return -1;
+          if (b.quantity === null) return 1;
+          if (a.quantity !== b.quantity) return a.quantity - b.quantity;
+        }
+        // Then by price
+        const priceA = a.event ?? a.orig ?? Infinity;
+        const priceB = b.event ?? b.orig ?? Infinity;
+        return priceA - priceB;
       });
       groups.push({ baseName: group.displayName, items: group.items });
     }
@@ -233,8 +239,14 @@ export function groupItems(items: Item[]): GroupedCategory {
   // Sort groups alphabetically by baseName
   groups.sort((a, b) => a.baseName.localeCompare(b.baseName));
 
-  // Sort singles by name
-  singles.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort singles by name, then price
+  singles.sort((a, b) => {
+    const cmp = a.name.localeCompare(b.name);
+    if (cmp !== 0) return cmp;
+    const priceA = a.event ?? a.orig ?? Infinity;
+    const priceB = b.event ?? b.orig ?? Infinity;
+    return priceA - priceB;
+  });
 
   return { singles, groups, sets };
 }
