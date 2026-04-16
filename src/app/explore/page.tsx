@@ -170,11 +170,11 @@ function ClinicListItem({ clinic }: { clinic: HiraClinic }) {
       <div className="font-semibold text-sm text-[var(--text)] group-hover:text-[var(--primary)] transition-colors leading-snug">
         {clinic.name}
       </div>
-      <div className="flex items-center gap-2 mt-1.5">
-        <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-[var(--text-muted)] rounded group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+      <div className="flex items-center gap-2 mt-1.5 min-w-0">
+        <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-[var(--text-muted)] rounded shrink-0 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
           {clinic.gu}
         </span>
-        <span className="text-xs text-[var(--text-light)] truncate">{clinic.addr}</span>
+        <span className="text-xs text-[var(--text-light)] truncate min-w-0">{clinic.addr}</span>
       </div>
       {clinic.homepage && (
         <div className="mt-1.5">
