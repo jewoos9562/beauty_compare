@@ -36,10 +36,11 @@ function isFeatured(name: string): boolean {
 interface MapInnerProps {
   clinics: HiraClinic[];
   selectedGu: string | null;
+  featuredMap?: Record<string, string>; // HIRA name → clinic page ID
   onClinicClick?: (clinic: HiraClinic) => void;
 }
 
-export default function MapInner({ clinics, selectedGu, onClinicClick }: MapInnerProps) {
+export default function MapInner({ clinics, selectedGu, featuredMap = {}, onClinicClick }: MapInnerProps) {
   const mapRef = useRef<L.Map | null>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,7 @@ export default function MapInner({ clinics, selectedGu, onClinicClick }: MapInne
 
     for (const c of clinics) {
       const featured = isFeatured(c.name);
+      const clinicPageId = featuredMap[c.name] || null;
       const m = L.marker([c.lat, c.lng], { icon: featured ? featuredIcon : defaultIcon, zIndexOffset: featured ? 1000 : 0 });
 
       const nmap = `https://map.naver.com/p/search/${encodeURIComponent(c.name)}?c=${c.lng},${c.lat},17,0,0,0,dh`;
@@ -114,7 +116,7 @@ export default function MapInner({ clinics, selectedGu, onClinicClick }: MapInne
             <a href="${nmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 네이버</a>
             <a href="${kmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 카카오</a>
           </div>
-          ${featured ? `<a href="/compare" style="${priceBtn}">💰 가격 비교 보기</a>` : ''}
+          ${featured && clinicPageId ? `<a href="/clinic/${clinicPageId}" style="${priceBtn}">💰 시술 가격표 보기</a>` : ''}
         </div>
       `, { maxWidth: 300, closeButton: true });
 

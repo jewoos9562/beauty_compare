@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { HiraClinic } from '@/types/hira';
 import { GU_LIST } from '@/types/hira';
 import LangCurrencySelector from '@/components/LangCurrencySelector';
+import { supabase } from '@/lib/supabase';
 
 const MapInner = dynamic(() => import('@/components/map/MapInner'), {
   ssr: false,
@@ -22,15 +23,21 @@ export default function ExplorePage() {
   const [selectedGu, setSelectedGu] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [featuredMap, setFeaturedMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch('/data/seoul_derma.json')
-      .then((r) => r.json())
-      .then((data: HiraClinic[]) => {
-        setClinics(data);
-        setLoading(false);
+    Promise.all([
+      fetch('/data/seoul_derma.json').then((r) => r.json()),
+      supabase.from('clinics').select('id, name').then(({ data }) => data || []),
+    ])
+      .then(([hiraData, featuredData]: [HiraClinic[], { id: string; name: string }[]]) => {
+        setClinics(hiraData);
+        const map: Record<string, string> = {};
+        for (const f of featuredData) map[f.name] = f.id;
+        setFeaturedMap(map);
       })
-      .catch(() => setLoading(false));
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   const guCounts = useMemo(() => {
@@ -140,7 +147,7 @@ export default function ExplorePage() {
             ) : (
               <div className="p-2">
                 {visibleList.map((c) => (
-                  <ClinicListItem key={c.id} clinic={c} />
+                  <ClinicListItem key={c.id} clinic={c} featuredMap={featuredMap} />
                 ))}
                 {filtered.length > 200 && (
                   <div className="text-center text-xs text-[var(--text-light)] py-4">
@@ -158,6 +165,7 @@ export default function ExplorePage() {
             <MapInner
               clinics={filtered}
               selectedGu={selectedGu}
+              featuredMap={featuredMap}
             />
           )}
         </div>
@@ -172,8 +180,9 @@ function isFeaturedClinic(name: string): boolean {
   return FEATURED_CHAINS.some((chain) => name.includes(chain));
 }
 
-function ClinicListItem({ clinic }: { clinic: HiraClinic }) {
+function ClinicListItem({ clinic, featuredMap }: { clinic: HiraClinic; featuredMap: Record<string, string> }) {
   const featured = isFeaturedClinic(clinic.name);
+  const clinicPageId = featuredMap[clinic.name] || null;
   return (
     <div className={`p-3 rounded-xl cursor-pointer transition-colors mb-1 group border ${
       featured
@@ -208,9 +217,9 @@ function ClinicListItem({ clinic }: { clinic: HiraClinic }) {
             🌐 홈페이지
           </a>
         )}
-        {featured && (
-          <a href="/compare" onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-pink-500 hover:underline">
-            💰 가격 보기
+        {featured && clinicPageId && (
+          <a href={`/clinic/${clinicPageId}`} onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-pink-500 hover:underline">
+            💰 가격표 보기
           </a>
         )}
       </div>

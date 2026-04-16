@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { fetchClinicDetail } from '@/lib/fetch-featured';
 import type { ClinicDetail, CategoryDetail, TreatmentDetail } from '@/lib/fetch-featured';
+import { useI18n } from '@/context/I18nContext';
+import LangCurrencySelector from '@/components/LangCurrencySelector';
 
 const TAG_LABELS: Record<string, { label: string; color: string }> = {
   first: { label: '첫방문', color: 'bg-emerald-100 text-emerald-700' },
@@ -34,6 +36,7 @@ function discountPct(orig: number | null, event: number | null): number | null {
 export default function ClinicPage() {
   const params = useParams();
   const clinicId = params.clinicId as string;
+  const { fmtPrice, currency, rateLabel } = useI18n();
   const [clinic, setClinic] = useState<ClinicDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -116,7 +119,11 @@ export default function ClinicPage() {
           </Link>
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-base truncate">{clinic.name}</h1>
+            {rateLabel && (
+              <p className="text-[10px] text-[var(--text-light)] truncate">{rateLabel}</p>
+            )}
           </div>
+          <LangCurrencySelector />
           <Link href="/explore" className="text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors font-medium">
             🗺️ 지도
           </Link>
@@ -233,7 +240,7 @@ export default function ClinicPage() {
                 {expandedCat.has(cat.id) && (
                   <div className="border-t border-[var(--border)]">
                     {cat.items.map((item, idx) => (
-                      <TreatmentRow key={item.id} item={item} isLast={idx === cat.items.length - 1} />
+                      <TreatmentRow key={item.id} item={item} isLast={idx === cat.items.length - 1} fmtPrice={fmtPrice} />
                     ))}
                   </div>
                 )}
@@ -246,7 +253,7 @@ export default function ClinicPage() {
   );
 }
 
-function TreatmentRow({ item, isLast }: { item: TreatmentDetail; isLast: boolean }) {
+function TreatmentRow({ item, isLast, fmtPrice }: { item: TreatmentDetail; isLast: boolean; fmtPrice: (n: number | null | undefined) => string }) {
   const disc = discountPct(item.orig_price, item.event_price);
 
   return (
@@ -272,14 +279,14 @@ function TreatmentRow({ item, isLast }: { item: TreatmentDetail; isLast: boolean
                   -{disc}%
                 </span>
               )}
-              <span className="text-sm font-bold text-[var(--primary)]">{fmtWon(item.event_price)}</span>
+              <span className="text-sm font-bold text-[var(--primary)]">{fmtPrice(item.event_price)}</span>
             </div>
             {item.orig_price && item.orig_price !== item.event_price && (
-              <span className="text-xs text-[var(--text-light)] line-through">{fmtWon(item.orig_price)}</span>
+              <span className="text-xs text-[var(--text-light)] line-through">{fmtPrice(item.orig_price)}</span>
             )}
           </div>
         ) : item.orig_price ? (
-          <span className="text-sm font-bold text-[var(--text)]">{fmtWon(item.orig_price)}</span>
+          <span className="text-sm font-bold text-[var(--text)]">{fmtPrice(item.orig_price)}</span>
         ) : (
           <span className="text-xs text-[var(--text-light)]">가격문의</span>
         )}
