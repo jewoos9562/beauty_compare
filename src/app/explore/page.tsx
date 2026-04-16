@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type { HiraClinic } from '@/types/hira';
-import { GU_LIST } from '@/types/hira';
 import LangCurrencySelector from '@/components/LangCurrencySelector';
-import { supabase } from '@/lib/supabase';
 
 const MapInner = dynamic(() => import('@/components/map/MapInner'), {
   ssr: false,
@@ -23,21 +21,15 @@ export default function ExplorePage() {
   const [selectedGu, setSelectedGu] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [featuredMap, setFeaturedMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    Promise.all([
-      fetch('/data/seoul_derma.json').then((r) => r.json()),
-      supabase.from('clinics').select('id, name').then(({ data }) => data || []),
-    ])
-      .then(([hiraData, featuredData]: [HiraClinic[], { id: string; name: string }[]]) => {
-        setClinics(hiraData);
-        const map: Record<string, string> = {};
-        for (const f of featuredData) map[f.name] = f.id;
-        setFeaturedMap(map);
+    fetch('/data/seoul_derma.json')
+      .then((r) => r.json())
+      .then((data: HiraClinic[]) => {
+        setClinics(data);
+        setLoading(false);
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch(() => setLoading(false));
   }, []);
 
   const guCounts = useMemo(() => {
@@ -76,7 +68,7 @@ export default function ExplorePage() {
         </div>
         <div className="flex items-center gap-2">
           <LangCurrencySelector />
-          <span className="text-xs text-[var(--text-muted)] font-medium px-2.5 py-1 bg-[var(--primary-soft)] text-[var(--primary)] rounded-full">
+          <span className="text-xs font-medium px-2.5 py-1 bg-[var(--primary-soft)] text-[var(--primary)] rounded-full">
             {filtered.length.toLocaleString()}곳
           </span>
           <button
@@ -119,7 +111,6 @@ export default function ExplorePage() {
               />
             </div>
 
-            {/* Gu filter */}
             <select
               value={selectedGu || ''}
               onChange={(e) => setSelectedGu(e.target.value || null)}
@@ -147,7 +138,7 @@ export default function ExplorePage() {
             ) : (
               <div className="p-2">
                 {visibleList.map((c) => (
-                  <ClinicListItem key={c.id} clinic={c} featuredMap={featuredMap} />
+                  <ClinicListItem key={c.id} clinic={c} />
                 ))}
                 {filtered.length > 200 && (
                   <div className="text-center text-xs text-[var(--text-light)] py-4">
@@ -165,7 +156,6 @@ export default function ExplorePage() {
             <MapInner
               clinics={filtered}
               selectedGu={selectedGu}
-              featuredMap={featuredMap}
             />
           )}
         </div>
@@ -174,40 +164,11 @@ export default function ExplorePage() {
   );
 }
 
-const FEATURED_CHAINS = ['톡스앤필', '밴스', '유앤아이', '데이뷰', '에버스', '쁨', '블리비'];
-
-function isFeaturedClinic(name: string): boolean {
-  return FEATURED_CHAINS.some((chain) => name.includes(chain));
-}
-
-function findFeaturedId(hiraName: string, featuredMap: Record<string, string>): string | null {
-  if (featuredMap[hiraName]) return featuredMap[hiraName];
-  const hiraNorm = hiraName.replace(/의원|클리닉|\s/g, '');
-  for (const [dbName, id] of Object.entries(featuredMap)) {
-    const dbNorm = dbName.replace(/의원|클리닉|\s/g, '');
-    if (hiraNorm.includes(dbNorm) || dbNorm.includes(hiraNorm)) return id;
-  }
-  return null;
-}
-
-function ClinicListItem({ clinic, featuredMap }: { clinic: HiraClinic; featuredMap: Record<string, string> }) {
-  const featured = isFeaturedClinic(clinic.name);
-  const clinicPageId = featured ? findFeaturedId(clinic.name, featuredMap) : null;
+function ClinicListItem({ clinic }: { clinic: HiraClinic }) {
   return (
-    <div className={`p-3 rounded-xl cursor-pointer transition-colors mb-1 group border ${
-      featured
-        ? 'border-indigo-200 bg-gradient-to-r from-indigo-50/50 to-pink-50/30 hover:border-indigo-300 hover:shadow-sm'
-        : 'border-transparent hover:bg-[var(--primary-soft)] hover:border-indigo-200'
-    }`}>
-      <div className="flex items-center gap-2">
-        {featured && (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-indigo-500 to-pink-500 text-white shrink-0">
-            ⭐ 가격비교
-          </span>
-        )}
-        <span className="font-semibold text-sm text-[var(--text)] group-hover:text-[var(--primary)] transition-colors leading-snug truncate">
-          {clinic.name}
-        </span>
+    <div className="p-3 rounded-xl hover:bg-[var(--primary-soft)] cursor-pointer transition-colors mb-1 group border border-transparent hover:border-indigo-200">
+      <div className="font-semibold text-sm text-[var(--text)] group-hover:text-[var(--primary)] transition-colors leading-snug">
+        {clinic.name}
       </div>
       <div className="flex items-center gap-2 mt-1.5 min-w-0">
         <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-[var(--text-muted)] rounded shrink-0 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
@@ -215,8 +176,8 @@ function ClinicListItem({ clinic, featuredMap }: { clinic: HiraClinic; featuredM
         </span>
         <span className="text-xs text-[var(--text-light)] truncate min-w-0">{clinic.addr}</span>
       </div>
-      <div className="flex items-center gap-3 mt-1.5">
-        {clinic.homepage && (
+      {clinic.homepage && (
+        <div className="mt-1.5">
           <a
             href={clinic.homepage}
             target="_blank"
@@ -226,13 +187,8 @@ function ClinicListItem({ clinic, featuredMap }: { clinic: HiraClinic; featuredM
           >
             🌐 홈페이지
           </a>
-        )}
-        {featured && clinicPageId && (
-          <a href={`/clinic/${clinicPageId}`} onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-pink-500 hover:underline">
-            💰 가격표 보기
-          </a>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

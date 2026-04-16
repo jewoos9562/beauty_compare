@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -11,48 +11,26 @@ import type { HiraClinic } from '@/types/hira';
 const SEOUL_CENTER: [number, number] = [37.5665, 126.978];
 const DEFAULT_ZOOM = 12;
 
-const defaultIcon = L.divIcon({
+const clinicIcon = L.divIcon({
   className: '',
-  html: '<div style="width:10px;height:10px;border-radius:50%;background:#94a3b8;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.15)"></div>',
-  iconSize: [10, 10],
-  iconAnchor: [5, 5],
+  html: '<div style="width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 2px 6px rgba(99,102,241,0.4)"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
 });
 
-const featuredIcon = L.divIcon({
+const hasHomepageIcon = L.divIcon({
   className: '',
-  html: `<div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ec4899);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(99,102,241,0.5);display:flex;align-items:center;justify-content:center">
-    <div style="width:6px;height:6px;background:#fff;border-radius:50%"></div>
-  </div>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
+  html: `<div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:2px solid #fff;box-shadow:0 2px 6px rgba(99,102,241,0.5)"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
-
-const FEATURED_CHAINS = ['톡스앤필', '밴스', '유앤아이', '데이뷰', '에버스', '쁨', '블리비'];
-
-function isFeatured(name: string): boolean {
-  return FEATURED_CHAINS.some((chain) => name.includes(chain));
-}
-
-function findFeaturedId(hiraName: string, featuredMap: Record<string, string>): string | null {
-  // 1) exact match
-  if (featuredMap[hiraName]) return featuredMap[hiraName];
-  // 2) HIRA name contains DB name, or DB name contains HIRA name
-  const hiraNorm = hiraName.replace(/의원|클리닉|\s/g, '');
-  for (const [dbName, id] of Object.entries(featuredMap)) {
-    const dbNorm = dbName.replace(/의원|클리닉|\s/g, '');
-    if (hiraNorm.includes(dbNorm) || dbNorm.includes(hiraNorm)) return id;
-  }
-  return null;
-}
 
 interface MapInnerProps {
   clinics: HiraClinic[];
   selectedGu: string | null;
-  featuredMap?: Record<string, string>;
-  onClinicClick?: (clinic: HiraClinic) => void;
 }
 
-export default function MapInner({ clinics, selectedGu, featuredMap = {}, onClinicClick }: MapInnerProps) {
+export default function MapInner({ clinics, selectedGu }: MapInnerProps) {
   const mapRef = useRef<L.Map | null>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -102,24 +80,17 @@ export default function MapInner({ clinics, selectedGu, featuredMap = {}, onClin
     cluster.clearLayers();
     const markers: L.Marker[] = [];
 
+    const linkStyle = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;background:#eef2ff;color:#6366f1;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;flex:1;text-align:center;min-width:0;white-space:nowrap;';
+
     for (const c of clinics) {
-      const featured = isFeatured(c.name);
-      const clinicPageId = featured ? findFeaturedId(c.name, featuredMap) : null;
-      const m = L.marker([c.lat, c.lng], { icon: featured ? featuredIcon : defaultIcon, zIndexOffset: featured ? 1000 : 0 });
+      const icon = c.homepage ? hasHomepageIcon : clinicIcon;
+      const m = L.marker([c.lat, c.lng], { icon });
 
       const nmap = `https://map.naver.com/p/search/${encodeURIComponent(c.name)}?c=${c.lng},${c.lat},17,0,0,0,dh`;
       const kmap = `https://map.kakao.com/link/search/${encodeURIComponent(c.name)}?longitude=${c.lng}&latitude=${c.lat}`;
 
-      const linkStyle = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;background:#eef2ff;color:#6366f1;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;flex:1;text-align:center;min-width:0;white-space:nowrap;';
-      const priceBtn = 'display:block;width:100%;padding:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;margin-top:10px;';
-
-      const featuredBadge = featured
-        ? '<div style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px">⭐ 가격 비교 가능</div>'
-        : '';
-
       m.bindPopup(`
         <div style="font-family:inherit;font-size:13px">
-          ${featuredBadge}
           <div style="font-weight:700;font-size:15px;margin-bottom:6px;line-height:1.35">${c.name}</div>
           <div style="font-size:12px;color:#64748b;margin-bottom:3px;line-height:1.4">${c.addr}</div>
           ${c.tel ? `<div style="font-size:12px;color:#64748b;margin-bottom:3px">📞 <a href="tel:${c.tel.replace(/[^0-9]/g, '')}" style="color:#6366f1;text-decoration:none">${c.tel}</a></div>` : ''}
@@ -128,18 +99,14 @@ export default function MapInner({ clinics, selectedGu, featuredMap = {}, onClin
             <a href="${nmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 네이버</a>
             <a href="${kmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 카카오</a>
           </div>
-          ${featured && clinicPageId ? `<a href="/clinic/${clinicPageId}" style="${priceBtn}">💰 시술 가격표 보기</a>` : ''}
         </div>
       `, { maxWidth: 300, closeButton: true });
 
-      if (onClinicClick) {
-        m.on('click', () => onClinicClick(c));
-      }
       markers.push(m);
     }
 
     cluster.addLayers(markers);
-  }, [clinics, onClinicClick]);
+  }, [clinics]);
 
   useEffect(() => {
     const map = mapRef.current;
