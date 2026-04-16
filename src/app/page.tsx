@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { HiraClinic } from '@/types/hira';
+import LangCurrencySelector from '@/components/LangCurrencySelector';
 
 const STATS = { clinics: 2803, gu: 25, featured: 9 };
 
@@ -62,10 +63,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <span className="text-xl">💎</span>
             <span className="font-bold text-lg tracking-tight">
-              <span className="gradient-brand-text">Seoul Beauty</span>
+              <span className="gradient-brand-text">En beauté</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <LangCurrencySelector />
             <Link
               href="/explore"
               className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
@@ -158,7 +160,7 @@ export default function LandingPage() {
       <section className="py-20 px-5">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4 tracking-tight">
-            왜 <span className="gradient-brand-text">Seoul Beauty</span>인가요?
+            왜 <span className="gradient-brand-text">En beauté</span>인가요?
           </h2>
           <p className="text-center text-[var(--text-muted)] mb-12 max-w-lg mx-auto">
             건강보험심사평가원 공식 데이터와 실시간 크롤링 가격 정보를 결합했습니다.
@@ -238,7 +240,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--text-light)]">
           <div className="flex items-center gap-2">
             <span>💎</span>
-            <span className="font-semibold text-[var(--text-muted)]">Seoul Beauty Compare</span>
+            <span className="font-semibold text-[var(--text-muted)]">En beauté Compare</span>
           </div>
           <div>
             Data by HIRA (건강보험심사평가원) · Map by OpenStreetMap

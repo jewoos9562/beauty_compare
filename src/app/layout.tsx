@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Seoul Beauty Compare | 서울 피부과 가격 비교",
-  description: "서울 2,800+ 피부과/미용의원 가격 비교 & 리뷰 — Seoul's #1 beauty clinic price comparison",
+  title: "앙뷰띠 En beauté | 서울 피부과 가격 비교",
+  description: "서울 2,800+ 피부과/미용의원 가격 비교 & 리뷰 — Seoul beauty clinic price comparison",
 };
 
 export default function RootLayout({

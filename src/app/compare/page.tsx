@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { FeaturedClinic } from '@/lib/fetch-featured';
 import { fetchAllFeatured } from '@/lib/fetch-featured';
+import LangCurrencySelector from '@/components/LangCurrencySelector';
 
 const DISTRICT_NAMES: Record<string, string> = {
   gangnam: '강남구', seocho: '서초구', songpa: '송파구', mapo: '마포구',
@@ -75,12 +76,13 @@ export default function ComparePage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <span className="text-lg">💎</span>
-              <span className="font-bold text-sm gradient-brand-text hidden sm:inline">Seoul Beauty</span>
+              <span className="font-bold text-sm gradient-brand-text hidden sm:inline">En beauté</span>
             </Link>
             <span className="text-[var(--border)]">|</span>
             <span className="text-sm font-semibold">가격 비교</span>
           </div>
           <div className="flex items-center gap-2">
+            <LangCurrencySelector />
             <Link href="/explore" className="text-sm text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors font-medium">
               🗺️ 지도
             </Link>

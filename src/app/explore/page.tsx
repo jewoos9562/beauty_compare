@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type { HiraClinic } from '@/types/hira';
 import { GU_LIST } from '@/types/hira';
+import LangCurrencySelector from '@/components/LangCurrencySelector';
 
 const MapInner = dynamic(() => import('@/components/map/MapInner'), {
   ssr: false,
@@ -61,12 +62,13 @@ export default function ExplorePage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-lg">💎</span>
-            <span className="font-bold text-sm gradient-brand-text hidden sm:inline">Seoul Beauty</span>
+            <span className="font-bold text-sm gradient-brand-text hidden sm:inline">En beauté</span>
           </Link>
           <span className="text-[var(--border)]">|</span>
           <span className="text-sm font-semibold text-[var(--text)]">탐색</span>
         </div>
         <div className="flex items-center gap-2">
+          <LangCurrencySelector />
           <span className="text-xs text-[var(--text-muted)] font-medium px-2.5 py-1 bg-[var(--primary-soft)] text-[var(--primary)] rounded-full">
             {filtered.length.toLocaleString()}곳
           </span>
