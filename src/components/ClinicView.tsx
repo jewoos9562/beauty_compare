@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import type { Clinic, Category, TreatmentItem } from '@/data/clinics';
 import { TAG_CONFIG } from '@/data/clinics';
-import type { CompareItem } from '@/app/page';
+import type { CompareItem } from '@/types/compare';
 import { useI18n } from '@/context/I18nContext';
 import { groupItems } from '@/lib/group-treatments';
 import ReviewSummary from '@/components/ReviewSummary';

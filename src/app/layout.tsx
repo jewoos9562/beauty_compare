@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "서울 피부과 가격 비교",
-  description: "서울 지역별 피부과 시술 가격 비교",
+  title: "Seoul Beauty Compare | 서울 피부과 가격 비교",
+  description: "서울 2,800+ 피부과/미용의원 가격 비교 & 리뷰 — Seoul's #1 beauty clinic price comparison",
 };
 
 export default function RootLayout({
@@ -28,7 +28,14 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <head>
+        <link
+          rel="stylesheet"
+          as="style"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-[var(--background)]">
         <I18nProvider>{children}</I18nProvider>
       </body>
     </html>

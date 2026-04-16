@@ -1,15 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
-  --accent: #0ea5e9;
-  --accent-light: #e0f2fe;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-soft: #eef2ff;
+  --secondary: #0ea5e9;
+  --secondary-soft: #e0f2fe;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --border: #e2e8f0;
+  --border-soft: #f1f5f9;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -17,25 +39,70 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Pretendard', var(--font-sans), -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hide scrollbar for compare drawer */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Smooth transitions */
 * { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
 
-/* Custom checkbox */
-input[type="checkbox"] {
-  accent-color: #0ea5e9;
-}
+input[type="checkbox"] { accent-color: var(--primary); }
 
-/* Glass effect for headers */
 .glass {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.gradient-brand {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+}
+
+.gradient-brand-text {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Leaflet overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 16px 18px !important;
+  min-width: 220px !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+}
+
+.marker-cluster-small {
+  background: rgba(99, 102, 241, 0.2) !important;
+}
+.marker-cluster-small div {
+  background: rgba(99, 102, 241, 0.85) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+.marker-cluster-medium {
+  background: rgba(139, 92, 246, 0.2) !important;
+}
+.marker-cluster-medium div {
+  background: rgba(139, 92, 246, 0.9) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+.marker-cluster-large {
+  background: rgba(236, 72, 153, 0.25) !important;
+}
+.marker-cluster-large div {
+  background: rgba(236, 72, 153, 0.92) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
 }

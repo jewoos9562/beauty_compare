@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Clinic } from '@/data/clinics';
 import { fetchCrossKeywords } from '@/lib/fetch-clinics';
-import type { CompareItem } from '@/app/page';
+import type { CompareItem } from '@/types/compare';
 import { useI18n } from '@/context/I18nContext';
 import { parseTreatment } from '@/lib/group-treatments';
 

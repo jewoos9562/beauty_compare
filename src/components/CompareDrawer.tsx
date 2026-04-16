@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { CompareItem } from '@/app/page';
+import type { CompareItem } from '@/types/compare';
 import { useI18n } from '@/context/I18nContext';
 
 type Props = {
