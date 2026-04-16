@@ -180,9 +180,19 @@ function isFeaturedClinic(name: string): boolean {
   return FEATURED_CHAINS.some((chain) => name.includes(chain));
 }
 
+function findFeaturedId(hiraName: string, featuredMap: Record<string, string>): string | null {
+  if (featuredMap[hiraName]) return featuredMap[hiraName];
+  const hiraNorm = hiraName.replace(/의원|클리닉|\s/g, '');
+  for (const [dbName, id] of Object.entries(featuredMap)) {
+    const dbNorm = dbName.replace(/의원|클리닉|\s/g, '');
+    if (hiraNorm.includes(dbNorm) || dbNorm.includes(hiraNorm)) return id;
+  }
+  return null;
+}
+
 function ClinicListItem({ clinic, featuredMap }: { clinic: HiraClinic; featuredMap: Record<string, string> }) {
   const featured = isFeaturedClinic(clinic.name);
-  const clinicPageId = featuredMap[clinic.name] || null;
+  const clinicPageId = featured ? findFeaturedId(clinic.name, featuredMap) : null;
   return (
     <div className={`p-3 rounded-xl cursor-pointer transition-colors mb-1 group border ${
       featured

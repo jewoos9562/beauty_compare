@@ -33,10 +33,22 @@ function isFeatured(name: string): boolean {
   return FEATURED_CHAINS.some((chain) => name.includes(chain));
 }
 
+function findFeaturedId(hiraName: string, featuredMap: Record<string, string>): string | null {
+  // 1) exact match
+  if (featuredMap[hiraName]) return featuredMap[hiraName];
+  // 2) HIRA name contains DB name, or DB name contains HIRA name
+  const hiraNorm = hiraName.replace(/의원|클리닉|\s/g, '');
+  for (const [dbName, id] of Object.entries(featuredMap)) {
+    const dbNorm = dbName.replace(/의원|클리닉|\s/g, '');
+    if (hiraNorm.includes(dbNorm) || dbNorm.includes(hiraNorm)) return id;
+  }
+  return null;
+}
+
 interface MapInnerProps {
   clinics: HiraClinic[];
   selectedGu: string | null;
-  featuredMap?: Record<string, string>; // HIRA name → clinic page ID
+  featuredMap?: Record<string, string>;
   onClinicClick?: (clinic: HiraClinic) => void;
 }
 
@@ -92,7 +104,7 @@ export default function MapInner({ clinics, selectedGu, featuredMap = {}, onClin
 
     for (const c of clinics) {
       const featured = isFeatured(c.name);
-      const clinicPageId = featuredMap[c.name] || null;
+      const clinicPageId = featured ? findFeaturedId(c.name, featuredMap) : null;
       const m = L.marker([c.lat, c.lng], { icon: featured ? featuredIcon : defaultIcon, zIndexOffset: featured ? 1000 : 0 });
 
       const nmap = `https://map.naver.com/p/search/${encodeURIComponent(c.name)}?c=${c.lng},${c.lat},17,0,0,0,dh`;

@@ -131,6 +131,15 @@ export default function ClinicPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-5 py-6">
+        {/* Currency info bar */}
+        {currency !== 'KRW' && rateLabel && (
+          <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-pink-50 rounded-xl border border-indigo-100">
+            <span className="text-sm">💱</span>
+            <span className="text-xs font-semibold text-[var(--primary)]">{rateLabel}</span>
+            <span className="text-[10px] text-[var(--text-light)]">· 실시간 환율 적용</span>
+          </div>
+        )}
+
         {/* Clinic info */}
         <div className="bg-white rounded-2xl border border-[var(--border)] p-5 mb-6">
           <div className="flex items-start justify-between">
