@@ -11,16 +11,26 @@ import type { HiraClinic } from '@/types/hira';
 const SEOUL_CENTER: [number, number] = [37.5665, 126.978];
 const DEFAULT_ZOOM = 12;
 
-const clinicIcon = L.divIcon({
+const defaultIcon = L.divIcon({
   className: '',
-  html: '<div style="width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 2px 6px rgba(99,102,241,0.5)"></div>',
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
+  html: '<div style="width:10px;height:10px;border-radius:50%;background:#94a3b8;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.15)"></div>',
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
 });
 
-function formatEstb(s?: string) {
-  if (!s || s.length !== 8) return '';
-  return `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6)}`;
+const featuredIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ec4899);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(99,102,241,0.5);display:flex;align-items:center;justify-content:center">
+    <div style="width:6px;height:6px;background:#fff;border-radius:50%"></div>
+  </div>`,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+const FEATURED_CHAINS = ['톡스앤필', '밴스', '유앤아이', '데이뷰', '에버스', '쁨', '블리비'];
+
+function isFeatured(name: string): boolean {
+  return FEATURED_CHAINS.some((chain) => name.includes(chain));
 }
 
 interface MapInnerProps {
@@ -80,25 +90,31 @@ export default function MapInner({ clinics, selectedGu, onClinicClick }: MapInne
     const markers: L.Marker[] = [];
 
     for (const c of clinics) {
-      const m = L.marker([c.lat, c.lng], { icon: clinicIcon });
-      // 네이버: 좌표 기반 장소 검색 (병원명 + 주소 + 좌표 중심)
+      const featured = isFeatured(c.name);
+      const m = L.marker([c.lat, c.lng], { icon: featured ? featuredIcon : defaultIcon, zIndexOffset: featured ? 1000 : 0 });
+
       const nmap = `https://map.naver.com/p/search/${encodeURIComponent(c.name)}?c=${c.lng},${c.lat},17,0,0,0,dh`;
-      // 카카오: 좌표 기반 키워드 검색 (lat/lng → kakao의 WGS84 좌표)
       const kmap = `https://map.kakao.com/link/search/${encodeURIComponent(c.name)}?longitude=${c.lng}&latitude=${c.lat}`;
 
       const linkStyle = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;background:#eef2ff;color:#6366f1;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;flex:1;text-align:center;min-width:0;white-space:nowrap;';
-      const linkHover = 'transition:background 0.15s;';
+      const priceBtn = 'display:block;width:100%;padding:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;margin-top:10px;';
+
+      const featuredBadge = featured
+        ? '<div style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px">⭐ 가격 비교 가능</div>'
+        : '';
 
       m.bindPopup(`
         <div style="font-family:inherit;font-size:13px">
+          ${featuredBadge}
           <div style="font-weight:700;font-size:15px;margin-bottom:6px;line-height:1.35">${c.name}</div>
           <div style="font-size:12px;color:#64748b;margin-bottom:3px;line-height:1.4">${c.addr}</div>
           ${c.tel ? `<div style="font-size:12px;color:#64748b;margin-bottom:3px">📞 <a href="tel:${c.tel.replace(/[^0-9]/g, '')}" style="color:#6366f1;text-decoration:none">${c.tel}</a></div>` : ''}
           <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0">
-            ${c.homepage ? `<a href="${c.homepage}" target="_blank" rel="noopener" style="${linkStyle}${linkHover}">🌐 홈페이지</a>` : ''}
-            <a href="${nmap}" target="_blank" rel="noopener" style="${linkStyle}${linkHover}">🗺️ 네이버</a>
-            <a href="${kmap}" target="_blank" rel="noopener" style="${linkStyle}${linkHover}">🗺️ 카카오</a>
+            ${c.homepage ? `<a href="${c.homepage}" target="_blank" rel="noopener" style="${linkStyle}">🌐 홈페이지</a>` : ''}
+            <a href="${nmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 네이버</a>
+            <a href="${kmap}" target="_blank" rel="noopener" style="${linkStyle}">🗺️ 카카오</a>
           </div>
+          ${featured ? `<a href="/compare" style="${priceBtn}">💰 가격 비교 보기</a>` : ''}
         </div>
       `, { maxWidth: 300, closeButton: true });
 
