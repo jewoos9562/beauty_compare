@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { classifySourceUrl, type SiteType } from '@/lib/chain-utils';
 
@@ -88,8 +87,6 @@ const STATUS_CONFIG: Record<ReviewStatus, { label: string; color: string; bg: st
 
 /* ─── Main ─── */
 export default function AdminImagesPage() {
-  const searchParams = useSearchParams();
-
   const [summaries, setSummaries] = useState<ImageSummary[]>([]);
   const [guMap, setGuMap] = useState<Record<string, string>>({});
   const [homepageMap, setHomepageMap] = useState<Record<string, string>>({});
@@ -98,10 +95,19 @@ export default function AdminImagesPage() {
   const [allClinicData, setAllClinicData] = useState<{ id: string; name: string; gu: string; site_type?: SiteType }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Read initial state from URL
-  const [selectedClinicId, setSelectedClinicId] = useState<string | null>(searchParams.get('clinic'));
-  const [selectedMode, setSelectedMode] = useState<'all' | 'branch' | 'common'>((searchParams.get('mode') as 'all' | 'branch' | 'common') || 'all');
-  const [selectedLabel, setSelectedLabel] = useState(searchParams.get('label') || '');
+  // Read initial state from URL (client-side only)
+  const [selectedClinicId, setSelectedClinicId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('clinic');
+  });
+  const [selectedMode, setSelectedMode] = useState<'all' | 'branch' | 'common'>(() => {
+    if (typeof window === 'undefined') return 'all';
+    return (new URLSearchParams(window.location.search).get('mode') as 'all' | 'branch' | 'common') || 'all';
+  });
+  const [selectedLabel, setSelectedLabel] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.search).get('label') || '';
+  });
   const [clinicImages, setClinicImages] = useState<CrawlImage[]>([]);
   const [clinicLoading, setClinicLoading] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
@@ -183,7 +189,7 @@ export default function AdminImagesPage() {
     const map = new Map<string, GuGroup>();
     for (const c of clinicEntries) {
       if (!map.has(c.gu)) {
-        map.set(c.gu, { gu: c.gu, clinics: [], total: 0, pending: 0 });
+        map.set(c.gu, { gu: c.gu, clinics: [], total: 0, pending: 0, completed: 0 });
       }
       const g = map.get(c.gu)!;
       g.clinics.push(c);
