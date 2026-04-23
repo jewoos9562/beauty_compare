@@ -55,6 +55,7 @@ interface GuGroup {
   clinics: ClinicEntry[];
   total: number;
   pending: number;
+  completed: number;
 }
 
 /** Chain info for the "체인 공통" section */
@@ -65,6 +66,7 @@ interface ChainInfo {
   // We pick one hira_id that has images to load from
   primaryHiraId: string;
   totalImages: number;
+  totalPending: number;
 }
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/crawl-images/';
@@ -170,6 +172,7 @@ export default function AdminImagesPage() {
         branches: allBranches,
         primaryHiraId: primary.hira_id,
         totalImages: entries.reduce((s, e) => s + e.total, 0),
+        totalPending: entries.reduce((s, e) => s + e.pending, 0),
       });
     }
     return result.filter(c => c.totalImages > 0).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
@@ -373,11 +376,20 @@ export default function AdminImagesPage() {
                   <button
                     key={ch.name}
                     onClick={() => selectClinic(ch.primaryHiraId, 'common', `${ch.name} 공통`)}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 bg-violet-50 rounded-xl border border-violet-200 hover:border-violet-400 hover:shadow-sm transition-all text-left group"
+                    className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all text-left group ${
+                      ch.totalPending === 0 && ch.totalImages > 0
+                        ? 'bg-emerald-50/50 border-emerald-200 opacity-70'
+                        : 'bg-violet-50 border-violet-200 hover:border-violet-400 hover:shadow-sm'
+                    }`}
                   >
+                    {ch.totalPending === 0 && ch.totalImages > 0 && (
+                      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-sm text-violet-700 group-hover:text-violet-900">{ch.name}</span>
+                        <span className={`font-semibold text-sm group-hover:text-violet-900 ${ch.totalPending === 0 && ch.totalImages > 0 ? 'text-[var(--text-light)]' : 'text-violet-700'}`}>{ch.name}</span>
                       </div>
                       <div className="text-[11px] text-violet-400 mt-0.5">
                         {ch.branches.length}개 지점: {ch.branches.map(b => b.gu).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
