@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { classifySourceUrl, type SiteType } from '@/lib/chain-utils';
 
@@ -85,6 +86,8 @@ const STATUS_CONFIG: Record<ReviewStatus, { label: string; color: string; bg: st
 
 /* ─── Main ─── */
 export default function AdminImagesPage() {
+  const searchParams = useSearchParams();
+
   const [summaries, setSummaries] = useState<ImageSummary[]>([]);
   const [guMap, setGuMap] = useState<Record<string, string>>({});
   const [homepageMap, setHomepageMap] = useState<Record<string, string>>({});
@@ -93,9 +96,10 @@ export default function AdminImagesPage() {
   const [allClinicData, setAllClinicData] = useState<{ id: string; name: string; gu: string; site_type?: SiteType }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedClinicId, setSelectedClinicId] = useState<string | null>(null);
-  const [selectedMode, setSelectedMode] = useState<'all' | 'branch' | 'common'>('all');
-  const [selectedLabel, setSelectedLabel] = useState('');
+  // Read initial state from URL
+  const [selectedClinicId, setSelectedClinicId] = useState<string | null>(searchParams.get('clinic'));
+  const [selectedMode, setSelectedMode] = useState<'all' | 'branch' | 'common'>((searchParams.get('mode') as 'all' | 'branch' | 'common') || 'all');
+  const [selectedLabel, setSelectedLabel] = useState(searchParams.get('label') || '');
   const [clinicImages, setClinicImages] = useState<CrawlImage[]>([]);
   const [clinicLoading, setClinicLoading] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
@@ -194,6 +198,7 @@ export default function AdminImagesPage() {
     setReviewIndex(0);
     setStatusFilter('pending');
     setClinicLoading(true);
+    window.history.pushState(null, '', `/admin/images?clinic=${hiraId}&mode=${mode}&label=${encodeURIComponent(label)}`);
 
     const all: CrawlImage[] = [];
     let from = 0;
@@ -240,6 +245,29 @@ export default function AdminImagesPage() {
     const map = new Map(clinicImages.map(img => [img.id, img]));
     return reviewList.map(img => map.get(img.id) || img);
   }, [reviewList, clinicImages]);
+
+  /* ─── Back button handler ─── */
+  const goBack = useCallback(() => {
+    setSelectedClinicId(null);
+    setClinicImages([]);
+    setReviewList([]);
+    prevFilterKey.current = '';
+    window.history.pushState(null, '', '/admin/images');
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get('clinic')) {
+        setSelectedClinicId(null);
+        setClinicImages([]);
+        setReviewList([]);
+        prevFilterKey.current = '';
+      }
+    };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, []);
 
   /* ─── Actions ─── */
   const updateImage = useCallback(async (id: number, updates: Partial<CrawlImage>) => {
@@ -378,11 +406,20 @@ export default function AdminImagesPage() {
                     <button
                       key={c.hira_id}
                       onClick={() => selectClinic(c.hira_id, c.isChain ? 'branch' : 'all', `${c.clinic_name}${c.isChain ? ' (' + c.gu + ')' : ''}`)}
-                      className="w-full flex items-center gap-4 px-5 py-3.5 bg-white rounded-xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-sm transition-all text-left group"
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all text-left group ${
+                        c.pending === 0 && c.total > 0
+                          ? 'bg-emerald-50/50 border-emerald-200 opacity-70'
+                          : 'bg-white border-[var(--border)] hover:border-[var(--primary)] hover:shadow-sm'
+                      }`}
                     >
+                      {c.pending === 0 && c.total > 0 && (
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-sm text-[var(--text)] truncate group-hover:text-[var(--primary)] transition-colors">{c.clinic_name}</span>
+                          <span className={`font-semibold text-sm truncate group-hover:text-[var(--primary)] transition-colors ${c.pending === 0 && c.total > 0 ? 'text-[var(--text-light)]' : 'text-[var(--text)]'}`}>{c.clinic_name}</span>
                           {c.isChain && c.siteType === 'mixed' && (
                             <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded shrink-0">지점</span>
                           )}
@@ -428,7 +465,7 @@ export default function AdminImagesPage() {
           setReviewIndex={setReviewIndex}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
-          onBack={() => setSelectedClinicId(null)}
+          onBack={goBack}
           onUpdate={updateImage}
         />
       )}
