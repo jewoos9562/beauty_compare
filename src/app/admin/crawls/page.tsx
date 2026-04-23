@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { supabase, fetchAll } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { classifySourceUrl, type SiteType } from '@/lib/chain-utils';
 
 /* ─── Types ─── */
 interface CrawlPageSummary {
   hira_id: string;
   clinic_name: string;
-  url: string;
-  char_count: number;
+  pages: number;
+  total_chars: number;
 }
 
 interface CrawlPageFull {
@@ -65,14 +65,14 @@ export default function AdminCrawlsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchAll<CrawlPageSummary>('crawl_pages', 'hira_id, clinic_name, url, char_count'),
-      fetchAll<{ hira_id: string }>('crawl_images', 'hira_id'),
+      supabase.from('crawl_page_summary').select('*').then(r => r.data || []) as Promise<CrawlPageSummary[]>,
+      supabase.from('crawl_image_summary').select('hira_id, total').then(r => r.data || []) as Promise<{ hira_id: string; total: number }[]>,
       fetch('/data/seoul_derma.json').then(r => r.json()),
     ]).then(([pages, images, clinicData]) => {
       setPageSummaries(pages);
 
       const imgMap: Record<string, number> = {};
-      for (const img of images) imgMap[img.hira_id] = (imgMap[img.hira_id] || 0) + 1;
+      for (const img of images) imgMap[img.hira_id] = img.total;
       setImageCounts(imgMap);
 
       const gm: Record<string, string> = {};
@@ -104,27 +104,19 @@ export default function AdminCrawlsPage() {
     });
   }, []);
 
-  /* ─── Clinic summaries ─── */
+  /* ─── Clinic summaries from pre-aggregated view ─── */
   const clinicCrawls = useMemo<ClinicCrawl[]>(() => {
-    const map = new Map<string, ClinicCrawl>();
-    for (const p of pageSummaries) {
-      if (!map.has(p.hira_id)) {
-        map.set(p.hira_id, {
-          hira_id: p.hira_id,
-          clinic_name: p.clinic_name,
-          gu: guMap[p.hira_id] || '기타',
-          pages: 0, totalChars: 0,
-          imageCount: imageCounts[p.hira_id] || 0,
-          isChain: (chainCountMap[p.hira_id] || 1) >= 2,
-          homepage: homepageMap[p.hira_id] || '',
-          siteType: siteTypeMap[p.hira_id],
-        });
-      }
-      const c = map.get(p.hira_id)!;
-      c.pages++;
-      c.totalChars += p.char_count;
-    }
-    return [...map.values()].sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
+    return pageSummaries.map(s => ({
+      hira_id: s.hira_id,
+      clinic_name: s.clinic_name,
+      gu: guMap[s.hira_id] || '기타',
+      pages: s.pages,
+      totalChars: s.total_chars,
+      imageCount: imageCounts[s.hira_id] || 0,
+      isChain: (chainCountMap[s.hira_id] || 1) >= 2,
+      homepage: homepageMap[s.hira_id] || '',
+      siteType: siteTypeMap[s.hira_id],
+    })).sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
   }, [pageSummaries, guMap, homepageMap, siteTypeMap, chainCountMap, imageCounts]);
 
   /* ─── Chain commons (unified + mixed only) ─── */
@@ -188,7 +180,7 @@ export default function AdminCrawlsPage() {
 
   /* ─── Stats ─── */
   const totalClinics = clinicCrawls.length;
-  const totalPages = pageSummaries.length;
+  const totalPages = pageSummaries.reduce((s, p) => s + p.pages, 0);
   const totalImages = Object.values(imageCounts).reduce((s, c) => s + c, 0);
 
   if (loading) {

@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { supabase, fetchAll } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { classifySourceUrl, type SiteType } from '@/lib/chain-utils';
 
 /* ─── Types ─── */
 interface ImageSummary {
   hira_id: string;
   clinic_name: string;
-  status: string;
-  ocr_status: string;
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
 }
 
 interface CrawlImage {
@@ -98,7 +100,7 @@ export default function AdminImagesPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchAll<ImageSummary>('crawl_images', 'hira_id, clinic_name, status, ocr_status'),
+      supabase.from('crawl_image_summary').select('*').then(r => r.data || []) as Promise<ImageSummary[]>,
       fetch('/data/seoul_derma.json').then(r => r.json()),
     ]).then(([imgSummaries, clinicData]) => {
       setSummaries(imgSummaries);
@@ -126,32 +128,21 @@ export default function AdminImagesPage() {
     });
   }, []);
 
-  /* ─── Build clinic entries with branch/common counts ─── */
+  /* ─── Build clinic entries from pre-aggregated summary ─── */
   const clinicEntries = useMemo<ClinicEntry[]>(() => {
-    const map = new Map<string, ClinicEntry>();
-    // First pass: build basic entries
-    for (const img of summaries) {
-      if (!map.has(img.hira_id)) {
-        const hp = homepageMap[img.hira_id] || '';
-        map.set(img.hira_id, {
-          hira_id: img.hira_id,
-          clinic_name: img.clinic_name,
-          gu: guMap[img.hira_id] || '기타',
-          total: 0, pending: 0, approved: 0, rejected: 0,
-          isChain: (chainCountMap[img.hira_id] || 1) >= 2,
-          homepage: hp,
-          siteType: siteTypeMap[img.hira_id],
-          branchTotal: 0, commonTotal: 0,
-        });
-      }
-      const c = map.get(img.hira_id)!;
-      c.total++;
-      const s = (img.status || 'pending') as ReviewStatus;
-      if (s === 'pending') c.pending++;
-      else if (s === 'approved') c.approved++;
-      else if (s === 'rejected') c.rejected++;
-    }
-    return [...map.values()].sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
+    return summaries.map(s => ({
+      hira_id: s.hira_id,
+      clinic_name: s.clinic_name,
+      gu: guMap[s.hira_id] || '기타',
+      total: s.total,
+      pending: s.pending,
+      approved: s.approved,
+      rejected: s.rejected,
+      isChain: (chainCountMap[s.hira_id] || 1) >= 2,
+      homepage: homepageMap[s.hira_id] || '',
+      siteType: siteTypeMap[s.hira_id],
+      branchTotal: 0, commonTotal: 0,
+    })).sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
   }, [summaries, guMap, homepageMap, siteTypeMap, chainCountMap]);
 
   /* ─── Chains with common images (unified + mixed only) ─── */
@@ -247,15 +238,21 @@ export default function AdminImagesPage() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const current = filteredImages[reviewIndex];
       if (!current) return;
-      if (e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1)); }
+      const rejectAndNext = () => {
+        if ((current.status || 'pending') === 'pending') updateImage(current.id, { status: 'rejected' });
+        setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1));
+      };
+      const approveAndNext = () => {
+        updateImage(current.id, { status: 'approved' });
+        setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1));
+      };
+      if (e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); rejectAndNext(); }
       else if (e.key === 'ArrowLeft' || e.key === 'k') { e.preventDefault(); setReviewIndex(i => Math.max(i - 1, 0)); }
-      else if (e.key === 'a') { e.preventDefault(); updateImage(current.id, { status: 'approved' }); setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1)); }
-      else if (e.key === 'r') { e.preventDefault(); updateImage(current.id, { status: 'rejected' }); setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1)); }
-      else if (e.key === 'y') { e.preventDefault(); updateImage(current.id, { ocr_status: current.ocr_status === 'ocr_yes' ? 'pending' : 'ocr_yes' } as Partial<CrawlImage>); }
+      else if (e.key === ' ') { e.preventDefault(); approveAndNext(); }
       else if (e.key === 'Escape') { e.preventDefault(); setSelectedClinicId(null); }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keyup', handler);
+    return () => window.removeEventListener('keyup', handler);
   }, [selectedClinicId, filteredImages, reviewIndex, updateImage]);
 
   const totalPending = clinicEntries.reduce((s, c) => s + c.pending, 0);
@@ -436,7 +433,6 @@ function ReviewView({
   onUpdate: (id: number, updates: Partial<CrawlImage>) => void;
 }) {
   const current = images[reviewIndex] || null;
-  const isOcrMarked = current?.ocr_status === 'ocr_yes';
   const imageScrollRef = useCallback((node: HTMLDivElement | null) => {
     if (node) node.scrollTop = 0;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -505,9 +501,6 @@ function ReviewView({
                 <div className={`sticky top-3 left-3 float-left px-3 py-1.5 rounded-lg text-xs font-bold border ${STATUS_CONFIG[(current.status || 'pending') as ReviewStatus].bg}`}>
                   {STATUS_CONFIG[(current.status || 'pending') as ReviewStatus].label}
                 </div>
-                {isOcrMarked && (
-                  <div className="sticky top-3 right-3 float-right px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-100 text-sky-700 border border-sky-200">OCR 대상</div>
-                )}
               </div>
             )}
 
@@ -520,18 +513,16 @@ function ReviewView({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => onUpdate(current.id, { ocr_status: isOcrMarked ? 'pending' : 'ocr_yes' } as Partial<CrawlImage>)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-colors ${isOcrMarked ? 'border-sky-300 bg-sky-50 text-sky-700' : 'border-slate-200 text-slate-400 hover:bg-slate-50'}`}>
-                    OCR {isOcrMarked ? 'ON' : 'OFF'} <kbd className="ml-1.5 text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200">Y</kbd>
-                  </button>
-                  <div className="w-px h-6 bg-[var(--border)] mx-1" />
-                  <button onClick={() => { onUpdate(current.id, { status: 'rejected' }); setReviewIndex(i => Math.min(i + 1, images.length - 1)); }}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-                    거절 <kbd className="ml-1.5 text-[10px] text-red-300 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">R</kbd>
+                  <button onClick={() => {
+                    if ((current.status || 'pending') === 'pending') onUpdate(current.id, { status: 'rejected' });
+                    setReviewIndex(i => Math.min(i + 1, images.length - 1));
+                  }}
+                    className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                    넘기기 <kbd className="ml-1.5 text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200">→</kbd>
                   </button>
                   <button onClick={() => { onUpdate(current.id, { status: 'approved' }); setReviewIndex(i => Math.min(i + 1, images.length - 1)); }}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
-                    승인 <kbd className="ml-1.5 text-[10px] text-indigo-200 bg-indigo-500 px-1.5 py-0.5 rounded">A</kbd>
+                    className="px-5 py-2 rounded-xl text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
+                    승인 <kbd className="ml-1.5 text-[10px] text-indigo-200 bg-indigo-500 px-1.5 py-0.5 rounded">Space</kbd>
                   </button>
                 </div>
               </div>
@@ -575,7 +566,7 @@ function ReviewView({
             <div className="bg-slate-50 rounded-2xl border border-[var(--border)] p-4">
               <h3 className="text-[10px] font-bold text-[var(--text-light)] uppercase tracking-wide mb-2">키보드 단축키</h3>
               <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
-                {[['이전/다음', '← → / J K'], ['승인', 'A'], ['거절', 'R'], ['OCR 필요', 'Y'], ['목록으로', 'ESC']].map(([label, key]) => (
+                {[['승인', 'Space'], ['넘기기 (=거절)', '→ / J'], ['이전', '← / K'], ['목록으로', 'ESC']].map(([label, key]) => (
                   <div key={label} className="flex justify-between"><span>{label}</span><span className="font-mono text-[var(--text-light)]">{key}</span></div>
                 ))}
               </div>
@@ -595,9 +586,6 @@ function ReviewView({
                         : 'border-transparent opacity-70 hover:opacity-100'
                       }`}>
                       <img src={STORAGE_URL + img.storage_path} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      {img.ocr_status === 'ocr_yes' && (
-                        <div className="absolute bottom-0 inset-x-0 bg-sky-600/90 text-white text-[8px] font-bold text-center py-0.5">OCR</div>
-                      )}
                       {st === 'approved' && (
                         <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
