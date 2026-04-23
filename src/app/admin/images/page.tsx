@@ -207,9 +207,12 @@ export default function AdminImagesPage() {
     setClinicLoading(false);
   }, []);
 
-  /* ─── Filtered images ─── */
+  /* ─── Review list: filter once on load, then freeze during review ─── */
   const selectedEntry = clinicEntries.find(c => c.hira_id === selectedClinicId);
-  const filteredImages = useMemo(() => {
+  const [reviewList, setReviewList] = useState<CrawlImage[]>([]);
+
+  // Build review list when clinic is selected or filters change — but not when images are updated
+  useEffect(() => {
     let list = clinicImages;
     if (statusFilter !== 'all') {
       list = list.filter(i => (i.status || 'pending') === statusFilter);
@@ -217,8 +220,17 @@ export default function AdminImagesPage() {
     if (selectedMode !== 'all' && selectedEntry?.isChain) {
       list = list.filter(i => classifySourceUrl(i.source_url, selectedEntry.homepage, selectedEntry.siteType) === selectedMode);
     }
-    return list;
-  }, [clinicImages, statusFilter, selectedMode, selectedEntry]);
+    setReviewList(list);
+    setReviewIndex(0);
+    // Only rebuild when filters change, not when clinicImages updates (to prevent index shifting)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClinicId, statusFilter, selectedMode]);
+
+  // Keep review list's status in sync with clinicImages (for badge display) without removing items
+  const reviewListSynced = useMemo(() => {
+    const map = new Map(clinicImages.map(img => [img.id, img]));
+    return reviewList.map(img => map.get(img.id) || img);
+  }, [reviewList, clinicImages]);
 
   /* ─── Actions ─── */
   const updateImage = useCallback(async (id: number, updates: Partial<CrawlImage>) => {
@@ -234,8 +246,8 @@ export default function AdminImagesPage() {
   /* ─── Keyboard (use refs to avoid re-registration on every state change) ─── */
   const reviewIndexRef = useRef(reviewIndex);
   reviewIndexRef.current = reviewIndex;
-  const filteredRef = useRef(filteredImages);
-  filteredRef.current = filteredImages;
+  const filteredRef = useRef(reviewListSynced);
+  filteredRef.current = reviewListSynced;
 
   useEffect(() => {
     if (!selectedClinicId) return;
@@ -419,7 +431,7 @@ export default function AdminImagesPage() {
         <ReviewView
           entry={selectedEntry!}
           mode={selectedMode}
-          images={filteredImages}
+          images={reviewListSynced}
           allImages={clinicImages}
           reviewIndex={reviewIndex}
           setReviewIndex={setReviewIndex}
