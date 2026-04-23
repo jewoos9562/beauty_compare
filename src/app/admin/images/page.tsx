@@ -196,7 +196,7 @@ export default function AdminImagesPage() {
     setSelectedMode(mode);
     setSelectedLabel(label);
     setReviewIndex(0);
-    setStatusFilter('pending');
+    setStatusFilter('all');
     setClinicLoading(true);
     window.history.pushState(null, '', `/admin/images?clinic=${hiraId}&mode=${mode}&label=${encodeURIComponent(label)}`);
 
@@ -253,6 +253,10 @@ export default function AdminImagesPage() {
     setReviewList([]);
     prevFilterKey.current = '';
     window.history.pushState(null, '', '/admin/images');
+    // Refresh summaries to reflect labeling changes
+    supabase.from('crawl_image_summary').select('*').then(({ data }) => {
+      if (data) setSummaries(data as ImageSummary[]);
+    });
   }, []);
 
   useEffect(() => {
@@ -263,6 +267,9 @@ export default function AdminImagesPage() {
         setClinicImages([]);
         setReviewList([]);
         prevFilterKey.current = '';
+        supabase.from('crawl_image_summary').select('*').then(({ data }) => {
+          if (data) setSummaries(data as ImageSummary[]);
+        });
       }
     };
     window.addEventListener('popstate', handler);
