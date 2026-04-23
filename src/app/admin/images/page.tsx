@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { classifySourceUrl, type SiteType } from '@/lib/chain-utils';
@@ -231,29 +231,48 @@ export default function AdminImagesPage() {
     setClinicImages(prev => prev.map(img => img.id === id ? { ...img, ...updates, reviewed_at: ts } : img));
   }, []);
 
-  /* ─── Keyboard ─── */
+  /* ─── Keyboard (use refs to avoid re-registration on every state change) ─── */
+  const reviewIndexRef = useRef(reviewIndex);
+  reviewIndexRef.current = reviewIndex;
+  const filteredRef = useRef(filteredImages);
+  filteredRef.current = filteredImages;
+
   useEffect(() => {
-    if (!selectedClinicId || filteredImages.length === 0) return;
+    if (!selectedClinicId) return;
+    let busy = false;
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const current = filteredImages[reviewIndex];
+      if (busy) return;
+      const imgs = filteredRef.current;
+      const idx = reviewIndexRef.current;
+      const current = imgs[idx];
       if (!current) return;
-      const rejectAndNext = () => {
+
+      if (e.key === 'ArrowRight' || e.key === 'j') {
+        e.preventDefault();
+        busy = true;
         if ((current.status || 'pending') === 'pending') updateImage(current.id, { status: 'rejected' });
-        setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1));
-      };
-      const approveAndNext = () => {
+        setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
+        setTimeout(() => { busy = false; }, 150);
+      } else if (e.key === 'ArrowLeft' || e.key === 'k') {
+        e.preventDefault();
+        busy = true;
+        setReviewIndex(i => Math.max(i - 1, 0));
+        setTimeout(() => { busy = false; }, 150);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        busy = true;
         updateImage(current.id, { status: 'approved' });
-        setReviewIndex(i => Math.min(i + 1, filteredImages.length - 1));
-      };
-      if (e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); rejectAndNext(); }
-      else if (e.key === 'ArrowLeft' || e.key === 'k') { e.preventDefault(); setReviewIndex(i => Math.max(i - 1, 0)); }
-      else if (e.key === ' ') { e.preventDefault(); approveAndNext(); }
-      else if (e.key === 'Escape') { e.preventDefault(); setSelectedClinicId(null); }
+        setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
+        setTimeout(() => { busy = false; }, 150);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedClinicId(null);
+      }
     };
-    window.addEventListener('keyup', handler);
-    return () => window.removeEventListener('keyup', handler);
-  }, [selectedClinicId, filteredImages, reviewIndex, updateImage]);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedClinicId, updateImage]);
 
   const totalPending = clinicEntries.reduce((s, c) => s + c.pending, 0);
   const totalApproved = clinicEntries.reduce((s, c) => s + c.approved, 0);
