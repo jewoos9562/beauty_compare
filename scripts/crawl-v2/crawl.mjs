@@ -1,83 +1,116 @@
 #!/usr/bin/env node
 
 /**
- * 크롤링 파이프라인 v2
+ * 크롤링 파이프라인 v3
  *
- * 1. Puppeteer로 홈페이지 + 내부 링크 탐색 (가격/시술/이벤트 관련 페이지)
- * 2. 각 페이지의 텍스트 추출
- * 3. Claude API로 시술/가격 파싱 (마스터 데이터 참조)
- * 4. Supabase crawl_treatments에 저장
+ * - raw_text + images 수집 (API 비용 0원)
+ * - 이미지 URL 정규화로 중복 제거
+ * - 이미지 병렬 다운로드 (5개씩)
+ * - 페이지 대기시간 최적화
+ * - 클리닉별 소요시간 측정
+ *
+ * Usage:
+ *   node crawl.mjs --gu=광진구         # 광진구만
+ *   node crawl.mjs                     # 전체
+ *   node crawl.mjs --force --gu=광진구  # 기존 데이터 무시하고 재크롤
+ *   node crawl.mjs --list              # 구별 클리닉 수 확인
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { TARGETS } from './config.mjs';
+import { getTargets, listDistricts } from './config.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const masterTreatments = JSON.parse(fs.readFileSync(path.join(__dirname, 'master-treatments.json'), 'utf8'));
-
-// --- ENV ---
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!ANTHROPIC_KEY || !SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('Missing env: ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('Missing env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
   process.exit(1);
 }
 
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY });
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- CONSTANTS ---
+// --- CONFIG ---
 const PRICE_KEYWORDS = ['가격', '비용', '시술', '이벤트', '프로모션', 'price', 'menu', '메뉴', '상담', '보톡스', '필러', '리프팅', '레이저', '토닝', '스킨부스터', '할인', '특가', '원데이', 'event'];
 const IMAGE_KEYWORDS = ['가격', '비용', '시술', '이벤트', '프로모션', 'price', 'menu', 'event', '할인', '특가', '보톡스', '필러', '리프팅', 'banner', '배너', 'popup', '팝업'];
-const MAX_PAGES_PER_CLINIC = 15;
-const CRAWL_TIMEOUT = 30000;
-const MIN_IMAGE_SIZE = 200; // px — 아이콘/로고 제외
+const MAX_PAGES = 30;           // 페이지 제한 해제 (15 → 30)
+const PAGE_TIMEOUT = 20000;     // 20초 (30초에서 줄임)
+const PAGE_WAIT = 800;          // 페이지 로드 후 대기 (1500 → 800ms)
+const MIN_IMAGE_SIZE = 150;     // 최소 이미지 크기 (200 → 150)
+const IMG_CONCURRENCY = 5;      // 이미지 동시 다운로드 수
 
-// --- STEP 1: Discover & extract pages ---
-async function discoverPages(browser, homepage) {
+// --- Helpers ---
+function normalizeImgUrl(src) {
+  try {
+    const u = new URL(src);
+    u.search = '';
+    u.hash = '';
+    return u.href;
+  } catch { return src; }
+}
+
+/** Run promises in batches of `n` */
+async function parallel(items, n, fn) {
+  const results = [];
+  for (let i = 0; i < items.length; i += n) {
+    const batch = items.slice(i, i + n);
+    const batchResults = await Promise.allSettled(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
+// --- STEP 1: Discover pages + images ---
+async function discoverPages(browser, homepage, isChain = false) {
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
   await page.setViewport({ width: 1280, height: 900 });
+  // Block fonts/media for speed
+  await page.setRequestInterception(true);
+  page.on('request', req => {
+    const type = req.resourceType();
+    if (type === 'font' || type === 'media') req.abort();
+    else req.continue();
+  });
 
   const visited = new Set();
-  const results = []; // { url, text }
-  const imageResults = []; // { sourceUrl, imageUrl, alt, context, width, height, score }
+  const results = [];
+  const imageResults = [];
   const seenImages = new Set();
   const baseHost = new URL(homepage).hostname;
 
+  // For chain clinics: restrict link following to branch-specific paths
+  const homeUrl = new URL(homepage);
+  const homePath = homeUrl.pathname.replace(/\/$/, '');
+  const branchSegment = homePath && homePath !== '' && homePath.length > 3
+    ? homePath.split('/').filter(Boolean).pop() || ''
+    : '';
+  // If homepage is a root domain (daybeauclinic04.com), no restriction needed
+  // If homepage has a specific path (/cnpskin22, /geondae), only follow links containing that segment
+  const restrictLinks = isChain && branchSegment && branchSegment.length > 2;
+
   async function crawlPage(url, depth) {
-    if (visited.size >= MAX_PAGES_PER_CLINIC) return;
+    if (visited.size >= MAX_PAGES) return;
     if (visited.has(url) || depth > 2) return;
     visited.add(url);
 
     try {
-      const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: CRAWL_TIMEOUT });
+      const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT });
       if (!resp || !resp.ok()) return;
 
-      // Wait for dynamic content
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, PAGE_WAIT));
 
-      // Extract text content
       const text = await page.evaluate(() => {
-        // Remove scripts, styles, nav, footer
         const remove = document.querySelectorAll('script, style, nav, footer, header, .cookie-banner, .chat-widget');
         remove.forEach(el => el.remove());
         return document.body?.innerText?.trim() || '';
       });
 
-      if (text.length > 100) {
-        results.push({ url, text: text.slice(0, 15000) }); // Cap at 15k chars
-        console.log(`  [page] ${url} (${text.length} chars)`);
+      if (text.length > 50) {
+        results.push({ url, text });
       }
 
-      // Extract images with context
+      // Extract images
       const images = await page.evaluate((minSize, kwList) => {
         const imgs = [];
         for (const img of document.querySelectorAll('img[src]')) {
@@ -85,21 +118,17 @@ async function discoverPages(browser, homepage) {
           if (!src || src.startsWith('data:')) continue;
           const w = img.naturalWidth || img.width || 0;
           const h = img.naturalHeight || img.height || 0;
-          if (w < minSize && h < minSize) continue; // skip tiny icons
+          if (w < minSize && h < minSize) continue;
 
-          // Gather context: alt, parent text, nearby text
           const alt = (img.alt || '').trim();
           const parentText = (img.parentElement?.innerText || '').trim().slice(0, 200);
           const nearby = (img.closest('section, article, div.event, div.price, div.menu, div.popup, .swiper-slide, .banner')?.innerText || '').trim().slice(0, 300);
 
-          // Score: how likely this image contains price/treatment info
           const allText = [src, alt, parentText, nearby].join(' ').toLowerCase();
           let score = 0;
           for (const kw of kwList) {
             if (allText.includes(kw)) score++;
           }
-
-          // Large images are more likely to be content (not decorative)
           if (w > 600 || h > 600) score += 1;
           if (w > 1000 || h > 1000) score += 1;
 
@@ -109,8 +138,9 @@ async function discoverPages(browser, homepage) {
       }, MIN_IMAGE_SIZE, IMAGE_KEYWORDS);
 
       for (const img of images) {
-        if (!seenImages.has(img.src)) {
-          seenImages.add(img.src);
+        const normUrl = normalizeImgUrl(img.src);
+        if (!seenImages.has(normUrl)) {
+          seenImages.add(normUrl);
           imageResults.push({
             sourceUrl: url,
             imageUrl: img.src,
@@ -126,31 +156,39 @@ async function discoverPages(browser, homepage) {
       // Find internal links
       if (depth < 2) {
         const links = await page.evaluate((host) => {
-          return [...document.querySelectorAll('a[href]')]
-            .map(a => a.href)
-            .filter(href => {
-              try {
-                const u = new URL(href);
-                return u.hostname === host || u.hostname.endsWith('.' + host);
-              } catch { return false; }
-            });
+          return [...new Set(
+            [...document.querySelectorAll('a[href]')]
+              .map(a => a.href)
+              .filter(href => {
+                try {
+                  const u = new URL(href);
+                  return (u.hostname === host || u.hostname.endsWith('.' + host)) && !href.match(/\.(pdf|zip|jpg|png|gif|mp4)$/i);
+                } catch { return false; }
+              })
+          )];
         }, baseHost);
 
-        // Score links by keyword relevance
-        const scored = links.map(link => {
-          const lower = link.toLowerCase();
-          const score = PRICE_KEYWORDS.reduce((s, kw) => s + (lower.includes(kw) ? 1 : 0), 0);
-          return { link, score };
-        }).filter(l => l.score > 0 || !visited.has(l.link))
+        const scored = links
+          .filter(l => {
+            if (visited.has(l)) return false;
+            // Chain: only follow links containing branch segment
+            if (restrictLinks && !l.includes(branchSegment)) return false;
+            return true;
+          })
+          .map(link => {
+            const lower = link.toLowerCase();
+            const score = PRICE_KEYWORDS.reduce((s, kw) => s + (lower.includes(kw) ? 1 : 0), 0);
+            return { link, score };
+          })
           .sort((a, b) => b.score - a.score)
-          .slice(0, 10);
+          .slice(0, 15);
 
         for (const { link } of scored) {
           await crawlPage(link, depth + 1);
         }
       }
     } catch (e) {
-      console.log(`  [skip] ${url}: ${e.message?.slice(0, 80)}`);
+      // Skip silently
     }
   }
 
@@ -159,46 +197,70 @@ async function discoverPages(browser, homepage) {
   return { pages: results, images: imageResults };
 }
 
-// --- STEP 1.5: Save images to Supabase Storage + DB ---
+// --- STEP 2: Save raw text ---
+async function saveRawText(hiraId, clinicName, pages) {
+  if (pages.length === 0) return 0;
+
+  await supabase.from('crawl_pages').delete().eq('hira_id', hiraId);
+
+  const rows = pages.map(p => ({
+    hira_id: hiraId,
+    clinic_name: clinicName,
+    url: p.url,
+    raw_text: p.text,
+    char_count: p.text.length,
+  }));
+
+  const { error } = await supabase.from('crawl_pages').insert(rows);
+  if (error) {
+    console.error('  [db] crawl_pages error:', error.message?.slice(0, 60));
+    return 0;
+  }
+  return rows.length;
+}
+
+// --- STEP 3: Save images (parallel download) ---
 async function saveImages(hiraId, clinicName, images) {
   if (images.length === 0) return 0;
 
-  // Sort by score descending — high score = more likely price-related
-  const sorted = images.sort((a, b) => b.score - a.score);
+  // Check existing to avoid duplicates
+  const { data: existing } = await supabase
+    .from('crawl_images')
+    .select('image_url')
+    .eq('hira_id', hiraId);
+  const existingUrls = new Set((existing || []).map(e => e.image_url));
+
+  const newImages = images.filter(img => !existingUrls.has(img.imageUrl));
+  const skipped = images.length - newImages.length;
+
   let saved = 0;
 
-  for (const img of sorted) {
+  await parallel(newImages, IMG_CONCURRENCY, async (img) => {
     try {
-      // Download image
-      const resp = await fetch(img.imageUrl, {
-        timeout: 10000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0' }
-      });
-      if (!resp.ok) continue;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
 
+      const resp = await fetch(img.imageUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0' },
+      });
+      clearTimeout(timeout);
+
+      if (!resp.ok) return;
       const contentType = resp.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.startsWith('image/')) continue;
+      if (!contentType.startsWith('image/')) return;
 
       const buffer = Buffer.from(await resp.arrayBuffer());
-      const fileSize = buffer.length;
+      if (buffer.length < 5000) return;
 
-      // Skip very small files (likely 1px trackers)
-      if (fileSize < 5000) continue;
-
-      // Upload to Storage
       const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
       const storagePath = `${hiraId.slice(0, 20)}/${Date.now()}-${saved}.${ext}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('crawl-images')
         .upload(storagePath, buffer, { contentType, upsert: false });
+      if (uploadErr) return;
 
-      if (uploadErr) {
-        console.log(`  [img skip] upload error: ${uploadErr.message?.slice(0, 60)}`);
-        continue;
-      }
-
-      // Save metadata to DB
       const { error: dbErr } = await supabase.from('crawl_images').insert({
         hira_id: hiraId,
         clinic_name: clinicName,
@@ -209,194 +271,131 @@ async function saveImages(hiraId, clinicName, images) {
         context: img.context || null,
         width: img.width || null,
         height: img.height || null,
-        file_size: fileSize,
+        file_size: buffer.length,
         score: img.score,
       });
-
-      if (dbErr) {
-        console.log(`  [img skip] db error: ${dbErr.message?.slice(0, 60)}`);
-        continue;
-      }
-
-      saved++;
-    } catch (e) {
-      // Skip failed downloads silently
+      if (!dbErr) saved++;
+    } catch {
+      // Skip
     }
-  }
-
-  return saved;
-}
-
-// --- STEP 2: Parse treatments with Claude ---
-async function parseTreatments(clinicName, pages) {
-  const masterSummary = masterTreatments.map(t =>
-    `${t.category} > ${t.subcategory} > ${t.name_ko} (${t.standard_name}) [${t.unit}] 키워드: ${t.keywords}`
-  ).join('\n');
-
-  const pageTexts = pages.map((p, i) =>
-    `=== 페이지 ${i + 1}: ${p.url} ===\n${p.text}`
-  ).join('\n\n');
-
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 8000,
-    messages: [{
-      role: 'user',
-      content: `당신은 한국 피부과/미용의원의 웹사이트에서 시술 가격 정보를 추출하는 전문가입니다.
-
-## 마스터 시술 데이터 (참고용 — 시술 분류에 사용)
-${masterSummary}
-
-## 병원: ${clinicName}
-
-## 크롤링된 웹페이지 텍스트
-${pageTexts}
-
-## 작업
-위 텍스트에서 시술명과 가격 정보를 추출하세요.
-
-## 출력 형식 (JSON array만, 다른 텍스트 없이)
-\`\`\`json
-[
-  {
-    "treatment_name": "시술명 (원본 그대로)",
-    "category": "마스터 데이터 기준 카테고리 (필러/보톡스/리프팅/피부/바디/제모/기타)",
-    "subcategory": "마스터 데이터 기준 서브카테고리",
-    "standard_name": "마스터 데이터에 매칭되는 표준 시술명 (없으면 null)",
-    "orig_price": 정가(숫자, 없으면 null),
-    "event_price": 이벤트/할인가(숫자, 없으면 null),
-    "volume_or_count": "용량/횟수 (예: 1cc, 100U, 300샷, 1회)",
-    "area": "시술 부위 (예: 얼굴, 턱, 이마)",
-    "notes": "브랜드/추가 정보",
-    "source_url": "해당 정보가 있던 페이지 URL"
-  }
-]
-\`\`\`
-
-## 규칙
-- 가격이 명확하지 않은 항목(가격문의, 상담 후 결정)은 orig_price와 event_price를 null로
-- 가격 단위: 원 (10,000원 → 10000)
-- "~" 등 범위가 있으면 낮은 가격을 event_price에
-- 텍스트에서 가격 정보가 전혀 없으면 빈 배열 []
-- 중복 제거: 같은 시술+같은 가격은 하나만
-- JSON만 출력하세요. 설명이나 마크다운 없이.`
-    }]
   });
 
-  const text = response.content[0].text;
-  // Extract JSON from response
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    console.log('  [warn] No JSON found in Claude response');
-    return [];
-  }
-
-  try {
-    return JSON.parse(jsonMatch[0]);
-  } catch (e) {
-    console.log('  [warn] JSON parse error:', e.message);
-    return [];
-  }
-}
-
-// --- STEP 3: Save to Supabase ---
-async function saveTreatments(hiraId, clinicName, treatments) {
-  if (treatments.length === 0) return 0;
-
-  const rows = treatments.map(t => ({
-    hira_id: hiraId,
-    clinic_name: clinicName,
-    category: t.category || null,
-    subcategory: t.subcategory || null,
-    treatment_name: t.treatment_name,
-    standard_name: t.standard_name || null,
-    orig_price: t.orig_price || null,
-    event_price: t.event_price || null,
-    volume_or_count: t.volume_or_count || null,
-    area: t.area || null,
-    notes: t.notes || null,
-    source_url: t.source_url || null,
-  }));
-
-  const { error } = await supabase.from('crawl_treatments').insert(rows);
-  if (error) {
-    console.error('  [db error]', error.message);
-    return 0;
-  }
-  return rows.length;
-}
-
-async function logCrawl(hiraId, clinicName, homepage, status, pagesCrawled, treatmentsFound, errorMsg) {
-  await supabase.from('crawl_logs_v2').insert({
-    hira_id: hiraId,
-    clinic_name: clinicName,
-    homepage_url: homepage,
-    status,
-    pages_crawled: pagesCrawled,
-    treatments_found: treatmentsFound,
-    error_message: errorMsg || null,
-  });
+  return { saved, skipped };
 }
 
 // --- MAIN ---
 async function main() {
-  const targetIdx = parseInt(process.argv[2]);
-  const targets = targetIdx >= 0 ? [TARGETS[targetIdx]] : TARGETS;
+  const guArg = process.argv.find(a => a.startsWith('--gu='))?.split('=')[1];
 
-  console.log(`\n=== 크롤링 시작: ${targets.length}개 클리닉 ===\n`);
+  if (process.argv.includes('--list')) {
+    console.log('\n구별 홈페이지 있는 클리닉 수:');
+    for (const { gu, count } of listDistricts()) {
+      console.log(`  ${gu}: ${count}개`);
+    }
+    return;
+  }
+
+  const targets = getTargets(guArg);
+  if (targets.length === 0) {
+    console.error(`No targets found. Use --list to see districts.`);
+    process.exit(1);
+  }
+
+  const skipExisting = !process.argv.includes('--force');
+  let crawledIds = new Set();
+  if (skipExisting) {
+    const { data: existing } = await supabase.from('crawl_pages').select('hira_id');
+    if (existing) crawledIds = new Set(existing.map(r => r.hira_id));
+  }
+
+  const remaining = skipExisting ? targets.filter(t => !crawledIds.has(t.hira_id)) : targets;
+
+  console.log(`\n=== 크롤링 시작 ===`);
+  console.log(`=== ${guArg || '전체'}: ${remaining.length}/${targets.length}개 클리닉 ===\n`);
+
+  if (remaining.length === 0) {
+    console.log('모든 클리닉 크롤 완료. --force로 재크롤 가능.');
+    return;
+  }
 
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
   });
 
-  for (const target of targets) {
-    console.log(`\n[${target.name}] ${target.homepage}`);
+  const timings = [];
+  let totalPages = 0;
+  let totalImages = 0;
+
+  for (let i = 0; i < remaining.length; i++) {
+    const target = remaining[i];
+    const t0 = Date.now();
+
+    process.stdout.write(`[${i + 1}/${remaining.length}] ${target.name} `);
 
     try {
-      // Step 1: Discover pages + images
-      console.log('  Step 1: 페이지 + 이미지 탐색...');
-      const { pages, images } = await discoverPages(browser, target.homepage);
-      console.log(`  → ${pages.length}개 페이지, ${images.length}개 이미지 후보 수집`);
+      const { pages, images } = await discoverPages(browser, target.homepage, target.isChain);
 
-      // Step 1.5: Save images to Storage + DB
+      const textSaved = await saveRawText(target.hira_id, target.name, pages);
+      let imgSaved = 0, imgSkipped = 0;
       if (images.length > 0) {
-        console.log('  Step 1.5: 이미지 저장...');
-        const imgSaved = await saveImages(target.hira_id, target.name, images);
-        console.log(`  → ${imgSaved}/${images.length}개 이미지 저장 (score순 정렬)`);
+        const result = await saveImages(target.hira_id, target.name, images);
+        imgSaved = result.saved;
+        imgSkipped = result.skipped;
       }
 
-      if (pages.length === 0) {
-        console.log('  → 텍스트 페이지 없음');
-        await logCrawl(target.hira_id, target.name, target.homepage, 'partial', 0, 0, `images: ${images.length}, text pages: 0`);
-        continue;
-      }
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      timings.push({ name: target.name, seconds: parseFloat(elapsed), pages: pages.length, images: imgSaved });
+      totalPages += textSaved;
+      totalImages += imgSaved;
 
-      // Step 2: Parse with Claude
-      console.log('  Step 2: Claude API로 시술/가격 파싱...');
-      const treatments = await parseTreatments(target.name, pages);
-      console.log(`  → ${treatments.length}개 시술 추출`);
+      console.log(`→ ${pages.length}p ${imgSaved}img ${imgSkipped > 0 ? `(${imgSkipped}skip) ` : ''}${elapsed}s`);
 
-      // Step 3: Save to DB
-      console.log('  Step 3: DB 저장...');
-      const saved = await saveTreatments(target.hira_id, target.name, treatments);
-      console.log(`  → ${saved}건 저장 완료`);
-
-      await logCrawl(target.hira_id, target.name, target.homepage, 'success', pages.length, saved, null);
-
-      // Save raw JSON locally too
-      const outPath = path.join(__dirname, `result-${target.name}.json`);
-      fs.writeFileSync(outPath, JSON.stringify(treatments, null, 2), 'utf8');
-      console.log(`  → 로컬 저장: ${outPath}`);
+      await supabase.from('crawl_logs_v2').insert({
+        hira_id: target.hira_id,
+        clinic_name: target.name,
+        homepage_url: target.homepage,
+        status: 'success',
+        pages_crawled: pages.length,
+        treatments_found: 0,
+        error_message: null,
+      });
 
     } catch (e) {
-      console.error(`  [ERROR] ${e.message}`);
-      await logCrawl(target.hira_id, target.name, target.homepage, 'error', 0, 0, e.message);
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      console.log(`→ ERROR ${elapsed}s: ${e.message?.slice(0, 50)}`);
+      timings.push({ name: target.name, seconds: parseFloat(elapsed), pages: 0, images: 0 });
+
+      await supabase.from('crawl_logs_v2').insert({
+        hira_id: target.hira_id,
+        clinic_name: target.name,
+        homepage_url: target.homepage,
+        status: 'error',
+        pages_crawled: 0,
+        treatments_found: 0,
+        error_message: e.message?.slice(0, 200),
+      });
     }
   }
 
   await browser.close();
-  console.log('\n=== 완료 ===\n');
+
+  // --- Stats ---
+  const times = timings.map(t => t.seconds).filter(s => s > 0);
+  const avg = times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : 0;
+  const min = times.length ? Math.min(...times).toFixed(1) : 0;
+  const max = times.length ? Math.max(...times).toFixed(1) : 0;
+  const total = times.reduce((a, b) => a + b, 0).toFixed(0);
+  const fastest = timings.filter(t => t.pages > 0).sort((a, b) => a.seconds - b.seconds)[0];
+  const slowest = timings.filter(t => t.pages > 0).sort((a, b) => b.seconds - a.seconds)[0];
+
+  console.log(`\n${'═'.repeat(50)}`);
+  console.log(`  완료: ${remaining.length}개 클리닉`);
+  console.log(`  페이지: ${totalPages} | 이미지: ${totalImages}`);
+  console.log(`  총 시간: ${total}s | 평균: ${avg}s | 최소: ${min}s | 최대: ${max}s`);
+  if (fastest) console.log(`  최빠름: ${fastest.name} (${fastest.seconds}s, ${fastest.pages}p)`);
+  if (slowest) console.log(`  최느림: ${slowest.name} (${slowest.seconds}s, ${slowest.pages}p)`);
+  console.log(`${'═'.repeat(50)}\n`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

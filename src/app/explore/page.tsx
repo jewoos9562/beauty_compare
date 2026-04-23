@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type { HiraClinic } from '@/types/hira';
+import { fetchAll } from '@/lib/supabase';
 import LangCurrencySelector from '@/components/LangCurrencySelector';
 
 const MapInner = dynamic(() => import('@/components/map/MapInner'), {
@@ -21,15 +22,18 @@ export default function ExplorePage() {
   const [selectedGu, setSelectedGu] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [crawledOnly, setCrawledOnly] = useState(false);
+  const [crawledIds, setCrawledIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('/data/seoul_derma.json')
-      .then((r) => r.json())
-      .then((data: HiraClinic[]) => {
-        setClinics(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch('/data/seoul_derma.json').then(r => r.json()),
+      fetchAll<{ hira_id: string }>('crawl_pages', 'hira_id'),
+    ]).then(([data, crawlData]) => {
+      setClinics(data as HiraClinic[]);
+      setCrawledIds(new Set(crawlData.map((r: { hira_id: string }) => r.hira_id)));
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const guCounts = useMemo(() => {
@@ -40,6 +44,7 @@ export default function ExplorePage() {
 
   const filtered = useMemo(() => {
     let list = clinics;
+    if (crawledOnly) list = list.filter((c) => crawledIds.has(c.id));
     if (selectedGu) list = list.filter((c) => c.gu === selectedGu);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -50,7 +55,7 @@ export default function ExplorePage() {
       );
     }
     return list;
-  }, [clinics, selectedGu, search]);
+  }, [clinics, selectedGu, search, crawledOnly, crawledIds]);
 
   const visibleList = useMemo(() => filtered.slice(0, 200), [filtered]);
 
@@ -123,6 +128,20 @@ export default function ExplorePage() {
                 </option>
               ))}
             </select>
+
+            {crawledIds.size > 0 && (
+              <button
+                onClick={() => setCrawledOnly(!crawledOnly)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm border transition-all ${
+                  crawledOnly
+                    ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)] font-semibold'
+                    : 'bg-white border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--primary)]'
+                }`}
+              >
+                <span>크롤 완료만 보기</span>
+                <span className="text-xs">{crawledIds.size}곳</span>
+              </button>
+            )}
           </div>
 
           {/* Clinic list */}
@@ -138,7 +157,7 @@ export default function ExplorePage() {
             ) : (
               <div className="p-2">
                 {visibleList.map((c) => (
-                  <ClinicListItem key={c.id} clinic={c} />
+                  <ClinicListItem key={c.id} clinic={c} crawled={crawledIds.has(c.id)} />
                 ))}
                 {filtered.length > 200 && (
                   <div className="text-center text-xs text-[var(--text-light)] py-4">
@@ -164,11 +183,16 @@ export default function ExplorePage() {
   );
 }
 
-function ClinicListItem({ clinic }: { clinic: HiraClinic }) {
+function ClinicListItem({ clinic, crawled }: { clinic: HiraClinic; crawled: boolean }) {
   return (
     <div className="p-3 rounded-xl hover:bg-[var(--primary-soft)] cursor-pointer transition-colors mb-1 group border border-transparent hover:border-indigo-200">
-      <div className="font-semibold text-sm text-[var(--text)] group-hover:text-[var(--primary)] transition-colors leading-snug">
-        {clinic.name}
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-sm text-[var(--text)] group-hover:text-[var(--primary)] transition-colors leading-snug">
+          {clinic.name}
+        </span>
+        {crawled && (
+          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded">크롤</span>
+        )}
       </div>
       <div className="flex items-center gap-2 mt-1.5 min-w-0">
         <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-[var(--text-muted)] rounded shrink-0 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
