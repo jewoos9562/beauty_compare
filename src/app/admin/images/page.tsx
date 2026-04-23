@@ -212,12 +212,18 @@ export default function AdminImagesPage() {
     setClinicLoading(false);
   }, []);
 
-  /* ─── Review list: frozen during review ─── */
+  /* ─── Review list: built once on load, frozen during review ─── */
   const selectedEntry = clinicEntries.find(c => c.hira_id === selectedClinicId);
   const [reviewList, setReviewList] = useState<CrawlImage[]>([]);
+  const prevFilterKey = useRef('');
 
+  // Build review list only when: initial load completes, or filter changes
   useEffect(() => {
-    if (clinicImages.length === 0) return; // wait for load
+    if (clinicImages.length === 0) return;
+    const filterKey = `${selectedClinicId}|${statusFilter}|${selectedMode}`;
+    if (filterKey === prevFilterKey.current) return; // already built for this filter
+    prevFilterKey.current = filterKey;
+
     let list = clinicImages;
     if (statusFilter !== 'all') {
       list = list.filter(i => (i.status || 'pending') === statusFilter);
@@ -227,9 +233,9 @@ export default function AdminImagesPage() {
     }
     setReviewList(list);
     setReviewIndex(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clinicImages, statusFilter, selectedMode]);
+  }, [clinicImages, statusFilter, selectedMode, selectedClinicId, selectedEntry]);
 
+  // Sync status badges without removing items from list
   const reviewListSynced = useMemo(() => {
     const map = new Map(clinicImages.map(img => [img.id, img]));
     return reviewList.map(img => map.get(img.id) || img);
