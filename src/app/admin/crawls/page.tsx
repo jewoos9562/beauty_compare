@@ -261,14 +261,7 @@ export default function AdminCrawlsPage() {
             </div>
           ) : (
             guGroups.map(g => (
-              <div key={g.gu}>
-                <div className="flex items-center gap-3 mb-2 px-1">
-                  <h3 className="text-sm font-bold text-[var(--text)]">{g.gu}</h3>
-                  <span className="text-[11px] text-[var(--text-light)]">
-                    {g.clinics.length}개 클리닉 · {g.totalPages}p
-                    {(noOfficialMap[g.gu]?.length || 0) > 0 && ` · ${noOfficialMap[g.gu].length}개 공식사이트 없음`}
-                  </span>
-                </div>
+              <CollapsibleGu key={g.gu} title={g.gu} subtitle={`${g.clinics.length}개 클리��� · ${g.totalPages}p${(noOfficialMap[g.gu]?.length || 0) > 0 ? ` · ${noOfficialMap[g.gu].length}개 공식사이트 없음` : ''}`}>
                 <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
                   <div className="divide-y divide-[var(--border-soft)]">
                     {g.clinics.map(c => {
@@ -318,7 +311,7 @@ export default function AdminCrawlsPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </CollapsibleGu>
             ))
           )}
         </div>
@@ -382,6 +375,27 @@ export default function AdminCrawlsPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function CollapsibleGu({ title, subtitle, children }: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 mb-2 px-1 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className={`text-[var(--text-light)] transition-transform ${open ? 'rotate-90' : ''}`}>
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+        <h3 className="text-sm font-bold text-[var(--text)]">{title}</h3>
+        <span className="text-[11px] text-[var(--text-light)]">{subtitle}</span>
+      </button>
+      {open && children}
     </div>
   );
 }
