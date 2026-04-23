@@ -21,8 +21,18 @@ function isCrawlable(c) {
 const nameCount = {};
 for (const c of allClinics) nameCount[c.name] = (nameCount[c.name] || 0) + 1;
 
+// For unified chains: only keep first branch (all share same site)
+const seenUnified = new Set();
+
 const withHomepage = allClinics
-  .filter(isCrawlable)
+  .filter(c => {
+    if (!isCrawlable(c)) return false;
+    if (c.site_type === 'unified' && (nameCount[c.name] || 1) >= 2) {
+      if (seenUnified.has(c.name)) return false; // skip duplicate unified branches
+      seenUnified.add(c.name);
+    }
+    return true;
+  })
   .map(c => ({
     hira_id: c.id,
     name: c.name,
