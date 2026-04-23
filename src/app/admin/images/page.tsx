@@ -217,6 +217,7 @@ export default function AdminImagesPage() {
   const [reviewList, setReviewList] = useState<CrawlImage[]>([]);
 
   useEffect(() => {
+    if (clinicImages.length === 0) return; // wait for load
     let list = clinicImages;
     if (statusFilter !== 'all') {
       list = list.filter(i => (i.status || 'pending') === statusFilter);
@@ -227,7 +228,7 @@ export default function AdminImagesPage() {
     setReviewList(list);
     setReviewIndex(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClinicId, statusFilter, selectedMode]);
+  }, [clinicImages, statusFilter, selectedMode]);
 
   const reviewListSynced = useMemo(() => {
     const map = new Map(clinicImages.map(img => [img.id, img]));
