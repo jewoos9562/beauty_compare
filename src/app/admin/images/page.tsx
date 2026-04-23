@@ -47,8 +47,6 @@ interface ClinicEntry {
   isChain: boolean;
   homepage: string;
   siteType?: SiteType;
-  branchTotal: number;
-  commonTotal: number;
 }
 
 interface GuGroup {
@@ -58,11 +56,14 @@ interface GuGroup {
   pending: number;
 }
 
-interface ChainCommon {
-  clinic_name: string;
-  hira_ids: string[];
-  commonTotal: number;
-  commonPending: number;
+/** Chain info for the "체인 공통" section */
+interface ChainInfo {
+  name: string;
+  siteType: SiteType;
+  branches: { gu: string; hira_id: string }[];
+  // We pick one hira_id that has images to load from
+  primaryHiraId: string;
+  totalImages: number;
 }
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/crawl-images/';
@@ -82,17 +83,19 @@ const STATUS_CONFIG: Record<ReviewStatus, { label: string; color: string; bg: st
   rejected: { label: '거절', color: 'text-red-500', bg: 'bg-red-50 border-red-200' },
 };
 
-/* ─── Main Page ─── */
+/* ─── Main ─── */
 export default function AdminImagesPage() {
   const [summaries, setSummaries] = useState<ImageSummary[]>([]);
   const [guMap, setGuMap] = useState<Record<string, string>>({});
   const [homepageMap, setHomepageMap] = useState<Record<string, string>>({});
   const [siteTypeMap, setSiteTypeMap] = useState<Record<string, SiteType>>({});
   const [chainCountMap, setChainCountMap] = useState<Record<string, number>>({});
+  const [allClinicData, setAllClinicData] = useState<{ id: string; name: string; gu: string; site_type?: SiteType }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedClinicId, setSelectedClinicId] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<'all' | 'branch' | 'common'>('all');
+  const [selectedLabel, setSelectedLabel] = useState('');
   const [clinicImages, setClinicImages] = useState<CrawlImage[]>([]);
   const [clinicLoading, setClinicLoading] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
@@ -104,6 +107,7 @@ export default function AdminImagesPage() {
       fetch('/data/seoul_derma.json').then(r => r.json()),
     ]).then(([imgSummaries, clinicData]) => {
       setSummaries(imgSummaries);
+      setAllClinicData(clinicData);
       const gMap: Record<string, string> = {};
       const hMap: Record<string, string> = {};
       const stMap: Record<string, SiteType> = {};
@@ -117,9 +121,7 @@ export default function AdminImagesPage() {
         nameCount[c.name] = (nameCount[c.name] || 0) + 1;
       }
       const ccMap: Record<string, number> = {};
-      for (const c of clinicData) {
-        if (c.id) ccMap[c.id] = nameCount[c.name] || 1;
-      }
+      for (const c of clinicData) { if (c.id) ccMap[c.id] = nameCount[c.name] || 1; }
       setGuMap(gMap);
       setHomepageMap(hMap);
       setSiteTypeMap(stMap);
@@ -128,45 +130,48 @@ export default function AdminImagesPage() {
     });
   }, []);
 
-  /* ─── Build clinic entries from pre-aggregated summary ─── */
+  /* ─── Clinic entries ─── */
   const clinicEntries = useMemo<ClinicEntry[]>(() => {
     return summaries.map(s => ({
       hira_id: s.hira_id,
       clinic_name: s.clinic_name,
       gu: guMap[s.hira_id] || '기타',
-      total: s.total,
-      pending: s.pending,
-      approved: s.approved,
-      rejected: s.rejected,
+      total: s.total, pending: s.pending, approved: s.approved, rejected: s.rejected,
       isChain: (chainCountMap[s.hira_id] || 1) >= 2,
       homepage: homepageMap[s.hira_id] || '',
       siteType: siteTypeMap[s.hira_id],
-      branchTotal: 0, commonTotal: 0,
     })).sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
   }, [summaries, guMap, homepageMap, siteTypeMap, chainCountMap]);
 
-  /* ─── Chains with common images (unified + mixed only) ─── */
-  const chainCommons = useMemo<ChainCommon[]>(() => {
-    // Only unified/mixed have common images. independent = all branch, no common.
+  /* ─── Chains: group by name, show branches, pick primary ─── */
+  const chainInfos = useMemo<ChainInfo[]>(() => {
+    // Only chains that have unified or mixed site_type have "common" images
     const chainClinics = clinicEntries.filter(c => c.isChain && (c.siteType === 'unified' || c.siteType === 'mixed'));
     const byName = new Map<string, ClinicEntry[]>();
     for (const c of chainClinics) {
       if (!byName.has(c.clinic_name)) byName.set(c.clinic_name, []);
       byName.get(c.clinic_name)!.push(c);
     }
-    const result: ChainCommon[] = [];
+
+    // Also include ALL branches (even without images) for display
+    const result: ChainInfo[] = [];
     for (const [name, entries] of byName) {
+      const allBranches = allClinicData.filter(c => c.name === name).map(c => ({ gu: c.gu, hira_id: c.id }));
+      // Pick entry with most images as primary
+      const sorted = [...entries].sort((a, b) => b.total - a.total);
+      const primary = sorted[0];
       result.push({
-        clinic_name: name,
-        hira_ids: entries.map(e => e.hira_id),
-        commonTotal: entries.reduce((s, e) => s + e.total, 0),
-        commonPending: entries.reduce((s, e) => s + e.pending, 0),
+        name,
+        siteType: primary.siteType || 'unified',
+        branches: allBranches,
+        primaryHiraId: primary.hira_id,
+        totalImages: entries.reduce((s, e) => s + e.total, 0),
       });
     }
-    return result.filter(c => c.commonTotal > 0).sort((a, b) => a.clinic_name.localeCompare(b.clinic_name, 'ko'));
-  }, [clinicEntries]);
+    return result.filter(c => c.totalImages > 0).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  }, [clinicEntries, allClinicData]);
 
-  /* ─── District groups (chain clinics show branch-only label) ─── */
+  /* ─── District groups ─── */
   const guGroups = useMemo<GuGroup[]>(() => {
     const map = new Map<string, GuGroup>();
     for (const c of clinicEntries) {
@@ -181,10 +186,11 @@ export default function AdminImagesPage() {
     return [...map.values()].sort((a, b) => a.gu.localeCompare(b.gu, 'ko'));
   }, [clinicEntries]);
 
-  /* ─── Select clinic to review ─── */
-  const selectClinic = useCallback(async (hiraId: string, mode: 'all' | 'branch' | 'common') => {
+  /* ─── Select clinic ─── */
+  const selectClinic = useCallback(async (hiraId: string, mode: 'all' | 'branch' | 'common', label: string) => {
     setSelectedClinicId(hiraId);
     setSelectedMode(mode);
+    setSelectedLabel(label);
     setReviewIndex(0);
     setStatusFilter('pending');
     setClinicLoading(true);
@@ -202,16 +208,14 @@ export default function AdminImagesPage() {
       if (data.length < 1000) break;
       from += 1000;
     }
-
     setClinicImages(all);
     setClinicLoading(false);
   }, []);
 
-  /* ─── Review list: filter once on load, then freeze during review ─── */
+  /* ─── Review list: frozen during review ─── */
   const selectedEntry = clinicEntries.find(c => c.hira_id === selectedClinicId);
   const [reviewList, setReviewList] = useState<CrawlImage[]>([]);
 
-  // Build review list when clinic is selected or filters change — but not when images are updated
   useEffect(() => {
     let list = clinicImages;
     if (statusFilter !== 'all') {
@@ -222,11 +226,9 @@ export default function AdminImagesPage() {
     }
     setReviewList(list);
     setReviewIndex(0);
-    // Only rebuild when filters change, not when clinicImages updates (to prevent index shifting)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClinicId, statusFilter, selectedMode]);
 
-  // Keep review list's status in sync with clinicImages (for badge display) without removing items
   const reviewListSynced = useMemo(() => {
     const map = new Map(clinicImages.map(img => [img.id, img]));
     return reviewList.map(img => map.get(img.id) || img);
@@ -243,7 +245,7 @@ export default function AdminImagesPage() {
     setClinicImages(prev => prev.map(img => img.id === id ? { ...img, ...updates, reviewed_at: ts } : img));
   }, []);
 
-  /* ─── Keyboard (use refs to avoid re-registration on every state change) ─── */
+  /* ─── Keyboard ─── */
   const reviewIndexRef = useRef(reviewIndex);
   reviewIndexRef.current = reviewIndex;
   const filteredRef = useRef(reviewListSynced);
@@ -261,19 +263,16 @@ export default function AdminImagesPage() {
       if (!current) return;
 
       if (e.key === 'ArrowRight' || e.key === 'j') {
-        e.preventDefault();
-        busy = true;
+        e.preventDefault(); busy = true;
         if ((current.status || 'pending') === 'pending') updateImage(current.id, { status: 'rejected' });
         setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
         setTimeout(() => { busy = false; }, 150);
       } else if (e.key === 'ArrowLeft' || e.key === 'k') {
-        e.preventDefault();
-        busy = true;
+        e.preventDefault(); busy = true;
         setReviewIndex(i => Math.max(i - 1, 0));
         setTimeout(() => { busy = false; }, 150);
       } else if (e.key === ' ') {
-        e.preventDefault();
-        busy = true;
+        e.preventDefault(); busy = true;
         updateImage(current.id, { status: 'approved' });
         setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
         setTimeout(() => { busy = false; }, 150);
@@ -286,6 +285,7 @@ export default function AdminImagesPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [selectedClinicId, updateImage]);
 
+  /* ─── Stats ─── */
   const totalPending = clinicEntries.reduce((s, c) => s + c.pending, 0);
   const totalApproved = clinicEntries.reduce((s, c) => s + c.approved, 0);
   const totalRejected = clinicEntries.reduce((s, c) => s + c.rejected, 0);
@@ -322,76 +322,68 @@ export default function AdminImagesPage() {
       </header>
 
       {!selectedClinicId ? (
-        /* ─── Queue: Chain commons + District groups ─── */
-        <div className="max-w-3xl mx-auto px-5 py-6 space-y-8">
+        <div className="max-w-3xl mx-auto px-5 py-6 space-y-6">
           {/* Chain common section */}
-          {chainCommons.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-3 px-1">
-                <h2 className="text-sm font-bold text-violet-600">체인 공통</h2>
-                <span className="text-[11px] text-[var(--text-light)]">전 지점 공유 이미지</span>
-              </div>
+          {chainInfos.length > 0 && (
+            <CollapsibleSection title="체인 공통" subtitle={`${chainInfos.length}개 체인 · 전 지점 공유 이미지`} color="violet" defaultOpen>
               <div className="space-y-1.5">
-                {chainCommons.map(ch => (
+                {chainInfos.map(ch => (
                   <button
-                    key={ch.clinic_name}
-                    onClick={() => selectClinic(ch.hira_ids[0], 'common')}
+                    key={ch.name}
+                    onClick={() => selectClinic(ch.primaryHiraId, 'common', `${ch.name} 공통`)}
                     className="w-full flex items-center gap-4 px-5 py-3.5 bg-violet-50 rounded-xl border border-violet-200 hover:border-violet-400 hover:shadow-sm transition-all text-left group"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-sm text-violet-700 group-hover:text-violet-900 transition-colors">{ch.clinic_name}</span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">{ch.hira_ids.length}개 지점</span>
+                        <span className="font-semibold text-sm text-violet-700 group-hover:text-violet-900">{ch.name}</span>
                       </div>
-                      <div className="text-[11px] text-violet-400 mt-0.5">공통 이미지</div>
+                      <div className="text-[11px] text-violet-400 mt-0.5">
+                        {ch.branches.length}개 지점: {ch.branches.map(b => b.gu).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
+                      </div>
                     </div>
-                    {ch.commonPending > 0 && (
-                      <span className="px-2.5 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold border border-amber-200">{ch.commonPending} 대기</span>
-                    )}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-300 group-hover:text-violet-500">
+                    <span className="text-xs font-bold text-violet-500">{ch.totalImages}장</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-300 group-hover:text-violet-500">
                       <path d="M9 18l6-6-6-6" />
                     </svg>
                   </button>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* District groups */}
           {guGroups.map(g => (
-            <CollapsibleGu key={g.gu} title={g.gu} subtitle={`${g.clinics.length}개 클리닉 · ${g.total.toLocaleString()}장`} badge={g.pending > 0 ? `${g.pending.toLocaleString()} 대기` : undefined}>
+            <CollapsibleSection key={g.gu} title={g.gu} subtitle={`${g.clinics.length}개 클리닉 · ${g.total.toLocaleString()}장`} badge={g.pending > 0 ? `${g.pending.toLocaleString()} 대기` : undefined}>
               <div className="space-y-1.5">
                 {g.clinics.map(c => {
                   const isUnified = c.isChain && c.siteType === 'unified';
                   return isUnified ? (
-                    // Unified chain: no branch images, show "공통에서 확인"
-                    <div key={c.hira_id} className="flex items-center gap-4 px-5 py-3.5 bg-white rounded-xl border border-[var(--border)] opacity-50">
+                    <div key={c.hira_id} className="flex items-center gap-4 px-5 py-3 bg-white rounded-xl border border-[var(--border)] opacity-50">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-sm text-[var(--text-light)]">{c.clinic_name}</span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded shrink-0">체인</span>
+                          <span className="text-sm text-[var(--text-light)]">{c.clinic_name}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">체인</span>
                         </div>
-                        <div className="text-[11px] text-[var(--text-light)] mt-0.5">지점 전용 이미지 없음 �� 위 체인 공통에서 확인</div>
+                        <div className="text-[11px] text-[var(--text-light)]">지점 전용 없음 — 체인 공통에서 확인</div>
                       </div>
                     </div>
                   ) : (
                     <button
                       key={c.hira_id}
-                      onClick={() => selectClinic(c.hira_id, c.isChain ? 'branch' : 'all')}
+                      onClick={() => selectClinic(c.hira_id, c.isChain ? 'branch' : 'all', `${c.clinic_name}${c.isChain ? ' (' + c.gu + ')' : ''}`)}
                       className="w-full flex items-center gap-4 px-5 py-3.5 bg-white rounded-xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-sm transition-all text-left group"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-sm text-[var(--text)] truncate group-hover:text-[var(--primary)] transition-colors">
-                            {c.clinic_name}
-                          </span>
-                          {c.isChain && (
+                          <span className="font-semibold text-sm text-[var(--text)] truncate group-hover:text-[var(--primary)] transition-colors">{c.clinic_name}</span>
+                          {c.isChain && c.siteType === 'mixed' && (
                             <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded shrink-0">지점</span>
                           )}
+                          {c.isChain && c.siteType === 'independent' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded shrink-0">독립</span>
+                          )}
                         </div>
-                        <div className="text-[11px] text-[var(--text-light)] mt-0.5">
-                          {c.isChain ? '지점 전용' : '총'} {c.total}장
-                        </div>
+                        <div className="text-[11px] text-[var(--text-light)] mt-0.5">{c.total}장</div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {c.pending > 0 && <span className="px-2.5 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold border border-amber-200">{c.pending} 대기</span>}
@@ -405,10 +397,10 @@ export default function AdminImagesPage() {
                   );
                 })}
               </div>
-            </CollapsibleGu>
+            </CollapsibleSection>
           ))}
 
-          {guGroups.length === 0 && chainCommons.length === 0 && (
+          {guGroups.length === 0 && chainInfos.length === 0 && (
             <div className="text-center py-16 text-[var(--text-muted)]">
               <p className="text-lg mb-1">이미지가 없습니다</p>
               <p className="text-sm">크롤링을 먼저 실행해주세요.</p>
@@ -420,9 +412,8 @@ export default function AdminImagesPage() {
           <div className="w-8 h-8 border-3 border-[var(--border)] border-t-[var(--primary)] rounded-full animate-spin" />
         </div>
       ) : (
-        /* ─── Review View ─── */
         <ReviewView
-          entry={selectedEntry!}
+          label={selectedLabel}
           mode={selectedMode}
           images={reviewListSynced}
           allImages={clinicImages}
@@ -438,14 +429,41 @@ export default function AdminImagesPage() {
   );
 }
 
-/* ═══════════════════════════════════════════
-   Review View
-   ═══════════════════════════════════════════ */
+/* ─── Collapsible Section ─── */
+function CollapsibleSection({ title, subtitle, badge, color, defaultOpen, children }: {
+  title: string;
+  subtitle: string;
+  badge?: string;
+  color?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen || false);
+  const isViolet = color === 'violet';
+  return (
+    <div>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 mb-2 px-1 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className={`${isViolet ? 'text-violet-400' : 'text-[var(--text-light)]'} transition-transform ${open ? 'rotate-90' : ''}`}>
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+        <h3 className={`text-sm font-bold ${isViolet ? 'text-violet-600' : 'text-[var(--text)]'}`}>{title}</h3>
+        <span className="text-[11px] text-[var(--text-light)]">{subtitle}</span>
+        {badge && (
+          <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold border border-amber-200">{badge}</span>
+        )}
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
+/* ─── Review View ─── */
 function ReviewView({
-  entry, mode, images, allImages, reviewIndex, setReviewIndex,
+  label, mode, images, allImages, reviewIndex, setReviewIndex,
   statusFilter, setStatusFilter, onBack, onUpdate,
 }: {
-  entry: ClinicEntry;
+  label: string;
   mode: 'all' | 'branch' | 'common';
   images: CrawlImage[];
   allImages: CrawlImage[];
@@ -466,8 +484,6 @@ function ReviewView({
   const approvedCount = allImages.filter(i => i.status === 'approved').length;
   const rejectedCount = allImages.filter(i => i.status === 'rejected').length;
 
-  const modeLabel = mode === 'common' ? '공통' : mode === 'branch' ? '지점 전용' : '';
-
   return (
     <div className="max-w-6xl mx-auto px-5 py-4">
       <div className="flex items-center justify-between mb-4">
@@ -477,10 +493,10 @@ function ReviewView({
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-[var(--text)]">{entry.clinic_name}</span>
-          {modeLabel && (
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${mode === 'common' ? 'bg-sky-100 text-sky-600' : 'bg-violet-100 text-violet-600'}`}>
-              {modeLabel}
+          <span className="text-sm font-bold text-[var(--text)]">{label}</span>
+          {mode !== 'all' && (
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${mode === 'common' ? 'bg-violet-100 text-violet-600' : 'bg-emerald-100 text-emerald-600'}`}>
+              {mode === 'common' ? '공통' : '지점'}
             </span>
           )}
         </div>
@@ -540,8 +556,7 @@ function ReviewView({
                   <button onClick={() => {
                     if ((current.status || 'pending') === 'pending') onUpdate(current.id, { status: 'rejected' });
                     setReviewIndex(i => Math.min(i + 1, images.length - 1));
-                  }}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                  }} className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
                     넘기기 <kbd className="ml-1.5 text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200">→</kbd>
                   </button>
                   <button onClick={() => { onUpdate(current.id, { status: 'approved' }); setReviewIndex(i => Math.min(i + 1, images.length - 1)); }}
@@ -553,6 +568,7 @@ function ReviewView({
             )}
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-4">
             {current && (
               <div className="bg-white rounded-2xl border border-[var(--border)] p-5">
@@ -590,8 +606,8 @@ function ReviewView({
             <div className="bg-slate-50 rounded-2xl border border-[var(--border)] p-4">
               <h3 className="text-[10px] font-bold text-[var(--text-light)] uppercase tracking-wide mb-2">키보드 단축키</h3>
               <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
-                {[['승인', 'Space'], ['넘기기 (=거절)', '→ / J'], ['이전', '← / K'], ['목록으로', 'ESC']].map(([label, key]) => (
-                  <div key={label} className="flex justify-between"><span>{label}</span><span className="font-mono text-[var(--text-light)]">{key}</span></div>
+                {[['승인', 'Space'], ['넘기기 (=거절)', '→ / J'], ['이전', '← / K'], ['목록으로', 'ESC']].map(([l, k]) => (
+                  <div key={l} className="flex justify-between"><span>{l}</span><span className="font-mono text-[var(--text-light)]">{k}</span></div>
                 ))}
               </div>
             </div>
@@ -628,31 +644,6 @@ function ReviewView({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function CollapsibleGu({ title, subtitle, badge, children }: {
-  title: string;
-  subtitle: string;
-  badge?: string;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 mb-2 px-1 text-left">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          className={`text-[var(--text-light)] transition-transform ${open ? 'rotate-90' : ''}`}>
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-        <h3 className="text-sm font-bold text-[var(--text)]">{title}</h3>
-        <span className="text-[11px] text-[var(--text-light)]">{subtitle}</span>
-        {badge && (
-          <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold border border-amber-200">{badge}</span>
-        )}
-      </button>
-      {open && children}
     </div>
   );
 }
