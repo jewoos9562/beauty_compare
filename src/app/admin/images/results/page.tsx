@@ -14,6 +14,7 @@ interface ReviewedImage {
   status: string;
   width: number | null;
   height: number | null;
+  ocr_text: string | null;
 }
 
 interface GuClinic {
@@ -26,10 +27,11 @@ export default function ResultsPage() {
   const [guMap, setGuMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'approved' | 'rejected'>('approved');
+  const [selectedImage, setSelectedImage] = useState<ReviewedImage | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetchAll<ReviewedImage>('crawl_images', 'id, hira_id, clinic_name, storage_path, status, width, height'),
+      fetchAll<ReviewedImage>('crawl_images', 'id, hira_id, clinic_name, storage_path, status, width, height, ocr_text'),
       fetch('/data/seoul_derma.json').then(r => r.json()),
     ]).then(([imgs, clinicData]) => {
       setImages(imgs.filter(i => i.status === 'approved' || i.status === 'rejected'));
@@ -125,14 +127,10 @@ export default function ResultsPage() {
                     </div>
                     <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                       {imgs.map(img => (
-                        <div key={img.id} className="aspect-square rounded-lg overflow-hidden border border-[var(--border)] bg-slate-50">
-                          <img
-                            src={STORAGE_URL + img.storage_path}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
+                        <button key={img.id} onClick={() => setSelectedImage(img)}
+                          className={`aspect-square rounded-lg overflow-hidden border bg-slate-50 transition-all hover:shadow-md hover:scale-105 ${img.ocr_text ? 'border-emerald-300' : 'border-[var(--border)]'}`}>
+                          <img src={STORAGE_URL + img.storage_path} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -142,6 +140,38 @@ export default function ResultsPage() {
           ))
         )}
       </div>
+
+      {/* Lightbox */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
+          <div className="bg-white rounded-2xl overflow-hidden max-w-5xl max-h-[90vh] flex flex-col sm:flex-row shadow-2xl" onClick={e => e.stopPropagation()}>
+            {/* Image */}
+            <div className="flex-1 bg-slate-100 overflow-auto max-h-[70vh] sm:max-h-[90vh]">
+              <img src={STORAGE_URL + selectedImage.storage_path} alt="" className="w-full h-auto" />
+            </div>
+            {/* OCR Text */}
+            <div className="w-full sm:w-80 p-5 border-t sm:border-t-0 sm:border-l border-[var(--border)] overflow-y-auto max-h-[40vh] sm:max-h-[90vh]">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold text-[var(--text-light)] uppercase tracking-wide">OCR 텍스트</h3>
+                <button onClick={() => setSelectedImage(null)} className="text-[var(--text-light)] hover:text-[var(--text)] text-lg leading-none">&times;</button>
+              </div>
+              <div className="text-sm text-[var(--text-muted)] mb-3">
+                {selectedImage.clinic_name} · {selectedImage.width}x{selectedImage.height}
+              </div>
+              {selectedImage.ocr_text ? (
+                <pre className="text-xs text-[var(--text)] leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 rounded-lg p-3">
+                  {selectedImage.ocr_text}
+                </pre>
+              ) : (
+                <div className="text-center py-8 text-[var(--text-light)]">
+                  <p className="text-sm">OCR 미완료</p>
+                  <p className="text-[11px] mt-1">ocr-approved.mjs 실행 필요</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
