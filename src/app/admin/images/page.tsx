@@ -139,6 +139,36 @@ export default function AdminImagesPage() {
       setSiteTypeMap(stMap);
       setChainCountMap(ccMap);
       setLoading(false);
+
+      // Auto-load clinic if URL has ?clinic= param (for page refresh)
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const clinicId = params.get('clinic');
+        if (clinicId) {
+          const mode = (params.get('mode') as 'all' | 'branch' | 'common') || 'all';
+          const label = params.get('label') || '';
+          // Trigger image load
+          (async () => {
+            const all: any[] = [];
+            let from = 0;
+            while (true) {
+              const { data } = await supabase
+                .from('crawl_images').select('*')
+                .eq('hira_id', clinicId)
+                .order('score', { ascending: false })
+                .range(from, from + 999);
+              if (!data || data.length === 0) break;
+              all.push(...data);
+              if (data.length < 1000) break;
+              from += 1000;
+            }
+            setSelectedClinicId(clinicId);
+            setSelectedMode(mode);
+            setSelectedLabel(label);
+            setClinicImages(all);
+          })();
+        }
+      }
     });
   }, []);
 
