@@ -313,9 +313,11 @@ export default function AdminImagesPage() {
       const current = imgs[idx];
       if (!current) return;
 
+      const st = current.status || 'pending';
       if (e.key === 'ArrowRight' || e.key === 'j') {
         e.preventDefault(); busy = true;
-        if ((current.status || 'pending') === 'pending') updateImage(current.id, { status: 'rejected' });
+        // 대기 → 거절, 이미 검수된 건 그냥 넘김
+        if (st === 'pending') updateImage(current.id, { status: 'rejected' });
         setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
         setTimeout(() => { busy = false; }, 150);
       } else if (e.key === 'ArrowLeft' || e.key === 'k') {
@@ -324,8 +326,11 @@ export default function AdminImagesPage() {
         setTimeout(() => { busy = false; }, 150);
       } else if (e.key === ' ') {
         e.preventDefault(); busy = true;
-        updateImage(current.id, { status: 'approved' });
-        setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
+        // 토글: 대기/거절 → 승인, 승인 → 거절
+        const newStatus = st === 'approved' ? 'rejected' : 'approved';
+        updateImage(current.id, { status: newStatus });
+        // 대기에서 승인하면 다음으로, 토글(수정)이면 제자리
+        if (st === 'pending') setReviewIndex(i => Math.min(i + 1, imgs.length - 1));
         setTimeout(() => { busy = false; }, 150);
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -361,6 +366,7 @@ export default function AdminImagesPage() {
             <span className="text-[var(--border)]">|</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">이미지 검수</span>
+              <Link href="/admin/images/results" className="text-[11px] font-semibold text-emerald-600 hover:underline">검수 결과</Link>
               <Link href="/admin/crawls" className="text-[11px] font-semibold text-[var(--primary)] hover:underline">크롤 데이터 →</Link>
             </div>
           </div>
@@ -623,14 +629,24 @@ function ReviewView({
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => {
-                    if ((current.status || 'pending') === 'pending') onUpdate(current.id, { status: 'rejected' });
+                    const st = current.status || 'pending';
+                    if (st === 'pending') onUpdate(current.id, { status: 'rejected' });
                     setReviewIndex(i => Math.min(i + 1, images.length - 1));
                   }} className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
                     넘기기 <kbd className="ml-1.5 text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200">→</kbd>
                   </button>
-                  <button onClick={() => { onUpdate(current.id, { status: 'approved' }); setReviewIndex(i => Math.min(i + 1, images.length - 1)); }}
-                    className="px-5 py-2 rounded-xl text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
-                    승인 <kbd className="ml-1.5 text-[10px] text-indigo-200 bg-indigo-500 px-1.5 py-0.5 rounded">Space</kbd>
+                  <button onClick={() => {
+                    const st = current.status || 'pending';
+                    const newStatus = st === 'approved' ? 'rejected' : 'approved';
+                    onUpdate(current.id, { status: newStatus });
+                    if (st === 'pending') setReviewIndex(i => Math.min(i + 1, images.length - 1));
+                  }}
+                    className={`px-5 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm ${
+                      (current.status || 'pending') === 'approved'
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]'
+                    }`}>
+                    {(current.status || 'pending') === 'approved' ? '승인 취소' : '승인'} <kbd className="ml-1.5 text-[10px] opacity-60 px-1.5 py-0.5 rounded">Space</kbd>
                   </button>
                 </div>
               </div>
@@ -675,7 +691,7 @@ function ReviewView({
             <div className="bg-slate-50 rounded-2xl border border-[var(--border)] p-4">
               <h3 className="text-[10px] font-bold text-[var(--text-light)] uppercase tracking-wide mb-2">키보드 단축키</h3>
               <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
-                {[['승인', 'Space'], ['넘기기 (=거절)', '→ / J'], ['이전', '← / K'], ['목록으로', 'ESC']].map(([l, k]) => (
+                {[['승인 / 승인취소 (토글)', 'Space'], ['넘기기 (=거절)', '→ / J'], ['이전', '← / K'], ['목록으로', 'ESC']].map(([l, k]) => (
                   <div key={l} className="flex justify-between"><span>{l}</span><span className="font-mono text-[var(--text-light)]">{k}</span></div>
                 ))}
               </div>
