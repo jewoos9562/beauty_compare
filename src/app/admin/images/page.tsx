@@ -285,23 +285,52 @@ export default function AdminImagesPage() {
     return reviewList.map(img => map.get(img.id) || img);
   }, [reviewList, clinicImages]);
 
+  /* ─── Actions: update local state instantly, batch DB writes ─── */
+  const pendingUpdates = useRef<Map<number, Partial<CrawlImage>>>(new Map());
+  const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flushUpdates = useCallback(() => {
+    const batch = new Map(pendingUpdates.current);
+    pendingUpdates.current.clear();
+    for (const [id, updates] of batch) {
+      supabase.from('crawl_images')
+        .update({ ...updates, reviewed_at: new Date().toISOString() })
+        .eq('id', id)
+        .then(({ error }) => { if (error) console.error('Update failed:', id, error); });
+    }
+  }, []);
+
+  const updateImage = useCallback((id: number, updates: Partial<CrawlImage>) => {
+    // Instant local update
+    const ts = new Date().toISOString();
+    setClinicImages(prev => prev.map(img => img.id === id ? { ...img, ...updates, reviewed_at: ts } : img));
+    // Queue DB write
+    pendingUpdates.current.set(id, { ...pendingUpdates.current.get(id), ...updates });
+    if (flushTimer.current) clearTimeout(flushTimer.current);
+    flushTimer.current = setTimeout(flushUpdates, 500); // batch every 500ms
+  }, [flushUpdates]);
+
+  // Flush on unmount
+  useEffect(() => { return () => { if (pendingUpdates.current.size > 0) flushUpdates(); }; }, [flushUpdates]);
+
   /* ─── Back button handler ─── */
   const goBack = useCallback(() => {
+    if (pendingUpdates.current.size > 0) flushUpdates();
     setSelectedClinicId(null);
     setClinicImages([]);
     setReviewList([]);
     prevFilterKey.current = '';
     window.history.pushState(null, '', '/admin/images');
-    // Refresh summaries to reflect labeling changes
     supabase.from('crawl_image_summary').select('*').then(({ data }) => {
       if (data) setSummaries(data as ImageSummary[]);
     });
-  }, []);
+  }, [flushUpdates]);
 
   useEffect(() => {
     const handler = () => {
       const params = new URLSearchParams(window.location.search);
       if (!params.get('clinic')) {
+        if (pendingUpdates.current.size > 0) flushUpdates();
         setSelectedClinicId(null);
         setClinicImages([]);
         setReviewList([]);
@@ -313,18 +342,7 @@ export default function AdminImagesPage() {
     };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
-  }, []);
-
-  /* ─── Actions ─── */
-  const updateImage = useCallback(async (id: number, updates: Partial<CrawlImage>) => {
-    const { error } = await supabase
-      .from('crawl_images')
-      .update({ ...updates, reviewed_at: new Date().toISOString() })
-      .eq('id', id);
-    if (error) { console.error('Update failed:', error); return; }
-    const ts = new Date().toISOString();
-    setClinicImages(prev => prev.map(img => img.id === id ? { ...img, ...updates, reviewed_at: ts } : img));
-  }, []);
+  }, [flushUpdates]);
 
   /* ─── Keyboard ─── */
   const reviewIndexRef = useRef(reviewIndex);
