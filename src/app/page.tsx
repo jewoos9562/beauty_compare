@@ -77,9 +77,15 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/admin/images"
-                className="px-2.5 py-1.5 text-[11px] font-semibold text-[var(--text-light)] hover:text-[var(--text)] border border-[var(--border)] border-l-0 rounded-r-lg transition-colors"
+                className="px-2.5 py-1.5 text-[11px] font-semibold text-[var(--text-light)] hover:text-[var(--text)] border border-[var(--border)] border-l-0 transition-colors"
               >
                 Images
+              </Link>
+              <Link
+                href="/admin/prices"
+                className="px-2.5 py-1.5 text-[11px] font-semibold text-[var(--text-light)] hover:text-[var(--text)] border border-[var(--border)] border-l-0 rounded-r-lg transition-colors"
+              >
+                Prices
               </Link>
             </div>
             <Link
